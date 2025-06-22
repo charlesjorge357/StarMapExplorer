@@ -166,16 +166,17 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 10, 16, 16]} />
         <meshStandardMaterial 
-          color={getPlanetColor(planet.type)}
-          emissive={getPlanetGlow(planet.type)}
-          emissiveIntensity={0.2}
+          color={getPlanetTexture(planet.type, planetTextures) ? '#ffffff' : getPlanetColor(planet.type)}
+          emissive={getPlanetTexture(planet.type, planetTextures) ? '#000000' : getPlanetGlow(planet.type)}
+          emissiveIntensity={getPlanetTexture(planet.type, planetTextures) ? 0.0 : 0.2}
           map={getPlanetTexture(planet.type, planetTextures)}
+          // Enhanced texture visibility
+          transparent={!!getPlanetTexture(planet.type, planetTextures)}
+          opacity={1.0}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={false}
-          opacity={1.0}
         />
       </mesh>
 
