@@ -148,6 +148,55 @@ export function SystemView({ system }: SystemViewProps) {
     name: 'Central Star'
   };
 
+  // Navigation mode selection logic
+  useFrame(() => {
+    if (!mouseMode) {
+      // In navigation mode, use raycasting to detect what's in the center
+      const raycaster = new THREE.Raycaster();
+      const camera = useThree.getState().camera;
+      
+      // Cast ray from camera center
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      
+      // Check for intersections with planets and star
+      // This is a simplified approach - in a real implementation you'd check specific objects
+      // For now, we'll trigger selection based on distance to camera center
+      const cameraPosition = camera.position;
+      
+      // Check distance to star (at origin)
+      const starDistance = cameraPosition.distanceTo(new THREE.Vector3(0, 0, 0));
+      
+      // Check distance to planets
+      let closestPlanet = null;
+      let closestDistance = Infinity;
+      
+      planets.forEach((planet: any) => {
+        const planetWorldPos = new THREE.Vector3(
+          planet.orbitRadius * Math.cos(planet.orbitSpeed * Date.now() * 0.001),
+          0,
+          planet.orbitRadius * Math.sin(planet.orbitSpeed * Date.now() * 0.001)
+        );
+        const distance = cameraPosition.distanceTo(planetWorldPos);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestPlanet = planet;
+        }
+      });
+      
+      // Select based on proximity (simplified logic)
+      if (starDistance < 20 && (closestDistance > starDistance || closestDistance > 30)) {
+        if (!(window as any).systemViewState?.selectedStar) {
+          handleStarClick();
+        }
+      } else if (closestDistance < 15 && closestPlanet) {
+        if ((window as any).systemViewState?.selectedPlanet?.id !== closestPlanet.id) {
+          handlePlanetClick(closestPlanet);
+        }
+      }
+    }
+  });
+
   return (
     <group onClick={handleBackgroundClick}>
       {/* Central star with strong bloom effect scaled by radius */}
@@ -155,11 +204,11 @@ export function SystemView({ system }: SystemViewProps) {
         position={[0, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
-          handleStarClick();
+          handleStarClick(e);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          document.body.style.cursor = 'pointer';
+          if (mouseMode) document.body.style.cursor = 'pointer';
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
@@ -214,11 +263,11 @@ export function SystemView({ system }: SystemViewProps) {
                 ref={planetRef}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePlanetClick(planet);
+                  handlePlanetClick(planet, e);
                 }}
                 onPointerOver={(e) => {
                   e.stopPropagation();
-                  document.body.style.cursor = 'pointer';
+                  if (mouseMode) document.body.style.cursor = 'pointer';
                 }}
                 onPointerOut={() => {
                   document.body.style.cursor = 'auto';
