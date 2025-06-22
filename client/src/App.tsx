@@ -35,10 +35,14 @@ function SelectionRing({ star }: { star: SimpleStar }) {
   const { camera } = useThree();
   const ringRef = useRef<any>();
 
-  useFrame(() => {
+  useFrame((state) => {
     if (ringRef.current) {
       // Make ring face camera
       ringRef.current.lookAt(camera.position);
+      
+      // Gentle pulsing animation
+      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      ringRef.current.scale.setScalar(scale);
     }
   });
 
@@ -100,7 +104,7 @@ function StarField({
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
             
-            {/* Visual star with fixed size to prevent LOD popping */}
+            {/* Visual star with gentle pulsing */}
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
               <meshBasicMaterial 
@@ -227,7 +231,10 @@ function App() {
                 <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} stars={stars} />
               )}
               {currentView === 'system' && currentSystem && (
-                <SystemView system={currentSystem} />
+                <>
+                  <StarfieldSkybox stars={stars} scale={0.05} />
+                  <SystemView system={currentSystem} />
+                </>
               )}
             </>
           )}
