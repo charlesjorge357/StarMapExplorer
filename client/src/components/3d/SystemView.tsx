@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 
 // Helper functions for planet materials
 function getPlanetColor(type: string): string {
@@ -109,11 +108,9 @@ function PlanetMesh({
   });
   
   const handleClick = (event: any) => {
-    if (mouseMode) {
-      event.stopPropagation();
-      console.log(`Selected planet: ${planet.name}`);
-      onPlanetClick(planet);
-    }
+    event.stopPropagation();
+    console.log(`Selected planet: ${planet.name}`);
+    onPlanetClick(planet);
   };
   
   return (
@@ -123,8 +120,8 @@ function PlanetMesh({
         ref={planetRef}
         onClick={handleClick}
         onPointerOver={(e) => {
+          e.stopPropagation();
           if (mouseMode) {
-            e.stopPropagation();
             document.body.style.cursor = 'pointer';
           }
         }}
@@ -172,7 +169,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Handle background click to deselect
   const handleBackgroundClick = () => {
-    if (mouseMode && selectedPlanet) {
+    if (selectedPlanet) {
       console.log('Deselecting planet');
       onPlanetClick(null);
     }
