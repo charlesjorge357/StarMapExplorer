@@ -113,7 +113,7 @@ export function AdminPanel() {
                 <Label htmlFor="star-name">Name</Label>
                 <Input
                   id="star-name"
-                  value={selectedStar.name}
+                  value={selectedStar?.name || ''}
                   onChange={(e) => handleStarUpdate('name', e.target.value)}
                 />
               </div>
@@ -121,11 +121,11 @@ export function AdminPanel() {
               <div>
                 <Label htmlFor="star-class">Spectral Class</Label>
                 <Select
-                  value={selectedStar.spectralClass}
+                  value={selectedStar?.spectralClass || ''}
                   onValueChange={(value) => handleStarUpdate('spectralClass', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select spectral class" />
                   </SelectTrigger>
                   <SelectContent>
                     {['O', 'B', 'A', 'F', 'G', 'K', 'M'].map(cls => (
@@ -141,8 +141,8 @@ export function AdminPanel() {
                   id="star-mass"
                   type="number"
                   step="0.1"
-                  value={selectedStar.mass}
-                  onChange={(e) => handleStarUpdate('mass', parseFloat(e.target.value))}
+                  value={selectedStar?.mass || 0}
+                  onChange={(e) => handleStarUpdate('mass', parseFloat(e.target.value) || 0)}
                 />
               </div>
               
@@ -151,8 +151,8 @@ export function AdminPanel() {
                 <Input
                   id="star-temp"
                   type="number"
-                  value={selectedStar.temperature}
-                  onChange={(e) => handleStarUpdate('temperature', parseInt(e.target.value))}
+                  value={selectedStar?.temperature || 0}
+                  onChange={(e) => handleStarUpdate('temperature', parseInt(e.target.value) || 0)}
                 />
               </div>
               
@@ -163,8 +163,8 @@ export function AdminPanel() {
                   type="number"
                   min="0"
                   max="20"
-                  value={selectedStar.planetCount}
-                  onChange={(e) => handleStarUpdate('planetCount', parseInt(e.target.value))}
+                  value={selectedStar?.planetCount || 0}
+                  onChange={(e) => handleStarUpdate('planetCount', parseInt(e.target.value) || 0)}
                 />
               </div>
             </div>
@@ -177,7 +177,7 @@ export function AdminPanel() {
                 <Label htmlFor="planet-name">Name</Label>
                 <Input
                   id="planet-name"
-                  value={selectedPlanet.name}
+                  value={selectedPlanet?.name || ''}
                   onChange={(e) => handlePlanetUpdate('name', e.target.value)}
                 />
               </div>
@@ -185,11 +185,11 @@ export function AdminPanel() {
               <div>
                 <Label htmlFor="planet-type">Type</Label>
                 <Select
-                  value={selectedPlanet.type}
+                  value={selectedPlanet?.type || ''}
                   onValueChange={(value) => handlePlanetUpdate('type', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select planet type" />
                   </SelectTrigger>
                   <SelectContent>
                     {planetTypes.map(type => (
@@ -207,8 +207,8 @@ export function AdminPanel() {
                   id="planet-radius"
                   type="number"
                   step="0.1"
-                  value={selectedPlanet.radius}
-                  onChange={(e) => handlePlanetUpdate('radius', parseFloat(e.target.value))}
+                  value={selectedPlanet?.radius || 0}
+                  onChange={(e) => handlePlanetUpdate('radius', parseFloat(e.target.value) || 0)}
                 />
               </div>
               
@@ -218,8 +218,8 @@ export function AdminPanel() {
                   id="planet-mass"
                   type="number"
                   step="0.1"
-                  value={selectedPlanet.mass}
-                  onChange={(e) => handlePlanetUpdate('mass', parseFloat(e.target.value))}
+                  value={selectedPlanet?.mass || 0}
+                  onChange={(e) => handlePlanetUpdate('mass', parseFloat(e.target.value) || 0)}
                 />
               </div>
               
@@ -228,8 +228,8 @@ export function AdminPanel() {
                 <Input
                   id="planet-temp"
                   type="number"
-                  value={selectedPlanet.temperature}
-                  onChange={(e) => handlePlanetUpdate('temperature', parseInt(e.target.value))}
+                  value={selectedPlanet?.temperature || 0}
+                  onChange={(e) => handlePlanetUpdate('temperature', parseInt(e.target.value) || 0)}
                 />
               </div>
             </div>
