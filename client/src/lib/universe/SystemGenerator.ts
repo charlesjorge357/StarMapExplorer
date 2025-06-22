@@ -34,6 +34,7 @@ type PlanetType =
 interface StarSystem {
   id: string;
   starId: string;
+  star?: any;
   planets: Planet[];
 }
 
@@ -213,6 +214,7 @@ export class SystemGenerator {
     return {
       id: `system-${star.id}`,
       starId: star.id,
+      star: star, // Include star data for system view
       planets
     };
   }
@@ -228,6 +230,19 @@ export class SystemGenerator {
       case 'ocean_world': return '#1E90FF';    // Deep sky blue
       case 'dead_world': return '#696969';     // Gray
       default: return '#808080';
+    }
+  }
+
+  static getStarColor(spectralClass: string): string {
+    switch (spectralClass) {
+      case 'O': return '#9BB0FF';  // Blue
+      case 'B': return '#AABFFF';  // Blue-white
+      case 'A': return '#CAD7FF';  // White
+      case 'F': return '#F8F7FF';  // Yellow-white
+      case 'G': return '#FFFF00';  // Yellow (Sun-like)
+      case 'K': return '#FFCD9B';  // Orange
+      case 'M': return '#FF6D4D';  // Red
+      default: return '#FFFF00';
     }
   }
 }

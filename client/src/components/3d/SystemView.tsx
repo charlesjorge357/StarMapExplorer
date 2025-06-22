@@ -24,7 +24,7 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
           onClick(planet);
         }}
       >
-        <sphereGeometry args={[planet.radius, 16, 16]} />
+        <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
         <meshStandardMaterial color={color} />
       </mesh>
     </group>
@@ -40,15 +40,22 @@ export function SystemView({ system }: SystemViewProps) {
     console.log('Clicked system background');
   };
 
+  // Get the star data from the system (we'll need to pass this)
+  const star = system.star || { 
+    radius: 1, 
+    spectralClass: 'G', 
+    temperature: 5778 
+  };
+
   return (
     <group onClick={handleBackgroundClick}>
-      {/* Central star */}
+      {/* Central star - use authentic solar radius and spectral color */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[2, 16, 16]} />
+        <sphereGeometry args={[star.radius, 16, 16]} />
         <meshStandardMaterial 
-          color="#FFFF00" 
-          emissive="#FFFF00" 
-          emissiveIntensity={0.5}
+          color={SystemGenerator.getStarColor(star.spectralClass)}
+          emissive={SystemGenerator.getStarColor(star.spectralClass)}
+          emissiveIntensity={0.6}
         />
       </mesh>
       
