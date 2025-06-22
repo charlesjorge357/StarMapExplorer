@@ -94,8 +94,8 @@ function StarField({
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
         // Scale visual size by stellar radius, smaller minimum to show true variation
-        const visualRadius = Math.max(0.3, star.radius * 0.4); 
-        const hitboxRadius = Math.max(2.5, star.radius * 0.5);
+        const visualRadius = Math.max(0.2, star.radius * 1.0); 
+        const hitboxRadius = Math.max(2.0, star.radius * 2.0);
 
         return (
           <group key={star.id}>
