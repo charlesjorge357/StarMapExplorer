@@ -72,14 +72,18 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
 
   // Create individual star meshes for better visibility
   const starMeshes = useMemo(() => {
+    if (!positions || !colors) return [];
+    
     const meshes = [];
-    for (let i = 0; i < Math.min(count, 500); i++) { // Limit for performance
-      const x = positions[i * 3];
-      const y = positions[i * 3 + 1];
-      const z = positions[i * 3 + 2];
-      const r = colors[i * 3];
-      const g = colors[i * 3 + 1];
-      const b = colors[i * 3 + 2];
+    const starCount = Math.min(count, 500, positions.length / 3); // Limit for performance
+    
+    for (let i = 0; i < starCount; i++) {
+      const x = positions[i * 3] || 0;
+      const y = positions[i * 3 + 1] || 0;
+      const z = positions[i * 3 + 2] || 0;
+      const r = colors[i * 3] || 1;
+      const g = colors[i * 3 + 1] || 1;
+      const b = colors[i * 3 + 2] || 1;
       
       meshes.push(
         <mesh
