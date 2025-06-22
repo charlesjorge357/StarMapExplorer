@@ -143,6 +143,7 @@ function StarField({
 function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
+  const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [mouseMode, setMouseMode] = useState(true);
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);

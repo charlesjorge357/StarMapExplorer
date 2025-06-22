@@ -3,258 +3,214 @@ import { useFrame } from '@react-three/fiber';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 
 // Helper functions for planet materials
-const getPlanetEmissive = (type: string): string => {
-  switch (type) {
-    case 'gas_giant': return '#332200';
-    case 'frost_giant': return '#001122';
-    case 'arid_world': return '#331100';
-    case 'verdant_world': return '#002200';
-    case 'acidic_world': return '#223300';
-    case 'nuclear_world': return '#331100';
-    case 'ocean_world': return '#001133';
-    case 'dead_world': return '#111111';
-    default: return '#111111';
-  }
-};
+function getPlanetColor(type: string): string {
+  const colors = {
+    gas_giant: '#FF7043',
+    frost_giant: '#81C784', 
+    arid_world: '#D4A574',
+    verdant_world: '#4CAF50',
+    acidic_world: '#FFC107',
+    nuclear_world: '#F44336',
+    ocean_world: '#2196F3',
+    dead_world: '#616161'
+  };
+  return colors[type as keyof typeof colors] || '#888888';
+}
 
-const getPlanetEmissiveIntensity = (type: string): number => {
-  switch (type) {
-    case 'gas_giant': return 0.2;
-    case 'frost_giant': return 0.15;
-    case 'arid_world': return 0.1;
-    case 'verdant_world': return 0.15;
-    case 'acidic_world': return 0.25;
-    case 'nuclear_world': return 0.4;
-    case 'ocean_world': return 0.2;
-    case 'dead_world': return 0.05;
-    default: return 0.1;
+function getPlanetGlow(type: string): string {
+  const glows = {
+    gas_giant: '#FF5722',
+    frost_giant: '#66BB6A', 
+    arid_world: '#D4AF37',
+    verdant_world: '#388E3C',
+    acidic_world: '#FF9800',
+    nuclear_world: '#D32F2F',
+    ocean_world: '#1976D2',
+    dead_world: '#424242'
+  };
+  return glows[type as keyof typeof glows] || '#444444';
+}
+
+function getStarColor(spectralClass: string): string {
+  const firstChar = spectralClass.charAt(0).toUpperCase();
+  switch (firstChar) {
+    case 'O': return '#9bb0ff';
+    case 'B': return '#aabfff';
+    case 'A': return '#cad7ff';
+    case 'F': return '#f8f7ff';
+    case 'G': return '#fff4ea';
+    case 'K': return '#ffd2a1';
+    case 'M': return '#ffad51';
+    default: return '#ffffff';
   }
-};
+}
 
 interface SystemViewProps {
   system: any;
+  selectedPlanet: any;
+  onPlanetClick: (planet: any) => void;
+  mouseMode: boolean;
 }
 
-function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) => void }) {
-  const color = SystemGenerator.getPlanetColor(planet.type);
-  const planetRef = useRef<any>();
-  const orbitGroupRef = useRef<any>();
+// Selection ring component to match galactic view style
+function SelectionRing({ planet, isSelected }: { planet: any; isSelected: boolean }) {
+  const ringRef = useRef<any>();
   
-  // Calculate initial orbital angle from planet position
-  const initialAngle = Math.atan2(planet.position[2], planet.position[0]);
-  const angleRef = useRef(initialAngle);
-  
-  useFrame((state, delta) => {
-    // Update orbital angle based on orbital speed (independent of camera)
-    angleRef.current += planet.orbitSpeed * delta;
-    
-    // Calculate new position with orbital inclination (fixed orbital mechanics)
-    const inclination = planet.inclination || 0;
-    const x = Math.cos(angleRef.current) * planet.orbitRadius * 10;
-    const z = Math.sin(angleRef.current) * planet.orbitRadius * 10;
-    const y = Math.sin(inclination) * planet.orbitRadius * 2 + 
-              Math.sin(angleRef.current) * Math.sin(inclination) * planet.orbitRadius * 1;
-    
-    // Update planet position directly (not via group)
-    if (planetRef.current) {
-      planetRef.current.position.set(x, y, z);
-      // Rotate planet on its axis
-      planetRef.current.rotation.y += planet.rotationSpeed * delta;
+  useFrame((state) => {
+    if (ringRef.current && isSelected) {
+      const time = state.clock.getElapsedTime() * 0.1;
+      const angle = time * planet.orbitSpeed + (Math.PI * 2 / 8);
+      ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
+      ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+      
+      // Pulse effect
+      const pulse = 0.8 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
+      ringRef.current.scale.setScalar(pulse);
     }
   });
   
+  if (!isSelected) return null;
+  
   return (
-    <group ref={orbitGroupRef}>
-      {/* Orbit path - tilted based on inclination */}
-      <mesh 
-        position={[0, 0, 0]} 
-        rotation={[Math.PI / 2 + (planet.inclination || 0), 0, 0]}
-      >
-        <ringGeometry args={[planet.orbitRadius * 10 - 0.1, planet.orbitRadius * 10 + 0.1, 64]} />
-        <meshBasicMaterial color="#333333" transparent opacity={0.3} />
-      </mesh>
-      
-      {/* Planet */}
-      <mesh 
-        ref={planetRef}
-        position={planet.position}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick(planet);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
-        <meshStandardMaterial 
-          color={color}
-          emissive={getPlanetEmissive(planet.type)}
-          emissiveIntensity={getPlanetEmissiveIntensity(planet.type)}
-          metalness={planet.type === 'nuclear_world' ? 0.8 : 0.1}
-          roughness={planet.type === 'gas_giant' ? 0.2 : 0.7}
-        />
-      </mesh>
-    </group>
+    <mesh ref={ringRef}>
+      <sphereGeometry args={[planet.radius + 0.3, 16, 16]} />
+      <meshBasicMaterial 
+        color="#ffffff"
+        transparent
+        opacity={0.3}
+        wireframe
+      />
+    </mesh>
   );
 }
 
-export function SystemView({ system }: SystemViewProps) {
-  const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
-  const [selectedStar, setSelectedStar] = useState<boolean>(false);
-
-  // Make selection state available globally for main App UI
-  (window as any).systemViewState = {
-    selectedPlanet,
-    selectedStar,
-    star: system.star || { 
-      radius: 1, 
-      spectralClass: 'G', 
-      temperature: 5778,
-      name: 'Central Star',
-      mass: 1
+function PlanetMesh({ 
+  planet, 
+  index, 
+  isSelected, 
+  onPlanetClick, 
+  mouseMode 
+}: { 
+  planet: any; 
+  index: number; 
+  isSelected: boolean;
+  onPlanetClick: (planet: any) => void;
+  mouseMode: boolean;
+}) {
+  const planetRef = useRef<any>();
+  
+  useFrame((state) => {
+    if (planetRef.current) {
+      const time = state.clock.getElapsedTime() * 0.1;
+      const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
+      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
+      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+    }
+  });
+  
+  const handleClick = (event: any) => {
+    if (mouseMode) {
+      event.stopPropagation();
+      console.log(`Selected planet: ${planet.name}`);
+      onPlanetClick(planet);
     }
   };
+  
+  return (
+    <>
+      {/* Planet mesh */}
+      <mesh 
+        ref={planetRef}
+        onClick={handleClick}
+        onPointerOver={(e) => {
+          if (mouseMode) {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }
+        }}
+        onPointerOut={() => {
+          if (mouseMode) {
+            document.body.style.cursor = 'auto';
+          }
+        }}
+      >
+        <sphereGeometry args={[planet.radius, 16, 16]} />
+        <meshStandardMaterial 
+          color={getPlanetColor(planet.type)}
+          emissive={getPlanetGlow(planet.type)}
+          emissiveIntensity={0.2}
+        />
+      </mesh>
 
+      {/* Selection ring */}
+      <SelectionRing planet={planet} isSelected={isSelected} />
 
+      {/* Orbital path */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[planet.orbitRadius - 0.05, planet.orbitRadius + 0.05, 128]} />
+        <meshBasicMaterial 
+          color="#444444" 
+          transparent 
+          opacity={0.3}
+          side={2}
+        />
+      </mesh>
+    </>
+  );
+}
 
-  const handlePlanetClick = (planet: any) => {
-    console.log(`Selected planet: ${planet.name}`);
-    setSelectedPlanet(planet);
-    setSelectedStar(false);
-  };
-
-  const handleStarClick = () => {
-    console.log(`Selected central star: ${system.star?.name || 'Central Star'}`);
-    setSelectedStar(true);
-    setSelectedPlanet(null);
-  };
-
-  const handleBackgroundClick = () => {
-    console.log('Clicked system background');
-    setSelectedPlanet(null);
-    setSelectedStar(false);
-  };
-
-  // Get the star data from the system (we'll need to pass this)
-  const star = system.star || { 
-    radius: 1, 
-    spectralClass: 'G', 
+export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
+  const star = system.star || {
+    radius: 1,
+    spectralClass: 'G',
     temperature: 5778,
     name: 'Central Star'
   };
 
+  const planets = SystemGenerator.generatePlanets(star, 12345);
+
+  // Handle background click to deselect
+  const handleBackgroundClick = () => {
+    if (mouseMode && selectedPlanet) {
+      console.log('Deselecting planet');
+      onPlanetClick(null);
+    }
+  };
+
   return (
-    <group>
-      {/* Central star with strong bloom effect scaled by radius */}
-      <mesh 
-        position={[0, 0, 0]}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleStarClick();
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <sphereGeometry args={[star.radius, 16, 16]} />
+    <group onClick={handleBackgroundClick}>
+      {/* Central Star */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[star.radius * 2, 32, 32]} />
         <meshStandardMaterial 
-          color={SystemGenerator.getStarColor(star.spectralClass)}
-          emissive={SystemGenerator.getStarColor(star.spectralClass)}
-          emissiveIntensity={Math.max(2.0, star.radius * 1.2)}
+          color={getStarColor(star.spectralClass)}
+          emissive={getStarColor(star.spectralClass)}
+          emissiveIntensity={0.8}
+          toneMapped={false}
         />
       </mesh>
 
-      {/* Star selection ring */}
-      {selectedStar && (
-        <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[star.radius + 0.5, 16, 16]} />
-          <meshBasicMaterial 
-            color="#ffffff"
-            transparent
-            opacity={0.3}
-            wireframe
-          />
-        </mesh>
-      )}
-      
-      {/* Planets with selection rings */}
-      {system.planets.map((planet: any) => {
-        const PlanetWithSelection = () => {
-          const planetRef = useRef<any>();
-          const selectionRef = useRef<any>();
-          
-          useFrame((state, delta) => {
-            // Sync both planet and selection ring positions
-            const time = state.clock.getElapsedTime() * planet.orbitSpeed * 0.3;
-            const x = Math.cos(time) * planet.orbitRadius * 10;
-            const z = Math.sin(time) * planet.orbitRadius * 10;
-            const y = Math.sin(planet.inclination || 0) * planet.orbitRadius * 2;
-            
-            if (planetRef.current) {
-              planetRef.current.position.set(x, y, z);
-              planetRef.current.rotation.y += planet.rotationSpeed * delta;
-            }
-            if (selectionRef.current && selectedPlanet?.id === planet.id) {
-              selectionRef.current.position.set(x, y, z);
-            }
-          });
-          
-          return (
-            <>
-              <mesh 
-                ref={planetRef}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePlanetClick(planet);
-                }}
-                onPointerOver={(e) => {
-                  e.stopPropagation();
-                  document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={() => {
-                  document.body.style.cursor = 'auto';
-                }}
-              >
-                <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
-                <meshStandardMaterial 
-                  color={SystemGenerator.getPlanetColor(planet.type)}
-                  emissive={getPlanetEmissive(planet.type)}
-                  emissiveIntensity={getPlanetEmissiveIntensity(planet.type)}
-                  metalness={planet.type === 'nuclear_world' ? 0.8 : 0.1}
-                  roughness={planet.type === 'gas_giant' ? 0.2 : 0.7}
-                />
-              </mesh>
-              
-              {/* Selection ring - scaled to visual planet size */}
-              {selectedPlanet?.id === planet.id && (
-                <mesh ref={selectionRef}>
-                  <sphereGeometry args={[planet.radius * 0.1 + 0.05, 16, 16]} />
-                  <meshBasicMaterial 
-                    color="#ffffff"
-                    transparent
-                    opacity={0.4}
-                    wireframe
-                  />
-                </mesh>
-              )}
-            </>
-          );
-        };
-        
-        return <PlanetWithSelection key={planet.id} />;
-      })}
+      {/* Star glow effect */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[star.radius * 3, 16, 16]} />
+        <meshBasicMaterial 
+          color={getStarColor(star.spectralClass)}
+          transparent
+          opacity={0.1}
+        />
+      </mesh>
 
-
-
+      {/* Planets with selection functionality */}
+      {planets.map((planet, index) => (
+        <PlanetMesh 
+          key={planet.id} 
+          planet={planet} 
+          index={index}
+          isSelected={selectedPlanet?.id === planet.id}
+          onPlanetClick={onPlanetClick}
+          mouseMode={mouseMode}
+        />
+      ))}
     </group>
   );
 }
