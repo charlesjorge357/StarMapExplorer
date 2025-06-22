@@ -17,6 +17,19 @@ function getPlanetColor(type: string): string {
   return colors[type as keyof typeof colors] || '#888888';
 }
 
+function getPlanetTexture(type: string, planetTextures: any): any {
+  const textures = planetTextures[type as keyof typeof planetTextures];
+  if (!textures) return undefined;
+  
+  // Handle array of textures (random selection)
+  if (Array.isArray(textures)) {
+    return textures[Math.floor(Math.random() * textures.length)];
+  }
+  
+  // Single texture
+  return textures;
+}
+
 function getPlanetGlow(type: string): string {
   const glows = {
     gas_giant: '#FF5722',
@@ -91,16 +104,14 @@ function PlanetMesh({
   isSelected, 
   onPlanetClick, 
   mouseMode,
-  uranusTexture,
-  neptuneTexture
+  planetTextures
 }: { 
   planet: any; 
   index: number; 
   isSelected: boolean;
   onPlanetClick: (planet: any) => void;
   mouseMode: boolean;
-  uranusTexture: any;
-  neptuneTexture: any;
+  planetTextures: any;
 }) {
   const planetRef = useRef<any>();
   
@@ -142,7 +153,7 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={planet.type === 'frost_giant' ? (Math.random() > 0.5 ? uranusTexture : neptuneTexture) : undefined}
+          map={getPlanetTexture(planet.type, planetTextures)}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
@@ -166,10 +177,22 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  // Load textures
+  // Load all planetary textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
+  
+  // Planet texture mapping - ready for expansion
+  const planetTextures = {
+    gas_giant: null, // Ready for gas giant textures
+    frost_giant: [uranusTexture, neptuneTexture],
+    arid_world: null, // Ready for Mars-like textures
+    verdant_world: null, // Ready for Earth-like textures
+    acidic_world: null, // Ready for Venus-like textures
+    nuclear_world: null, // Ready for irradiated world textures
+    ocean_world: null, // Ready for water world textures
+    dead_world: null // Ready for barren world textures
+  };
 
   // Use planets from the cached system
   const planets = system.planets || [];
@@ -279,8 +302,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           isSelected={selectedPlanet?.id === planet.id}
           onPlanetClick={onPlanetClick}
           mouseMode={mouseMode}
-          uranusTexture={uranusTexture}
-          neptuneTexture={neptuneTexture}
+          planetTextures={planetTextures}
         />
       ))}
     </group>
