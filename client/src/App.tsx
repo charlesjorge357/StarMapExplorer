@@ -167,6 +167,39 @@ function App() {
         </div>
       )}
 
+      {/* Center Crosshair */}
+      {!showSelector && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 5
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid rgba(255, 255, 255, 0.6)',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            position: 'relative'
+          }}>
+            {/* Inner dot */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '4px',
+              height: '4px',
+              background: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '50%'
+            }} />
+          </div>
+        </div>
+      )}
+
       {/* Star Information Panel */}
       {!showSelector && selectedStar && (
         <div style={{
