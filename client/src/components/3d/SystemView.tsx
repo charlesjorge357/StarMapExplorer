@@ -1,6 +1,36 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
+
+// Helper functions for planet materials
+const getPlanetEmissive = (type: string): string => {
+  switch (type) {
+    case 'gas_giant': return '#332200';
+    case 'frost_giant': return '#001122';
+    case 'arid_world': return '#331100';
+    case 'verdant_world': return '#002200';
+    case 'acidic_world': return '#223300';
+    case 'nuclear_world': return '#331100';
+    case 'ocean_world': return '#001133';
+    case 'dead_world': return '#111111';
+    default: return '#111111';
+  }
+};
+
+const getPlanetEmissiveIntensity = (type: string): number => {
+  switch (type) {
+    case 'gas_giant': return 0.2;
+    case 'frost_giant': return 0.15;
+    case 'arid_world': return 0.1;
+    case 'verdant_world': return 0.15;
+    case 'acidic_world': return 0.25;
+    case 'nuclear_world': return 0.4;
+    case 'ocean_world': return 0.2;
+    case 'dead_world': return 0.05;
+    default: return 0.1;
+  }
+};
 
 interface SystemViewProps {
   system: any;
@@ -45,7 +75,7 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
         <meshBasicMaterial color="#333333" transparent opacity={0.3} />
       </mesh>
       
-      {/* Planet with proper materials */}
+      {/* Planet */}
       <mesh 
         ref={planetRef}
         position={planet.position}
@@ -144,12 +174,62 @@ export function SystemView({ system }: SystemViewProps) {
       
       {/* Planets */}
       {system.planets.map((planet: any) => (
-        <PlanetMesh
-          key={planet.id}
-          planet={planet}
-          onClick={handlePlanetClick}
-        />
+        <group key={planet.id}>
+          <PlanetMesh
+            planet={planet}
+            onClick={handlePlanetClick}
+          />
+          {/* Planet selection ring */}
+          {selectedPlanet?.id === planet.id && (
+            <mesh position={[0, 0, 0]}>
+              <sphereGeometry args={[planet.radius * 0.1 + 0.2, 16, 16]} />
+              <meshBasicMaterial 
+                color="#ffffff"
+                transparent
+                opacity={0.4}
+                wireframe
+              />
+            </mesh>
+          )}
+        </group>
       ))}
+
+      {/* Information Panel */}
+      {(selectedPlanet || selectedStar) && (
+        <Html position={[15, 8, 0]} style={{ pointerEvents: 'none' }}>
+          <div className="bg-black/80 text-white p-4 rounded-lg min-w-64 backdrop-blur">
+            {selectedStar ? (
+              <div>
+                <h3 className="text-lg font-bold text-blue-300">{star.name}</h3>
+                <p className="text-sm text-gray-300 mb-2">Central Star</p>
+                <div className="space-y-1 text-sm">
+                  <p><span className="text-blue-200">Spectral Class:</span> {star.spectralClass}</p>
+                  <p><span className="text-blue-200">Radius:</span> {star.radius.toFixed(2)} R☉</p>
+                  <p><span className="text-blue-200">Temperature:</span> {star.temperature?.toFixed(0)} K</p>
+                  <p><span className="text-blue-200">Mass:</span> {star.mass?.toFixed(2)} M☉</p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-lg font-bold text-green-300">{selectedPlanet.name}</h3>
+                <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
+                <div className="space-y-1 text-sm">
+                  <p><span className="text-green-200">Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
+                  <p><span className="text-green-200">Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
+                  <p><span className="text-green-200">Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                  <p><span className="text-green-200">Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
+                  {selectedPlanet.atmosphere.length > 0 && (
+                    <div>
+                      <p className="text-green-200">Atmosphere:</p>
+                      <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
