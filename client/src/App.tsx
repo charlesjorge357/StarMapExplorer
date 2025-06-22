@@ -313,9 +313,14 @@ function App() {
         if (currentView === 'galactic' && selectedStar) {
           console.log(`Unselected star: ${selectedStar.name}`);
           setSelectedStar(null);
-        } else if (currentView === 'system' && selectedPlanet) {
-          console.log(`Unselected planet: ${selectedPlanet.name}`);
-          setSelectedPlanet(null);
+        } else if (currentView === 'system') {
+          if (selectedPlanet) {
+            console.log(`Unselected planet: ${selectedPlanet.name}`);
+            setSelectedPlanet(null);
+          } else if ((window as any).systemStarSelected) {
+            console.log('Unselected central star');
+            (window as any).systemStarSelected = false;
+          }
         }
       }
 
@@ -324,6 +329,7 @@ function App() {
         setCurrentView('galactic');
         setCurrentSystem(null);
         setSelectedPlanet(null);
+        (window as any).systemStarSelected = false; // Clear star selection
       }
 
       if (event.key === 'Backspace' && currentView === 'system') {

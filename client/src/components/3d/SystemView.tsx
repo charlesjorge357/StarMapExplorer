@@ -168,15 +168,44 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   return (
     <group onClick={handleBackgroundClick}>
       {/* Central Star - doubled size from galactic view for system scale */}
-      <mesh position={[0, 0, 0]}>
+      <mesh 
+        position={[0, 0, 0]}
+        onClick={handleStarClick}
+        onPointerOver={(e) => {
+          if (mouseMode) {
+            e.stopPropagation();
+            document.body.style.cursor = 'pointer';
+          }
+        }}
+        onPointerOut={() => {
+          if (mouseMode) {
+            document.body.style.cursor = 'auto';
+          }
+        }}
+      >
         <sphereGeometry args={[star.radius * 4, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
           emissiveIntensity={0.8}
           toneMapped={false}
+          // Bump map preparation - ready for texture implementation
+          bumpScale={0.1}
         />
       </mesh>
+
+      {/* Star selection ring */}
+      {selectedStar && (
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[star.radius * 4.5, 16, 16]} />
+          <meshBasicMaterial 
+            color="#ffffff"
+            transparent
+            opacity={0.3}
+            wireframe
+          />
+        </mesh>
+      )}
 
       {/* Star glow effect - scaled with star size */}
       <mesh position={[0, 0, 0]}>
