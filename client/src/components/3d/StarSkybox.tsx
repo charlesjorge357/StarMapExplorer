@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface StarSkyboxProps {
@@ -72,19 +70,35 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
     return colors;
   }, [count]);
 
-  return (
-    <group renderOrder={-1000}>
-      <Points positions={positions} colors={colors} raycast={() => null}>
-        <PointMaterial
-          transparent
-          size={3.0}
-          sizeAttenuation={false}
-          depthWrite={false}
-          depthTest={true}
-          vertexColors
-          blending={THREE.AdditiveBlending}
-        />
-      </Points>
-    </group>
-  );
+  // Create individual star meshes for better visibility
+  const starMeshes = useMemo(() => {
+    const meshes = [];
+    for (let i = 0; i < Math.min(count, 1000); i++) { // Limit for performance
+      const x = positions[i * 3];
+      const y = positions[i * 3 + 1];
+      const z = positions[i * 3 + 2];
+      const r = colors[i * 3];
+      const g = colors[i * 3 + 1];
+      const b = colors[i * 3 + 2];
+      
+      meshes.push(
+        <mesh
+          key={i}
+          position={[x, y, z]}
+          renderOrder={-1000}
+          raycast={() => null}
+        >
+          <sphereGeometry args={[0.5, 4, 4]} />
+          <meshBasicMaterial
+            color={new THREE.Color(r, g, b)}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+      );
+    }
+    return meshes;
+  }, [positions, colors, count]);
+
+  return <group>{starMeshes}</group>;
 }
