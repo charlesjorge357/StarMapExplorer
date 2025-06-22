@@ -39,13 +39,17 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       <KeyboardControls map={controls}>
         <Canvas
+          shadows
           camera={{
-            position: [0, 5, 20],
+            position: [0, 0, 10],
             fov: 75,
             near: 0.1,
-            far: 1000
+            far: 100000
           }}
-          style={{ background: '#000011' }}
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance"
+          }}
         >
           <color attach="background" args={["#000011"]} />
           

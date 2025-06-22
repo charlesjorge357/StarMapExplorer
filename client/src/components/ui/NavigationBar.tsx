@@ -130,13 +130,9 @@ export function NavigationBar() {
         )}
         
         {/* Controls Help */}
-        <Button
-          variant="ghost"
-          size="sm"
-          style={{ color: '#888' }}
-        >
-          WASD + Mouse to move • Click to select
-        </Button>
+        <div style={{ color: '#888', fontSize: '12px' }}>
+          WASD + Mouse to move • Click stars to explore
+        </div>
       </div>
     </div>
   );
