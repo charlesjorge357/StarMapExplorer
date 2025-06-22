@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
+import { StarGenerator } from "./lib/universe/StarGenerator";
 
 // Define control keys
 const controls = [
@@ -14,12 +15,25 @@ const controls = [
   { name: "boost", keys: ["ShiftLeft", "ShiftRight"] },
 ];
 
-function MinimalUniverse() {
+function StarField() {
+  const [stars, setStars] = useState([]);
+
+  useEffect(() => {
+    console.log("Generating stars...");
+    const generatedStars = StarGenerator.generateStars(12345, 100); // Small number for testing
+    setStars(generatedStars);
+    console.log(`Generated ${generatedStars.length} stars`);
+  }, []);
+
   return (
-    <mesh>
-      <sphereGeometry args={[1, 32, 32]} />
-      <meshStandardMaterial color="yellow" />
-    </mesh>
+    <group>
+      {stars.map((star) => (
+        <mesh key={star.id} position={star.position}>
+          <sphereGeometry args={[star.radius * 0.1, 8, 8]} />
+          <meshBasicMaterial color={StarGenerator.getStarColor(star.spectralClass)} />
+        </mesh>
+      ))}
+    </group>
   );
 }
 
@@ -39,7 +53,7 @@ function App() {
           {!showSelector && (
             <>
               <CameraController />
-              <MinimalUniverse />
+              <StarField />
             </>
           )}
         </Canvas>

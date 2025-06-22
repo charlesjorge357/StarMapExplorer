@@ -6,7 +6,7 @@ import { useCamera } from '../../lib/stores/useCamera';
 import { useUniverse } from '../../lib/stores/useUniverse';
 
 const MOVEMENT_SPEED = 0.5;
-const BOOST_MULTIPLIER = 3;
+const BOOST_MULTIPLIER = 6; // 500% boost = 6x total speed
 const MOUSE_SENSITIVITY = 0.002;
 
 export function CameraController() {
