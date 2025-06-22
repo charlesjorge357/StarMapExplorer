@@ -109,22 +109,22 @@ export function NavigationBar() {
             >
               Save
             </Button>
-            <label>
+            <div style={{ position: 'relative' }}>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={isLoading}
-                as="span"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.json';
+                  input.onchange = handleFileLoad;
+                  input.click();
+                }}
               >
                 Load
               </Button>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleFileLoad}
-                style={{ display: 'none' }}
-              />
-            </label>
+            </div>
           </>
         )}
         
