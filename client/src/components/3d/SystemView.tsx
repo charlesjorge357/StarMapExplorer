@@ -38,6 +38,7 @@ function getPlanetTextureForMaterial(planetType: string, planetTextures: any) {
 
   // Handle array of textures (random selection)
   if (Array.isArray(textures)) {
+    if (textures.length === 0) return undefined;
     return textures[Math.floor(Math.random() * textures.length)];
   }
 
@@ -264,8 +265,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Planet texture mapping - ready for expansion
   const planetTextures = {
-    gas_giant: [jupiterTexture, venusTexture].filter(Boolean), // Jupiter and Venus-like gas giants
-    frost_giant: [uranusTexture, neptuneTexture].filter(Boolean),
+    gas_giant: [jupiterTexture, venusTexture].filter(texture => texture !== null && texture !== undefined), // Jupiter and Venus-like gas giants
+    frost_giant: [uranusTexture, neptuneTexture].filter(texture => texture !== null && texture !== undefined),
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
     acidic_world: acidicTexture, // Acidic surface texture
