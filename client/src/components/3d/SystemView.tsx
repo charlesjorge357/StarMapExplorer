@@ -6,7 +6,7 @@ import { useTexture } from '@react-three/drei';
 function getPlanetColor(type: string): string {
   const colors = {
     gas_giant: '#FF7043',
-    frost_giant: '#81C784', 
+    frost_giant: '#5DADE2', 
     arid_world: '#D4A574',
     verdant_world: '#4CAF50',
     acidic_world: '#FFC107',
@@ -20,7 +20,7 @@ function getPlanetColor(type: string): string {
 function getPlanetGlow(type: string): string {
   const glows = {
     gas_giant: '#FF5722',
-    frost_giant: '#66BB6A', 
+    frost_giant: '#5DADE2', 
     arid_world: '#D4AF37',
     verdant_world: '#388E3C',
     acidic_world: '#FF9800',
@@ -138,6 +138,7 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
+          map={planet.type === 'frost_giant' ? (Math.random() > 0.5 ? uranusTexture : neptuneTexture) : undefined}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
@@ -161,8 +162,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  // Load star surface texture
+  // Load textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
+  const uranusTexture = useTexture('/textures/uranus.jpg');
+  const neptuneTexture = useTexture('/textures/neptune.jpg');
 
   // Use planets from the cached system
   const planets = system.planets || [];
