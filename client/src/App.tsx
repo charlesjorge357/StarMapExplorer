@@ -41,7 +41,7 @@ function SelectionRing({ star }: { star: SimpleStar }) {
     if (ringRef.current) {
       // Make ring face camera
       ringRef.current.lookAt(camera.position);
-      
+
       // Gentle pulsing animation
       const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
       ringRef.current.scale.setScalar(scale);
@@ -94,7 +94,7 @@ function StarField({
         // Scale visual size by stellar radius, smaller minimum to show true variation
         const visualRadius = Math.max(0.3, star.radius * 0.4); 
         const hitboxRadius = Math.max(2.5, star.radius * 0.5);
-        
+
         return (
           <group key={star.id}>
             {/* Invisible larger hitbox for easier selection */}
@@ -105,7 +105,7 @@ function StarField({
             >
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
-            
+
             {/* Visual star with gentle pulsing and emissive glow scaled by radius */}
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
@@ -115,7 +115,7 @@ function StarField({
                 emissiveIntensity={Math.max(0.8, star.radius * 0.6)}
               />
             </mesh>
-            
+
             {/* Selection overlay */}
             {isSelected && (
               <mesh position={star.position}>
@@ -131,7 +131,7 @@ function StarField({
           </group>
         );
       })}
-      
+
       {/* Camera-facing selection ring */}
       {selectedStar && <SelectionRing star={selectedStar} />}
     </group>
@@ -187,7 +187,7 @@ function App() {
     for (let i = 0; i < planetCount; i++) {
       const planetType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
       const orbitRadius = 5 + i * (3 + Math.random() * 4); // Better spacing
-      
+
       planets.push({
         id: `planet-${star.id}-${i}`,
         name: `${star.name} ${String.fromCharCode(945 + i)}`, // Greek letters
@@ -220,13 +220,43 @@ function App() {
     return atmospheres[planetType as keyof typeof atmospheres] || [];
   };
 
+  // Function to generate atmosphere based on planet type
+  const generateAtmosphere = (type: string) => {
+    const atmospheres = {
+      gas_giant: ['Hydrogen', 'Helium'],
+      frost_giant: ['Methane', 'Ammonia', 'Water vapor'],
+      arid_world: ['Carbon dioxide', 'Nitrogen'],
+      verdant_world: ['Nitrogen', 'Oxygen', 'Water vapor'],
+      acidic_world: ['Sulfur dioxide', 'Carbon dioxide'],
+      nuclear_world: ['Radioactive particles', 'Noble gases'],
+      ocean_world: ['Nitrogen', 'Oxygen', 'Water vapor'],
+      dead_world: []
+    };
+    return atmospheres[type as keyof typeof atmospheres] || [];
+  };
+
+  // Function to get planet color for UI consistency
+  const getPlanetColor = (type: string): string => {
+    const colors = {
+      gas_giant: '#FF7043',
+      frost_giant: '#81C784', 
+      arid_world: '#D4A574',
+      verdant_world: '#4CAF50',
+      acidic_world: '#FFC107',
+      nuclear_world: '#F44336',
+      ocean_world: '#2196F3',
+      dead_world: '#616161'
+    };
+    return colors[type as keyof typeof colors] || '#888888';
+  };
+
   // Handle Tab key to toggle mouse mode (avoids Chrome escape conflicts)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Tab') {
         event.preventDefault();
         event.stopPropagation();
-        
+
         // Exit pointer lock if active
         if (document.pointerLockElement) {
           document.exitPointerLock();
@@ -256,7 +286,7 @@ function App() {
     const handleSystemNavigation = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
-        
+
         // Check if system already exists in cache
         let system = systemCache.get(selectedStar.id);
         if (!system) {
@@ -271,12 +301,12 @@ function App() {
         } else {
           console.log(`Using cached system for ${selectedStar.name}`);
         }
-        
+
         setCurrentView('system');
         setCurrentSystem(system);
         setSelectedStar(null);
       }
-      
+
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
@@ -288,14 +318,14 @@ function App() {
           setSelectedPlanet(null);
         }
       }
-      
+
       if (event.key === 'Backspace' && currentView === 'system') {
         console.log('Returning to galactic view...');
         setCurrentView('galactic');
         setCurrentSystem(null);
         setSelectedPlanet(null);
       }
-      
+
       if (event.key === 'Backspace' && currentView === 'system') {
         console.log('Returning to galactic view...');
         setCurrentView('galactic');
@@ -337,7 +367,7 @@ function App() {
                   />
                 </>
               )}
-              
+
               {/* Post-processing effects for bloom */}
               <EffectComposer>
                 <Bloom 
@@ -440,16 +470,16 @@ function App() {
           {/* System view - planet information */}
           {selectedPlanet && currentView === 'system' && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-              <h3 className="text-lg font-bold text-green-300">{selectedPlanet.name}</h3>
+              <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
               <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
               <div className="space-y-1 text-sm">
-                <p><span className="text-green-200">Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
-                <p><span className="text-green-200">Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span className="text-green-200">Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
-                <p><span className="text-green-200">Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 {selectedPlanet.atmosphere.length > 0 && (
                   <div>
-                    <p className="text-green-200">Atmosphere:</p>
+                    <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
                     <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
                   </div>
                 )}
