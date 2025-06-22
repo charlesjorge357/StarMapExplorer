@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { useCamera } from '../../lib/stores/useCamera';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
-import { Star } from '../../lib/universe/types';
+import { Star } from '../../shared/schema';
 
 interface StarMeshProps {
   star: Star;

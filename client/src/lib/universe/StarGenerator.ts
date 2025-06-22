@@ -1,4 +1,4 @@
-import { Star } from "./types";
+import { Star } from "../../shared/schema";
 
 export class StarGenerator {
   private static seededRandom(seed: number): () => number {

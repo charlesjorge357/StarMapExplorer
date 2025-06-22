@@ -4,7 +4,7 @@ import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { PlanetGenerator } from '../../lib/universe/PlanetGenerator';
-import { SurfaceFeature } from '../../lib/universe/types';
+import { SurfaceFeature } from '../../shared/schema';
 
 interface SurfaceFeatureMesh {
   feature: SurfaceFeature;

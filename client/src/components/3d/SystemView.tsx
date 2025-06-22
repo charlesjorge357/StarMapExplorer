@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { useCamera } from '../../lib/stores/useCamera';
 import { PlanetGenerator } from '../../lib/universe/PlanetGenerator';
-import { Planet, AsteroidBelt } from '../../lib/universe/types';
+import { Planet, AsteroidBelt } from '../../shared/schema';
 
 interface PlanetMeshProps {
   planet: Planet;

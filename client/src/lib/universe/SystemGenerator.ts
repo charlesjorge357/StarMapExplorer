@@ -1,4 +1,4 @@
-import { Star, StarSystem, Planet, AsteroidBelt, PlanetType, Moon } from "./types";
+import { Star, StarSystem, Planet, AsteroidBelt, PlanetType, Moon } from "../../shared/schema";
 
 export class SystemGenerator {
   private static seededRandom(seed: number): () => number {

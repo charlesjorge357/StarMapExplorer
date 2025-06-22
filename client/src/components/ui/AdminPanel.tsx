@@ -6,7 +6,7 @@ import { Input } from './input';
 import { Textarea } from './textarea';
 import { Label } from './label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { PlanetType } from '../../lib/universe/types';
+import { PlanetType } from '../../shared/schema';
 
 export function AdminPanel() {
   const { 

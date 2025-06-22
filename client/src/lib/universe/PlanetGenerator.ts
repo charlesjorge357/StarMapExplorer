@@ -1,4 +1,4 @@
-import { Planet, PlanetType, SurfaceFeature } from "./types";
+import { Planet, PlanetType, SurfaceFeature } from "../../shared/schema";
 
 export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { ScopeType, ModeType, Star, StarSystem, Planet, UniverseData } from "../universe/types";
+import { ScopeType, ModeType, Star, StarSystem, Planet, UniverseData } from "../../shared/schema";
 import { StarGenerator } from "../universe/StarGenerator";
 import { SystemGenerator } from "../universe/SystemGenerator";
 import { SaveSystem } from "../universe/SaveSystem";
