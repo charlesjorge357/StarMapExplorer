@@ -126,6 +126,7 @@ function StarField({ selectedStar, setSelectedStar }: {
 function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
+  const [mouseMode, setMouseMode] = useState(false);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -163,12 +164,12 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 Galactic View • {100} Stars
+          📍 Galactic View • {100} Stars {mouseMode && '• Mouse Mode (ESC to toggle)'}
         </div>
       )}
 
       {/* Center Crosshair */}
-      {!showSelector && (
+      {!showSelector && !mouseMode && (
         <div style={{
           position: 'absolute',
           top: '50%',
