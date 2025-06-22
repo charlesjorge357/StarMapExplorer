@@ -184,6 +184,15 @@ function App() {
       'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
     ];
 
+    for (let i = 0; to generate planets for a star (moved from SystemView)
+  const generatePlanetsForStar = (star: SimpleStar) => {
+    const planets = [];
+    const planetCount = Math.floor(Math.random() * 6) + 3; // 3-8 planets
+    const planetTypes = [
+      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
+      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
+    ];
+
     for (let i = 0; i < planetCount; i++) {
       const planetType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
       const orbitRadius = 5 + i * (3 + Math.random() * 4); // Better spacing
@@ -218,21 +227,6 @@ function App() {
       dead_world: []
     };
     return atmospheres[planetType as keyof typeof atmospheres] || [];
-  };
-
-  // Function to generate atmosphere based on planet type
-  const generateAtmosphere = (type: string) => {
-    const atmospheres = {
-      gas_giant: ['Hydrogen', 'Helium'],
-      frost_giant: ['Methane', 'Ammonia', 'Water vapor'],
-      arid_world: ['Carbon dioxide', 'Nitrogen'],
-      verdant_world: ['Nitrogen', 'Oxygen', 'Water vapor'],
-      acidic_world: ['Sulfur dioxide', 'Carbon dioxide'],
-      nuclear_world: ['Radioactive particles', 'Noble gases'],
-      ocean_world: ['Nitrogen', 'Oxygen', 'Water vapor'],
-      dead_world: []
-    };
-    return atmospheres[type as keyof typeof atmospheres] || [];
   };
 
   // Function to get planet color for UI consistency
