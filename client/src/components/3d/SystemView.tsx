@@ -20,12 +20,12 @@ function getPlanetColor(type: string): string {
 function getPlanetTexture(type: string, planetTextures: any): any {
   const textures = planetTextures[type as keyof typeof planetTextures];
   if (!textures) return undefined;
-  
+
   // Handle array of textures (random selection)
   if (Array.isArray(textures)) {
     return textures[Math.floor(Math.random() * textures.length)];
   }
-  
+
   // Single texture
   return textures;
 }
@@ -34,12 +34,12 @@ function getPlanetTexture(type: string, planetTextures: any): any {
 function getPlanetTextureForMaterial(planetType: string, planetTextures: any) {
   const textures = planetTextures[planetType as keyof typeof planetTextures];
   if (!textures) return undefined;
-  
+
   // Handle array of textures (random selection)
   if (Array.isArray(textures)) {
     return textures[Math.floor(Math.random() * textures.length)];
   }
-  
+
   // Single texture
   return textures;
 }
@@ -82,7 +82,7 @@ interface SystemViewProps {
 // Selection ring component that follows the planet
 function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected: boolean; index: number }) {
   const ringRef = useRef<any>();
-  
+
   useFrame((state) => {
     if (ringRef.current && isSelected) {
       // Match the planet's orbital position exactly
@@ -90,15 +90,15 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
       ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
       ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
-      
+
       // Pulse effect
       const pulse = 1.0 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
       ringRef.current.scale.setScalar(pulse);
     }
   });
-  
+
   if (!isSelected) return null;
-  
+
   return (
     <mesh ref={ringRef}>
       <sphereGeometry args={[planet.radius * 10 + 0.5, 16, 16]} />
@@ -128,7 +128,7 @@ function PlanetMesh({
   planetTextures: any;
 }) {
   const planetRef = useRef<any>();
-  
+
   useFrame((state) => {
     if (planetRef.current) {
       const time = state.clock.getElapsedTime() * 0.1;
@@ -137,13 +137,13 @@ function PlanetMesh({
       planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
     }
   });
-  
+
   const handleClick = (event: any) => {
     event.stopPropagation();
     console.log(`Selected planet: ${planet.name}`);
     onPlanetClick(planet);
   };
-  
+
   return (
     <>
       {/* Planet mesh */}
@@ -167,11 +167,13 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={getPlanetTexture(planet.type, planetTextures)}
+          map={getPlanetTextureForMaterial(planet.type, planetTextures)}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
+          transparent={true}
+          opacity={0.95}
         />
       </mesh>
 
@@ -183,7 +185,7 @@ function PlanetMesh({
 
 export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<boolean>(false);
-  
+
   const star = system.star || {
     radius: 1,
     spectralClass: 'G',
@@ -197,7 +199,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   const neptuneTexture = useTexture('/textures/neptune.jpg');
   const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const venusTexture = useTexture('/textures/venus.jpg');
-  
+
   // Planet texture mapping - ready for expansion
   const planetTextures = {
     gas_giant: [jupiterTexture, venusTexture], // Jupiter and Venus-like gas giants
