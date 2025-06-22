@@ -96,33 +96,39 @@ export function CameraController() {
     // Calculate movement based on camera orientation
     const forward = new Vector3(0, 0, -1);
     const right = new Vector3(1, 0, 0);
-    const up = new Vector3(0, 1, 0);
+    const worldUp = new Vector3(0, 1, 0); // Keep Y movement world-relative
     
+    // Apply camera rotation only to forward/back and left/right
     forward.applyQuaternion(camera.quaternion);
     right.applyQuaternion(camera.quaternion);
-    up.applyQuaternion(camera.quaternion);
 
     // Reset target velocity
     targetVelocityRef.current.set(0, 0, 0);
 
-    // Apply movement inputs
+    // Apply movement inputs with proper vector scaling
     if (controls.forward) {
-      targetVelocityRef.current.add(forward.multiplyScalar(speed));
+      const forwardVec = forward.clone().multiplyScalar(speed);
+      targetVelocityRef.current.add(forwardVec);
     }
     if (controls.backward) {
-      targetVelocityRef.current.add(forward.multiplyScalar(-speed));
+      const backwardVec = forward.clone().multiplyScalar(-speed);
+      targetVelocityRef.current.add(backwardVec);
     }
     if (controls.leftward) {
-      targetVelocityRef.current.add(right.multiplyScalar(-speed));
+      const leftVec = right.clone().multiplyScalar(-speed);
+      targetVelocityRef.current.add(leftVec);
     }
     if (controls.rightward) {
-      targetVelocityRef.current.add(right.multiplyScalar(speed));
+      const rightVec = right.clone().multiplyScalar(speed);
+      targetVelocityRef.current.add(rightVec);
     }
     if (controls.up) {
-      targetVelocityRef.current.add(up.multiplyScalar(speed));
+      const upVec = worldUp.clone().multiplyScalar(speed);
+      targetVelocityRef.current.add(upVec);
     }
     if (controls.down) {
-      targetVelocityRef.current.add(up.multiplyScalar(-speed));
+      const downVec = worldUp.clone().multiplyScalar(-speed);
+      targetVelocityRef.current.add(downVec);
     }
 
     // Smooth velocity interpolation
