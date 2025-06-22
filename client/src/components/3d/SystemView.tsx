@@ -45,7 +45,7 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
         <meshBasicMaterial color="#333333" transparent opacity={0.3} />
       </mesh>
       
-      {/* Planet */}
+      {/* Planet with proper materials */}
       <mesh 
         ref={planetRef}
         position={planet.position}
@@ -53,34 +53,74 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
           e.stopPropagation();
           onClick(planet);
         }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
       >
         <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
-        <meshStandardMaterial color={color} />
+        <meshStandardMaterial 
+          color={color}
+          emissive={getPlanetEmissive(planet.type)}
+          emissiveIntensity={getPlanetEmissiveIntensity(planet.type)}
+          metalness={planet.type === 'nuclear_world' ? 0.8 : 0.1}
+          roughness={planet.type === 'gas_giant' ? 0.2 : 0.7}
+        />
       </mesh>
     </group>
   );
 }
 
 export function SystemView({ system }: SystemViewProps) {
+  const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
+  const [selectedStar, setSelectedStar] = useState<boolean>(false);
+
   const handlePlanetClick = (planet: any) => {
     console.log(`Selected planet: ${planet.name}`);
+    setSelectedPlanet(planet);
+    setSelectedStar(false);
+  };
+
+  const handleStarClick = () => {
+    console.log(`Selected central star: ${system.star?.name || 'Central Star'}`);
+    setSelectedStar(true);
+    setSelectedPlanet(null);
   };
 
   const handleBackgroundClick = () => {
     console.log('Clicked system background');
+    setSelectedPlanet(null);
+    setSelectedStar(false);
   };
 
   // Get the star data from the system (we'll need to pass this)
   const star = system.star || { 
     radius: 1, 
     spectralClass: 'G', 
-    temperature: 5778 
+    temperature: 5778,
+    name: 'Central Star'
   };
 
   return (
     <group onClick={handleBackgroundClick}>
       {/* Central star with strong bloom effect scaled by radius */}
-      <mesh position={[0, 0, 0]}>
+      <mesh 
+        position={[0, 0, 0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleStarClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
         <sphereGeometry args={[star.radius, 16, 16]} />
         <meshStandardMaterial 
           color={SystemGenerator.getStarColor(star.spectralClass)}
@@ -88,6 +128,19 @@ export function SystemView({ system }: SystemViewProps) {
           emissiveIntensity={Math.max(2.0, star.radius * 1.2)}
         />
       </mesh>
+
+      {/* Star selection ring */}
+      {selectedStar && (
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[star.radius + 0.5, 16, 16]} />
+          <meshBasicMaterial 
+            color="#ffffff"
+            transparent
+            opacity={0.3}
+            wireframe
+          />
+        </mesh>
+      )}
       
       {/* Planets */}
       {system.planets.map((planet: any) => (
