@@ -149,13 +149,15 @@ function App() {
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
   const [stars, setStars] = useState<SimpleStar[]>([]);
+  const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
 
-  // Generate stars when app loads
+  // Generate stars when app loads and clear system cache
   useEffect(() => {
     console.log("Generating stars...");
     const generatedStars = StarGenerator.generateStars(12345, 2000);
     setStars(generatedStars);
+    setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
 
@@ -171,6 +173,51 @@ function App() {
 
   const handleStart = () => {
     setShowSelector(false);
+  };
+
+  // Function to generate planets for a star (moved from SystemView)
+  const generatePlanetsForStar = (star: SimpleStar) => {
+    const planets = [];
+    const planetCount = Math.floor(Math.random() * 6) + 3; // 3-8 planets
+    const planetTypes = [
+      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
+      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
+    ];
+
+    for (let i = 0; i < planetCount; i++) {
+      const planetType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
+      const orbitRadius = 5 + i * (3 + Math.random() * 4); // Better spacing
+      
+      planets.push({
+        id: `planet-${star.id}-${i}`,
+        name: `${star.name} ${String.fromCharCode(945 + i)}`, // Greek letters
+        type: planetType,
+        radius: 0.3 + Math.random() * 1.2, // 0.3 to 1.5 units
+        mass: 0.5 + Math.random() * 5, // Earth masses
+        orbitRadius: orbitRadius,
+        orbitSpeed: 0.1 + Math.random() * 0.3, // Orbital speed
+        rotationSpeed: 0.01 + Math.random() * 0.05,
+        temperature: 200 + Math.random() * 600, // Kelvin
+        atmosphere: generateAtmosphere(planetType),
+        position: [orbitRadius, 0, 0] as [number, number, number]
+      });
+    }
+
+    return planets;
+  };
+
+  const generateAtmosphere = (planetType: string): string[] => {
+    const atmospheres = {
+      gas_giant: ['Hydrogen', 'Helium', 'Methane'],
+      frost_giant: ['Nitrogen', 'Methane', 'Argon'],
+      arid_world: ['Carbon Dioxide', 'Nitrogen'],
+      verdant_world: ['Nitrogen', 'Oxygen', 'Argon'],
+      acidic_world: ['Sulfuric Acid', 'Carbon Dioxide'],
+      nuclear_world: ['Radioactive Gases', 'Xenon'],
+      ocean_world: ['Nitrogen', 'Oxygen', 'Water Vapor'],
+      dead_world: []
+    };
+    return atmospheres[planetType as keyof typeof atmospheres] || [];
   };
 
   // Handle Tab key to toggle mouse mode (avoids Chrome escape conflicts)
@@ -209,11 +256,24 @@ function App() {
     const handleSystemNavigation = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
+        
+        // Check if system already exists in cache
+        let system = systemCache.get(selectedStar.id);
+        if (!system) {
+          // Generate new system and cache it
+          system = {
+            starId: selectedStar.id,
+            star: selectedStar,
+            planets: generatePlanetsForStar(selectedStar)
+          };
+          setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
+          console.log(`Generated new system for ${selectedStar.name}`);
+        } else {
+          console.log(`Using cached system for ${selectedStar.name}`);
+        }
+        
         setCurrentView('system');
-        setCurrentSystem({ 
-          starId: selectedStar.id,
-          star: selectedStar
-        });
+        setCurrentSystem(system);
         setSelectedStar(null);
       }
       
@@ -246,7 +306,7 @@ function App() {
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar, currentView]);
+  }, [selectedStar, currentView, systemCache]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
