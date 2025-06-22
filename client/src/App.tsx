@@ -140,6 +140,15 @@ function App() {
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
+  const [stars, setStars] = useState<SimpleStar[]>([]);
+
+  // Generate stars when app loads
+  useEffect(() => {
+    console.log("Generating stars...");
+    const generatedStars = StarGenerator.generateStars(12345, 2000);
+    setStars(generatedStars);
+    console.log(`Generated ${generatedStars.length} stars`);
+  }, []);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -216,7 +225,7 @@ function App() {
                 onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
               />
               {currentView === 'galactic' && (
-                <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
+                <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} stars={stars} />
               )}
               {currentView === 'system' && currentSystem && (
                 <SystemView system={currentSystem} />
