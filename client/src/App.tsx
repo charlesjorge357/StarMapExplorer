@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { StarGenerator } from "./lib/universe/StarGenerator";
+import { useThree } from "@react-three/fiber";
 
 // Simple star type to avoid import issues
 interface SimpleStar {
   id: string;
+  name?: string;
   position: [number, number, number];
   radius: number;
   spectralClass: string;
@@ -25,26 +27,50 @@ const controls = [
 
 function StarField() {
   const [stars, setStars] = useState<SimpleStar[]>([]);
+  const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
 
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 50); // Fewer stars to avoid errors
+    const generatedStars = StarGenerator.generateStars(12345, 50);
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
 
+  const handleStarClick = (star: SimpleStar) => {
+    console.log("Selected star:", star.name || star.id);
+    setSelectedStar(star);
+  };
+
   return (
     <group>
-      {stars.map((star) => (
-        <mesh key={star.id} position={star.position}>
-          <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
-          <meshStandardMaterial 
-            color={StarGenerator.getStarColor(star.spectralClass)}
-            emissive={StarGenerator.getStarColor(star.spectralClass)}
-            emissiveIntensity={0.3}
-          />
+      {stars.map((star) => {
+        const isSelected = selectedStar?.id === star.id;
+        return (
+          <mesh 
+            key={star.id} 
+            position={star.position}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStarClick(star);
+            }}
+          >
+            <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
+            <meshStandardMaterial 
+              color={isSelected ? "#ffff00" : StarGenerator.getStarColor(star.spectralClass)}
+              emissive={isSelected ? "#ffff00" : StarGenerator.getStarColor(star.spectralClass)}
+              emissiveIntensity={isSelected ? 0.8 : 0.3}
+            />
+          </mesh>
+        );
+      })}
+      
+      {/* Selection indicator */}
+      {selectedStar && (
+        <mesh position={selectedStar.position}>
+          <ringGeometry args={[1.5, 2, 16]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
         </mesh>
-      ))}
+      )}
     </group>
   );
 }
