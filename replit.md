@@ -119,6 +119,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Removed dynamic bloom intensity system due to performance impact. Reverted to static bloom intensities (0.8 for system view, 0.6 for galactic view) for consistent performance while maintaining stellar visual quality.
 - June 22, 2025: Implemented hybrid scaling approach: linear scaling (radius * multiplier) for galactic view to show true stellar size relationships, and logarithmic scaling (Math.log(radius + 1) * multiplier) for system view to prevent overwhelming star sizes while maintaining visual hierarchy.
 - June 22, 2025: Reverted to traditional spectral class coloring for all stars, removing the red dwarf override system. All stars now display their authentic spectral colors (O-blue, B-blue-white, A-white, F-yellow-white, G-yellow, K-orange, M-red-orange) based on temperature and classification.
+- June 22, 2025: Implemented frost giant planet specifications with authentic Uranus/Neptune textures, light blue coloring, and smaller sizes than gas giants (2.5-5.5 vs 3-7 radius). Added texture mapping system for realistic ice giant appearance.
 
 ## User Preferences
 
