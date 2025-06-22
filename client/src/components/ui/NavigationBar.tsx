@@ -14,8 +14,9 @@ export function NavigationBar() {
     isLoading 
   } = useUniverse();
 
-  const handleFileLoad = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileLoad = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file) {
       useUniverse.getState().loadUniverse(file);
     }
@@ -118,7 +119,7 @@ export function NavigationBar() {
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = '.json';
-                  input.onchange = handleFileLoad;
+                  input.addEventListener('change', handleFileLoad);
                   input.click();
                 }}
               >
