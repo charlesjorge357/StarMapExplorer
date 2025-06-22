@@ -55,7 +55,7 @@ function StarField({ selectedStar, setSelectedStar }: {
 
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 50);
+    const generatedStars = StarGenerator.generateStars(12345, 100);
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
