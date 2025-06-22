@@ -58,23 +58,36 @@ function StarField() {
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
 
-  const handleStarClick = (star: SimpleStar) => {
-    console.log("Selected star:", star.name || star.id);
-    setSelectedStar(star);
+  const handleStarClick = (star: SimpleStar, event: any) => {
+    event.stopPropagation();
+    if (selectedStar?.id === star.id) {
+      // Unselect if clicking the same star
+      console.log("Unselected star:", star.name || star.id);
+      setSelectedStar(null);
+    } else {
+      // Select new star
+      console.log("Selected star:", star.name || star.id);
+      setSelectedStar(star);
+    }
+  };
+
+  const handleBackgroundClick = () => {
+    // Unselect when clicking empty space
+    if (selectedStar) {
+      console.log("Unselected star by clicking background");
+      setSelectedStar(null);
+    }
   };
 
   return (
-    <group>
+    <group onClick={handleBackgroundClick}>
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
         return (
           <group key={star.id}>
             <mesh 
               position={star.position}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleStarClick(star);
-              }}
+              onClick={(e) => handleStarClick(star, e)}
             >
               <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
               <meshStandardMaterial 
@@ -103,6 +116,57 @@ function StarField() {
       {/* Camera-facing selection ring */}
       {selectedStar && <SelectionRing star={selectedStar} />}
     </group>
+  );
+}
+
+function StarFieldWithPanel() {
+  const [stars, setStars] = useState<SimpleStar[]>([]);
+  const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
+
+  useEffect(() => {
+    console.log("Generating stars...");
+    const generatedStars = StarGenerator.generateStars(12345, 50);
+    setStars(generatedStars);
+    console.log(`Generated ${generatedStars.length} stars`);
+  }, []);
+
+  return (
+    <>
+      <StarField />
+      {/* Star Information Panel */}
+      {selectedStar && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          width: '280px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          pointerEvents: 'none',
+          zIndex: 10
+        }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            {selectedStar.name || selectedStar.id}
+          </div>
+          <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+            <div>Class: {selectedStar.spectralClass}</div>
+            <div>Position: [{selectedStar.position[0].toFixed(1)}, {selectedStar.position[1].toFixed(1)}, {selectedStar.position[2].toFixed(1)}]</div>
+            <div>Radius: {selectedStar.radius.toFixed(2)} solar radii</div>
+          </div>
+          <div style={{ 
+            marginTop: '12px', 
+            fontSize: '10px', 
+            color: '#888',
+            textAlign: 'center'
+          }}>
+            Click star again to unselect • Click empty space to unselect
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
