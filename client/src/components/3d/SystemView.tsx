@@ -149,7 +149,7 @@ export function SystemView({ system }: SystemViewProps) {
   };
 
   return (
-    <group onClick={handleBackgroundClick}>
+    <group>
       {/* Central star with strong bloom effect scaled by radius */}
       <mesh 
         position={[0, 0, 0]}
