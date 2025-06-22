@@ -195,82 +195,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  // Load all planetary textures with error handling
-  let starBumpMap, uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture;
+  // Load all planetary textures
+  const starBumpMap = useTexture('/textures/star_surface.jpg');
+  const uranusTexture = useTexture('/textures/uranus.jpg');
+  const neptuneTexture = useTexture('/textures/neptune.jpg');
   
-  try {
-    starBumpMap = useTexture('/textures/star_surface.jpg');
-  } catch (e) {
-    console.warn('Failed to load star surface texture:', e);
-    starBumpMap = null;
-  }
-  
-  try {
-    uranusTexture = useTexture('/textures/uranus.jpg');
-  } catch (e) {
-    console.warn('Failed to load uranus texture:', e);
-    uranusTexture = null;
-  }
-  
-  try {
-    neptuneTexture = useTexture('/textures/neptune.jpg');
-  } catch (e) {
-    console.warn('Failed to load neptune texture:', e);
-    neptuneTexture = null;
-  }
-  
-  try {
-    jupiterTexture = useTexture('/textures/jupiter.jpg');
-  } catch (e) {
-    console.warn('Failed to load jupiter texture:', e);
-    jupiterTexture = null;
-  }
-  
-  try {
-    venusTexture = useTexture('/textures/venus.jpg');
-  } catch (e) {
-    console.warn('Failed to load venus texture:', e);
-    venusTexture = null;
-  }
-  
-  try {
-    acidicTexture = useTexture('/textures/acidic_world.jpg');
-  } catch (e) {
-    console.warn('Failed to load acidic world texture:', e);
-    acidicTexture = null;
-  }
-  
-  try {
-    nuclearTexture = useTexture('/textures/nuclear_world.jpg');
-  } catch (e) {
-    console.warn('Failed to load nuclear world texture:', e);
-    nuclearTexture = null;
-  }
-
-  // Set texture transparency for color blending
-  React.useEffect(() => {
-    const textures = [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture].filter(Boolean);
-    textures.forEach(texture => {
-      if (texture && typeof texture === 'object' && texture.format !== undefined) {
-        try {
-          texture.format = THREE.RGBAFormat;
-          texture.transparent = true;
-          texture.opacity = 0.7; // Semi-transparent to let base color show through
-        } catch (e) {
-          console.warn('Failed to set texture properties:', e);
-        }
-      }
-    });
-  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture].filter(Boolean));
-
   // Planet texture mapping - ready for expansion
   const planetTextures = {
-    gas_giant: [jupiterTexture, venusTexture].filter(texture => texture !== null && texture !== undefined), // Jupiter and Venus-like gas giants
-    frost_giant: [uranusTexture, neptuneTexture].filter(texture => texture !== null && texture !== undefined),
+    gas_giant: null, // Ready for gas giant textures
+    frost_giant: [uranusTexture, neptuneTexture],
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
-    acidic_world: acidicTexture, // Acidic surface texture
-    nuclear_world: nuclearTexture, // Nuclear/irradiated surface texture
+    acidic_world: null, // Ready for Venus-like textures
+    nuclear_world: null, // Ready for irradiated world textures
     ocean_world: null, // Ready for water world textures
     dead_world: null // Ready for barren world textures
   };
