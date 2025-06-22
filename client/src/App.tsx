@@ -160,8 +160,7 @@ function App() {
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
-  const [cameraPosition, setCameraPosition] = useState<[number, number, number]>([0, 0, 100]);
-  const [dynamicBloomIntensity, setDynamicBloomIntensity] = useState(0.6);
+
 
   // Generate stars when app loads and clear system cache
   useEffect(() => {
@@ -182,36 +181,7 @@ function App() {
     return () => clearInterval(interval);
   }, [currentView]);
 
-  // Calculate dynamic bloom intensity based on camera distance to nearest star
-  useEffect(() => {
-    if (stars.length === 0) return;
 
-    const updateBloomIntensity = () => {
-      // Find distance to nearest star
-      let minDistance = Infinity;
-      stars.forEach(star => {
-        const distance = Math.sqrt(
-          Math.pow(cameraPosition[0] - star.position[0], 2) +
-          Math.pow(cameraPosition[1] - star.position[1], 2) +
-          Math.pow(cameraPosition[2] - star.position[2], 2)
-        );
-        minDistance = Math.min(minDistance, distance);
-      });
-
-      // Map distance to bloom intensity (inverse relationship - dimmer when closer)
-      // Close distance (0-20 units) = low bloom (0.4-0.6) - lens adjusts to bright light
-      // Far distance (100+ units) = high bloom (1.0-1.5) - distant stars glow more
-      const normalizedDistance = Math.min(Math.max(minDistance, 5), 150);
-      const bloomIntensity = currentView === 'system' 
-        ? Math.min(1.5, 0.5 + (normalizedDistance / 150)) // System view: 0.5-1.5
-        : Math.min(1.2, 0.4 + (normalizedDistance / 187.5)); // Galactic view: 0.4-1.2
-      
-      setDynamicBloomIntensity(bloomIntensity);
-    };
-
-    const interval = setInterval(updateBloomIntensity, 200); // Update 5 times per second
-    return () => clearInterval(interval);
-  }, [stars, cameraPosition, currentView]);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -419,7 +389,6 @@ function App() {
                 mouseMode={mouseMode}
                 savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
                 onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
-                onPositionChange={setCameraPosition}
               />
               {currentView === 'galactic' && (
                 <StarField 
@@ -443,7 +412,7 @@ function App() {
               {/* Post-processing effects for bloom */}
               <EffectComposer>
                 <Bloom 
-                  intensity={dynamicBloomIntensity}
+                  intensity={currentView === 'system' ? 0.8 : 0.6}
                   luminanceThreshold={0.1}
                   luminanceSmoothing={0.7}
                   height={500}
