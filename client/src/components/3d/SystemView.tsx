@@ -220,9 +220,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           emissive={getStarColor(star.spectralClass)}
           emissiveIntensity={0.8}
           toneMapped={false}
-          // Star surface bump map with solar granulation and flares
-          bumpMap={starBumpMap}
-          bumpScale={0.2}
+          // Star surface texture with opacity blending
+          map={starBumpMap}
+          transparent={true}
+          opacity={0.75}
         />
       </mesh>
 

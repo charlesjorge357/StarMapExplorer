@@ -115,7 +115,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Added bloom post-processing effects with emissive materials for authentic stellar glow. System view features enhanced bloom intensity and scaled starfield background for visual continuity between navigation scopes.
 - June 22, 2025: Implemented comprehensive system view interactivity with clickable planets and stars, information panels showing detailed properties (radius, mass, temperature, atmosphere), visual selection rings, and planet-specific glow effects based on 8 distinct planet types.
 - June 22, 2025: Enhanced system view with realistic orbital mechanics - doubled planet spacing, fewer planets for larger stars, authentic size scaling, and persistent system caching. Added bump map preparation to all stellar materials. Fixed star selection UI and unified information panel system across both galactic and system views.
-- June 22, 2025: Implemented solar surface bump mapping for all stars using high-resolution 2K solar texture showing granulation patterns, solar flares, and surface detail. Applied to both galactic and system view stars for enhanced visual realism.
+- June 22, 2025: Implemented solar surface texture mapping for all stars using high-resolution 2K solar texture with opacity blending. Surface details like granulation patterns and solar flares now show through star colors for enhanced visual realism across galactic and system views.
 
 ## User Preferences
 
