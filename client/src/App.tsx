@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { StarGenerator } from "./lib/universe/StarGenerator";
+import { Star } from "../shared/schema";
 
 // Define control keys
 const controls = [
@@ -16,11 +17,11 @@ const controls = [
 ];
 
 function StarField() {
-  const [stars, setStars] = useState([]);
+  const [stars, setStars] = useState<Star[]>([]);
 
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 100); // Small number for testing
+    const generatedStars = StarGenerator.generateStars(12345, 500); // More stars
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
@@ -29,8 +30,12 @@ function StarField() {
     <group>
       {stars.map((star) => (
         <mesh key={star.id} position={star.position}>
-          <sphereGeometry args={[star.radius * 0.1, 8, 8]} />
-          <meshBasicMaterial color={StarGenerator.getStarColor(star.spectralClass)} />
+          <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 16, 16]} />
+          <meshBasicMaterial 
+            color={StarGenerator.getStarColor(star.spectralClass)} 
+            emissive={StarGenerator.getStarColor(star.spectralClass)}
+            emissiveIntensity={0.5}
+          />
         </mesh>
       ))}
     </group>
@@ -48,8 +53,9 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <KeyboardControls map={controls}>
         <Canvas camera={{ position: [0, 0, 5] }}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 5]} intensity={1} />
+          <color attach="background" args={["#000000"]} />
+          <ambientLight intensity={0.1} />
+          <directionalLight position={[10, 10, 5]} intensity={0.3} />
           {!showSelector && (
             <>
               <CameraController />
