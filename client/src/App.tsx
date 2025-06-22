@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
+import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
@@ -208,6 +209,7 @@ function App() {
           <directionalLight position={[10, 10, 5]} intensity={0.3} />
           {!showSelector && (
             <>
+              <StarSkybox count={currentView === 'galactic' ? 3000 : 1500} radius={500} />
               <CameraController 
                 mouseMode={mouseMode}
                 savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
