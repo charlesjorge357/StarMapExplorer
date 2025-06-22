@@ -178,6 +178,11 @@ export function CameraController({
       lastPositionRef.current.copy(camera.position);
     }
     
+    // Check active controls for position saving
+    const activeControls = Object.entries(controls)
+      .filter(([_, active]) => active)
+      .map(([key, _]) => key);
+    
     // Save position for navigation if callback provided (throttled)
     if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
       if (camera.position.distanceTo(lastPositionRef.current) > 1.0) {
