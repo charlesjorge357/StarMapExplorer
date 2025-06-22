@@ -160,6 +160,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
+  // Load star surface texture
+  const starBumpMap = useTexture('/textures/star_surface.jpg');
+
   // Use planets from the cached system
   const planets = system.planets || [];
 
@@ -216,8 +219,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           emissive={getStarColor(star.spectralClass)}
           emissiveIntensity={0.8}
           toneMapped={false}
-          // Bump map preparation - ready for texture implementation
-          bumpScale={0.1}
+          // Star surface bump map with solar granulation and flares
+          bumpMap={starBumpMap}
+          bumpScale={0.2}
         />
       </mesh>
 
