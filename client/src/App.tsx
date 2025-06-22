@@ -170,6 +170,20 @@ function App() {
     };
   }, []);
 
+  // Handle Enter key to navigate to system view
+  useEffect(() => {
+    const handleSystemNavigation = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && selectedStar) {
+        console.log(`Navigating to ${selectedStar.name} system...`);
+        // TODO: Implement system view transition
+        alert(`System view for ${selectedStar.name} coming soon!`);
+      }
+    };
+
+    document.addEventListener('keydown', handleSystemNavigation);
+    return () => document.removeEventListener('keydown', handleSystemNavigation);
+  }, [selectedStar]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <KeyboardControls map={controls}>
