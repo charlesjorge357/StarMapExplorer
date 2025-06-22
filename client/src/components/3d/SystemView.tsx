@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 
 interface SystemViewProps {
@@ -7,9 +8,37 @@ interface SystemViewProps {
 
 function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) => void }) {
   const color = SystemGenerator.getPlanetColor(planet.type);
+  const planetRef = useRef<any>();
+  const orbitGroupRef = useRef<any>();
+  
+  // Calculate initial orbital angle from planet position
+  const initialAngle = Math.atan2(planet.position[2], planet.position[0]);
+  const angleRef = useRef(initialAngle);
+  
+  useFrame((state, delta) => {
+    if (orbitGroupRef.current) {
+      // Update orbital angle based on orbital speed
+      angleRef.current += planet.orbitSpeed * delta;
+      
+      // Calculate new position
+      const x = Math.cos(angleRef.current) * planet.orbitRadius * 10;
+      const z = Math.sin(angleRef.current) * planet.orbitRadius * 10;
+      const y = planet.position[1]; // Keep original Y position
+      
+      // Update planet position
+      if (planetRef.current) {
+        planetRef.current.position.set(x, y, z);
+      }
+    }
+    
+    // Rotate planet on its axis
+    if (planetRef.current) {
+      planetRef.current.rotation.y += planet.rotationSpeed * delta;
+    }
+  });
   
   return (
-    <group>
+    <group ref={orbitGroupRef}>
       {/* Orbit path */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[planet.orbitRadius * 10 - 0.1, planet.orbitRadius * 10 + 0.1, 64]} />
@@ -18,6 +47,7 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
       
       {/* Planet */}
       <mesh 
+        ref={planetRef}
         position={planet.position}
         onClick={(e) => {
           e.stopPropagation();
