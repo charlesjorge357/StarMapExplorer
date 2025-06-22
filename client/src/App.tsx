@@ -184,15 +184,6 @@ function App() {
       'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
     ];
 
-    for (let i = 0; to generate planets for a star (moved from SystemView)
-  const generatePlanetsForStar = (star: SimpleStar) => {
-    const planets = [];
-    const planetCount = Math.floor(Math.random() * 6) + 3; // 3-8 planets
-    const planetTypes = [
-      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
-      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
-    ];
-
     for (let i = 0; i < planetCount; i++) {
       const planetType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
       const orbitRadius = 5 + i * (3 + Math.random() * 4); // Better spacing
