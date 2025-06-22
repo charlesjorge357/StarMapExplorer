@@ -82,7 +82,7 @@ export function SystemView({ system }: SystemViewProps) {
       {/* Central star with strong bloom effect */}
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[star.radius, 16, 16]} />
-        <meshBasicMaterial 
+        <meshStandardMaterial 
           color={SystemGenerator.getStarColor(star.spectralClass)}
           emissive={SystemGenerator.getStarColor(star.spectralClass)}
           emissiveIntensity={1.5}

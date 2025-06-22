@@ -109,7 +109,7 @@ function StarField({
             {/* Visual star with gentle pulsing and emissive glow */}
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
-              <meshBasicMaterial 
+              <meshStandardMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
                 emissive={StarGenerator.getStarColor(star.spectralClass)}
                 emissiveIntensity={0.5}
