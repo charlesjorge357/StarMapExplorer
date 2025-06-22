@@ -79,8 +79,8 @@ export function CameraController({
       camera.position.set(savedPosition[0], savedPosition[1], savedPosition[2]);
       console.log('Restored camera position:', savedPosition);
     } else if (currentScope === 'system') {
-      // System view camera positioned to face the star (flipped z-axis)
-      camera.position.set(-30, 10, -30);
+      // System view camera positioned to face the star
+      camera.position.set(30, 10, 30);
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
     }
