@@ -117,7 +117,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Enhanced system view with realistic orbital mechanics - doubled planet spacing, fewer planets for larger stars, authentic size scaling, and persistent system caching. Added bump map preparation to all stellar materials. Fixed star selection UI and unified information panel system across both galactic and system views.
 - June 22, 2025: Implemented solar surface texture mapping for all stars using high-resolution 2K solar texture with opacity blending. Surface details like granulation patterns and solar flares now show through star colors for enhanced visual realism across galactic and system views.
 - June 22, 2025: Removed dynamic bloom intensity system due to performance impact. Reverted to static bloom intensities (0.8 for system view, 0.6 for galactic view) for consistent performance while maintaining stellar visual quality.
-- June 22, 2025: Implemented logarithmic scaling for star sizes to prevent exponential growth. Uses Math.log(radius + 1) multipliers for more realistic size differences across stellar types while maintaining visual hierarchy.
+- June 22, 2025: Implemented square root scaling for star sizes to balance visual hierarchy with realism. Uses Math.sqrt(radius) multipliers to provide better size differentiation than logarithmic while avoiding exponential growth. Supergiant stars now appear appropriately larger than sun-like stars.
 
 ## User Preferences
 

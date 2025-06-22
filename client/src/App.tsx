@@ -94,8 +94,8 @@ function StarField({
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
         // Scale visual size by stellar radius, smaller minimum to show true variation
-        const visualRadius = Math.max(0.3, Math.log(star.radius + 1) * 0.2 + 0.1); 
-        const hitboxRadius = Math.max(2.5, Math.log(star.radius + 1) * 0.3 + 1.0);
+        const visualRadius = Math.max(0.3, Math.sqrt(star.radius) * 0.3 + 0.1); 
+        const hitboxRadius = Math.max(2.5, Math.sqrt(star.radius) * 0.5 + 1.0);
 
         return (
           <group key={star.id}>
@@ -128,7 +128,7 @@ function StarField({
             {/* Selection overlay */}
             {isSelected && (
               <mesh position={star.position}>
-                <sphereGeometry args={[Math.log(star.radius + 1) * 0.2 + 0.3, 8, 8]} />
+                <sphereGeometry args={[Math.sqrt(star.radius) * 0.3 + 0.3, 8, 8]} />
                 <meshBasicMaterial 
                   color="#ffffff"
                   transparent
