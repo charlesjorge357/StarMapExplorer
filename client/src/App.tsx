@@ -13,6 +13,8 @@ interface SimpleStar {
   position: [number, number, number];
   radius: number;
   spectralClass: string;
+  mass?: number;
+  temperature?: number;
 }
 
 // Define control keys
