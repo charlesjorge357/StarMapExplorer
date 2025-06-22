@@ -128,7 +128,7 @@ function StarField({
             {/* Selection overlay */}
             {isSelected && (
               <mesh position={star.position}>
-                <sphereGeometry args={[visualRadius + 0.2, 8, 8]} />
+                <sphereGeometry args={[Math.log(star.radius + 1) * 0.2 + 0.3, 8, 8]} />
                 <meshBasicMaterial 
                   color="#ffffff"
                   transparent
