@@ -5,8 +5,10 @@ import { Vector3 } from 'three';
 import { useCamera } from '../../lib/stores/useCamera';
 import { useUniverse } from '../../lib/stores/useUniverse';
 
-const MOVEMENT_SPEED = 0.5;
-const BOOST_MULTIPLIER = 6; // 500% boost = 6x total speed
+const MOVEMENT_SPEED = 1.5; // 200% faster base speed
+const BOOST_MULTIPLIER_MIN = 2; // Starting boost
+const BOOST_MULTIPLIER_MAX = 80; // 8000% max boost
+const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
 export function CameraController() {
@@ -18,6 +20,8 @@ export function CameraController() {
   const isLockedRef = useRef(false);
   const velocityRef = useRef(new Vector3());
   const targetVelocityRef = useRef(new Vector3());
+  const boostStartTimeRef = useRef<number | null>(null);
+  const lastBoostStateRef = useRef(false);
 
   // Handle pointer lock
   useEffect(() => {
@@ -67,7 +71,27 @@ export function CameraController() {
     }
 
     const controls = get();
-    const speed = controls.boost ? MOVEMENT_SPEED * BOOST_MULTIPLIER : MOVEMENT_SPEED;
+    
+    // Progressive boost system
+    let speedMultiplier = 1;
+    if (controls.boost) {
+      if (!lastBoostStateRef.current) {
+        // Just started boosting
+        boostStartTimeRef.current = Date.now();
+      }
+      
+      if (boostStartTimeRef.current) {
+        const boostDuration = (Date.now() - boostStartTimeRef.current) / 1000;
+        const progress = Math.min(boostDuration / BOOST_BUILDUP_TIME, 1);
+        speedMultiplier = BOOST_MULTIPLIER_MIN + (BOOST_MULTIPLIER_MAX - BOOST_MULTIPLIER_MIN) * progress;
+      }
+    } else {
+      // Reset boost timer when not boosting
+      boostStartTimeRef.current = null;
+    }
+    
+    lastBoostStateRef.current = controls.boost;
+    const speed = MOVEMENT_SPEED * speedMultiplier;
     
     // Calculate movement based on camera orientation
     const forward = new Vector3(0, 0, -1);
