@@ -180,12 +180,7 @@ function App() {
     const handleSystemNavigation = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
-        // Save current camera position before transitioning
-        const currentPosition = document.querySelector('canvas')?.getContext('webgl')?.canvas.parentElement?.querySelector('canvas');
-        if (currentPosition) {
-          // We'll get the actual camera position from the camera controller
-          setSavedCameraPosition([0, 0, 5]); // Placeholder - will be updated by camera controller
-        }
+        // Position will be automatically saved by camera controller
         const system = SystemGenerator.generateSystem(selectedStar, 12345);
         setCurrentSystem(system);
         setCurrentView('system');

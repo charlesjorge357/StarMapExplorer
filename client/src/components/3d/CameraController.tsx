@@ -159,16 +159,16 @@ export function CameraController({
     // Update store with current position
     setPosition(camera.position.clone());
     
+    // Log controls for debugging
+    const activeControls = Object.entries(controls)
+      .filter(([_, active]) => active)
+      .map(([key, _]) => key);
+    
     // Save position for navigation if callback provided
     if (onPositionSave && activeControls.length === 0) {
       // Only save when not actively moving to avoid constant updates
       onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
     }
-    
-    // Log controls for debugging
-    const activeControls = Object.entries(controls)
-      .filter(([_, active]) => active)
-      .map(([key, _]) => key);
     
     if (activeControls.length > 0) {
       console.log("Active controls:", activeControls);
