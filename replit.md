@@ -106,6 +106,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 ## Changelog
 - June 22, 2025: Initial setup
 - June 22, 2025: Completed 3D Universe Mapper with WebGL rendering, three-scope navigation (galactic/system/planetary), procedural generation, and WASD+mouse controls. Fixed JavaScript errors and confirmed 3D rendering works properly.
+- June 22, 2025: Added mode selection screen to delay 3D generation until user chooses sandbox/lore mode. Simplified UI to prevent runtime errors.
 
 ## User Preferences
 

@@ -1,95 +1,61 @@
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect } from "react";
-import { KeyboardControls } from "@react-three/drei";
-import { useUniverse } from "./lib/stores/useUniverse";
-import { useCamera } from "./lib/stores/useCamera";
-import "@fontsource/inter";
+import { useEffect, useState } from "react";
 
-// Import core 3D components only
-import { GalacticView } from "./components/3d/GalacticView";
-import { SystemView } from "./components/3d/SystemView";
-import { PlanetaryView } from "./components/3d/PlanetaryView";
-import { CameraController } from "./components/3d/CameraController";
-import { Lights } from "./components/3d/Lights";
-
-// Define control keys
-const controls = [
-  { name: "forward", keys: ["KeyW", "ArrowUp"] },
-  { name: "backward", keys: ["KeyS", "ArrowDown"] },
-  { name: "leftward", keys: ["KeyA", "ArrowLeft"] },
-  { name: "rightward", keys: ["KeyD", "ArrowRight"] },
-  { name: "up", keys: ["KeyQ"] },
-  { name: "down", keys: ["KeyE"] },
-  { name: "boost", keys: ["ShiftLeft", "ShiftRight"] },
-];
+function MinimalUniverse() {
+  return (
+    <mesh>
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshStandardMaterial color="yellow" />
+    </mesh>
+  );
+}
 
 function App() {
-  const { currentScope, initialize } = useUniverse();
-  const { isTransitioning } = useCamera();
+  const [showSelector, setShowSelector] = useState(true);
 
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
+  const handleStart = () => {
+    setShowSelector(false);
+  };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      <KeyboardControls map={controls}>
-        <Canvas
-          shadows
-          camera={{
-            position: [0, 0, 10],
-            fov: 75,
-            near: 0.1,
-            far: 100000
-          }}
-          gl={{
-            antialias: true,
-            powerPreference: "high-performance"
-          }}
-        >
-          <color attach="background" args={["#000011"]} />
-          
-          <Lights />
-          
-          <Suspense fallback={null}>
-            <CameraController />
-            
-            {currentScope === 'galactic' && <GalacticView />}
-            {currentScope === 'system' && <SystemView />}
-            {currentScope === 'planetary' && <PlanetaryView />}
-          </Suspense>
-        </Canvas>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <Canvas camera={{ position: [0, 0, 5] }}>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 5]} intensity={1} />
+        {!showSelector && <MinimalUniverse />}
+      </Canvas>
 
-        {/* Minimal UI overlay */}
+      {showSelector && (
         <div style={{
           position: 'absolute',
-          top: 10,
-          left: 10,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'black',
           color: 'white',
-          background: 'rgba(0,0,0,0.7)',
-          padding: '10px',
-          borderRadius: '5px',
-          pointerEvents: 'none',
-          zIndex: 10
+          padding: '40px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          zIndex: 100
         }}>
-          3D Universe Mapper - Current Scope: {currentScope || 'loading'}
+          <h1>3D Universe Mapper</h1>
+          <button 
+            onClick={handleStart}
+            style={{
+              background: 'blue',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              marginTop: '20px'
+            }}
+          >
+            Start Sandbox Mode
+          </button>
         </div>
-        
-        {isTransitioning && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: 'white',
-            fontSize: '24px',
-            pointerEvents: 'none',
-            zIndex: 20
-          }}>
-            Transitioning...
-          </div>
-        )}
-      </KeyboardControls>
+      )}
     </div>
   );
 }
