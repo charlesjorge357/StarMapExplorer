@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
+import { CameraController } from "./components/3d/CameraController";
 
 // Define control keys
 const controls = [
@@ -34,7 +35,12 @@ function App() {
         <Canvas camera={{ position: [0, 0, 5] }}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 5]} intensity={1} />
-          {!showSelector && <MinimalUniverse />}
+          {!showSelector && (
+            <>
+              <CameraController />
+              <MinimalUniverse />
+            </>
+          )}
         </Canvas>
       </KeyboardControls>
 
