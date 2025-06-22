@@ -203,12 +203,7 @@ function App() {
         setCurrentView('system');
         setSelectedStar(null); // Clear selection when transitioning
         
-        // Position camera facing the central star (flipped 180 degrees on z-axis)
-        setTimeout(() => {
-          camera.position.set(-30, 10, -30);
-          camera.lookAt(0, 0, 0);
-          camera.updateProjectionMatrix();
-        }, 100);
+        // Camera positioning will be handled by CameraController
       }
       
       if (event.key === 'Backspace' && currentView === 'system') {

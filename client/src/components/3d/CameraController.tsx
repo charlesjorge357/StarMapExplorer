@@ -75,11 +75,16 @@ export function CameraController({
 
   // Restore saved position when provided
   useEffect(() => {
-    if (savedPosition) {
+    if (savedPosition && currentScope === 'galactic') {
       camera.position.set(savedPosition[0], savedPosition[1], savedPosition[2]);
       console.log('Restored camera position:', savedPosition);
+    } else if (currentScope === 'system') {
+      // System view camera positioned to face the star (flipped z-axis)
+      camera.position.set(-30, 10, -30);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
     }
-  }, [savedPosition, camera]);
+  }, [savedPosition, camera, currentScope]);
 
   // Handle keyboard movement
   useFrame((state, delta) => {
