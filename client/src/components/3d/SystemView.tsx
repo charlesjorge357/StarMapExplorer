@@ -214,7 +214,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           }
         }}
       >
-        <sphereGeometry args={[Math.sqrt(star.radius) * 2 + 1, 32, 32]} />
+        <sphereGeometry args={[Math.log(star.radius + 1) * 3 + 2, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
@@ -230,7 +230,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       {/* Star selection ring */}
       {selectedStar && (
         <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[Math.sqrt(star.radius) * 2 + 1.5, 16, 16]} />
+          <sphereGeometry args={[Math.log(star.radius + 1) * 3 + 3.5, 16, 16]} />
           <meshBasicMaterial 
             color="#ffffff"
             transparent
@@ -242,7 +242,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
       {/* Star glow effect - scaled with star size */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[Math.sqrt(star.radius) * 3 + 2, 16, 16]} />
+        <sphereGeometry args={[Math.log(star.radius + 1) * 4 + 3, 16, 16]} />
         <meshBasicMaterial 
           color={getStarColor(star.spectralClass)}
           transparent
