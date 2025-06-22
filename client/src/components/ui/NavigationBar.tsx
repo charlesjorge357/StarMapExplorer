@@ -74,21 +74,21 @@ export function NavigationBar() {
       
       {/* Breadcrumb Navigation */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {breadcrumb.map((crumb, index) => (
+        {breadcrumb?.map((crumb, index) => (
           <React.Fragment key={index}>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => jumpToScope(crumb.scope, crumb.id)}
+              onClick={() => jumpToScope(crumb?.scope, crumb?.id)}
               style={{ color: 'white' }}
             >
-              {crumb.name}
+              {crumb?.name || '---'}
             </Button>
             {index < breadcrumb.length - 1 && (
               <span style={{ color: '#666' }}>→</span>
             )}
           </React.Fragment>
-        ))}
+        )) || null}
       </div>
       
       <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>

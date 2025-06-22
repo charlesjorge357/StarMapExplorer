@@ -43,9 +43,9 @@ export function ObjectPanel() {
       border: '1px solid rgba(255, 255, 255, 0.2)'
     }}>
       <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>
-        {currentScope === 'galactic' && selectedStar && selectedStar.name}
-        {currentScope === 'system' && selectedPlanet && selectedPlanet.name}
-        {currentScope === 'planetary' && selectedPlanet && selectedPlanet.name}
+        {currentScope === 'galactic' && (selectedStar?.name || '---')}
+        {currentScope === 'system' && (selectedPlanet?.name || '---')}
+        {currentScope === 'planetary' && (selectedPlanet?.name || '---')}
       </div>
       
       {/* Star Information */}
@@ -55,11 +55,11 @@ export function ObjectPanel() {
             Star Information
           </div>
           <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-            <div>Class: {selectedStar.spectralClass}</div>
-            <div>Mass: {selectedStar.mass.toFixed(2)} solar masses</div>
-            <div>Temperature: {Math.round(selectedStar.temperature)}K</div>
-            <div>Age: {selectedStar.age.toFixed(1)} billion years</div>
-            <div>Planets: {selectedStar.planetCount}</div>
+            <div>Class: {selectedStar?.spectralClass || '---'}</div>
+            <div>Mass: {selectedStar?.mass ? selectedStar.mass.toFixed(2) + ' solar masses' : '---'}</div>
+            <div>Temperature: {selectedStar?.temperature ? Math.round(selectedStar.temperature) + 'K' : '---'}</div>
+            <div>Age: {selectedStar?.age ? selectedStar.age.toFixed(1) + ' billion years' : '---'}</div>
+            <div>Planets: {selectedStar?.planetCount ?? '---'}</div>
           </div>
           
           {currentScope === 'galactic' && (
@@ -81,12 +81,12 @@ export function ObjectPanel() {
             Planet Information
           </div>
           <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-            <div>Type: {selectedPlanet.type.replace('_', ' ')}</div>
-            <div>Radius: {selectedPlanet.radius.toFixed(2)} Earth radii</div>
-            <div>Mass: {selectedPlanet.mass.toFixed(2)} Earth masses</div>
-            <div>Temperature: {Math.round(selectedPlanet.temperature)}K</div>
-            <div>Moons: {selectedPlanet.moons.length}</div>
-            {selectedPlanet.atmosphere.length > 0 && (
+            <div>Type: {selectedPlanet?.type?.replace('_', ' ') || '---'}</div>
+            <div>Radius: {selectedPlanet?.radius ? selectedPlanet.radius.toFixed(2) + ' Earth radii' : '---'}</div>
+            <div>Mass: {selectedPlanet?.mass ? selectedPlanet.mass.toFixed(2) + ' Earth masses' : '---'}</div>
+            <div>Temperature: {selectedPlanet?.temperature ? Math.round(selectedPlanet.temperature) + 'K' : '---'}</div>
+            <div>Moons: {selectedPlanet?.moons?.length ?? '---'}</div>
+            {selectedPlanet?.atmosphere?.length > 0 && (
               <div>Atmosphere: {selectedPlanet.atmosphere.join(', ')}</div>
             )}
           </div>
@@ -110,8 +110,8 @@ export function ObjectPanel() {
             System Overview
           </div>
           <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-            <div>Planets: {selectedSystem.planets.length}</div>
-            <div>Asteroid Belts: {selectedSystem.asteroidBelts.length}</div>
+            <div>Planets: {selectedSystem?.planets?.length ?? '---'}</div>
+            <div>Asteroid Belts: {selectedSystem?.asteroidBelts?.length ?? '---'}</div>
           </div>
         </div>
       )}
