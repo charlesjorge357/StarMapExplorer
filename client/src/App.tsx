@@ -1,5 +1,16 @@
 import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
+import { KeyboardControls } from "@react-three/drei";
+
+// Define control keys
+const controls = [
+  { name: "forward", keys: ["KeyW", "ArrowUp"] },
+  { name: "backward", keys: ["KeyS", "ArrowDown"] },
+  { name: "leftward", keys: ["KeyA", "ArrowLeft"] },
+  { name: "rightward", keys: ["KeyD", "ArrowRight"] },
+  { name: "up", keys: ["KeyQ"] },
+  { name: "down", keys: ["KeyE"] },
+];
 
 function MinimalUniverse() {
   return (
@@ -19,11 +30,13 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <Canvas camera={{ position: [0, 0, 5] }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        {!showSelector && <MinimalUniverse />}
-      </Canvas>
+      <KeyboardControls map={controls}>
+        <Canvas camera={{ position: [0, 0, 5] }}>
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[10, 10, 5]} intensity={1} />
+          {!showSelector && <MinimalUniverse />}
+        </Canvas>
+      </KeyboardControls>
 
       {showSelector && (
         <div style={{
