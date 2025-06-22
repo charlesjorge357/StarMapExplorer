@@ -179,14 +179,9 @@ export function CameraController({
       .filter(([_, active]) => active)
       .map(([key, _]) => key);
     
-    // Save position for navigation if callback provided
-    if (onPositionSave && activeControls.length === 0) {
-      // Only save when not actively moving to avoid constant updates
+    // Save position for navigation if callback provided (only in galactic view)
+    if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
       onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
-    }
-    
-    if (activeControls.length > 0) {
-      console.log("Active controls:", activeControls);
     }
   });
 

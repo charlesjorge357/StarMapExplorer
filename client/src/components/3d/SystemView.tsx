@@ -16,25 +16,20 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
   const angleRef = useRef(initialAngle);
   
   useFrame((state, delta) => {
-    if (orbitGroupRef.current) {
-      // Update orbital angle based on orbital speed
-      angleRef.current += planet.orbitSpeed * delta;
-      
-      // Calculate new position with orbital inclination
-      const inclination = planet.inclination || 0;
-      const x = Math.cos(angleRef.current) * planet.orbitRadius * 10;
-      const z = Math.sin(angleRef.current) * planet.orbitRadius * 10;
-      const y = Math.sin(inclination) * planet.orbitRadius * 2 + 
-                Math.sin(angleRef.current) * Math.sin(inclination) * planet.orbitRadius * 1;
-      
-      // Update planet position
-      if (planetRef.current) {
-        planetRef.current.position.set(x, y, z);
-      }
-    }
+    // Update orbital angle based on orbital speed (independent of camera)
+    angleRef.current += planet.orbitSpeed * delta;
     
-    // Rotate planet on its axis
+    // Calculate new position with orbital inclination (fixed orbital mechanics)
+    const inclination = planet.inclination || 0;
+    const x = Math.cos(angleRef.current) * planet.orbitRadius * 10;
+    const z = Math.sin(angleRef.current) * planet.orbitRadius * 10;
+    const y = Math.sin(inclination) * planet.orbitRadius * 2 + 
+              Math.sin(angleRef.current) * Math.sin(inclination) * planet.orbitRadius * 1;
+    
+    // Update planet position directly (not via group)
     if (planetRef.current) {
+      planetRef.current.position.set(x, y, z);
+      // Rotate planet on its axis
       planetRef.current.rotation.y += planet.rotationSpeed * delta;
     }
   });
