@@ -30,6 +30,20 @@ function getPlanetTexture(type: string, planetTextures: any): any {
   return textures;
 }
 
+// Helper function to get texture for a planet - moved to top level
+function getPlanetTextureForMaterial(planetType: string, planetTextures: any) {
+  const textures = planetTextures[planetType as keyof typeof planetTextures];
+  if (!textures) return undefined;
+  
+  // Handle array of textures (random selection)
+  if (Array.isArray(textures)) {
+    return textures[Math.floor(Math.random() * textures.length)];
+  }
+  
+  // Single texture
+  return textures;
+}
+
 function getPlanetGlow(type: string): string {
   const glows = {
     gas_giant: '#FF5722',
@@ -153,7 +167,7 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={getPlanetTextureForMaterial(planet.type)}
+          map={getPlanetTextureForMaterial(planet.type, planetTextures)}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
@@ -192,20 +206,6 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     nuclear_world: null, // Ready for irradiated world textures
     ocean_world: null, // Ready for water world textures
     dead_world: null // Ready for barren world textures
-  };
-
-  // Helper function to get texture for a planet
-  const getPlanetTextureForMaterial = (planetType: string) => {
-    const textures = planetTextures[planetType as keyof typeof planetTextures];
-    if (!textures) return undefined;
-    
-    // Handle array of textures (random selection)
-    if (Array.isArray(textures)) {
-      return textures[Math.floor(Math.random() * textures.length)];
-    }
-    
-    // Single texture
-    return textures;
   };
 
   // Use planets from the cached system
