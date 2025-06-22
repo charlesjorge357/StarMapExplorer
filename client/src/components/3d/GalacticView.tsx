@@ -129,48 +129,38 @@ export function GalacticView() {
 
   if (stars.length === 0) {
     return (
-      <Text
-        position={[0, 0, 0]}
-        fontSize={2}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Loading Galaxy...
-      </Text>
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[2, 2, 2]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
     );
   }
 
   return (
     <group>
-      {/* Background starfield */}
-      <points geometry={starfield}>
-        <pointsMaterial size={0.5} vertexColors transparent opacity={0.6} />
-      </points>
-      
-      {/* Main stars */}
-      {stars.map((star) => (
-        <StarMesh
-          key={star.id}
-          star={star}
-          onClick={handleStarClick}
-          isSelected={selectedStar?.id === star.id}
-        />
-      ))}
+      {/* Test cube to verify 3D rendering */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[5, 5, 5]} />
+        <meshBasicMaterial color="blue" />
+      </mesh>
       
       {/* Grid helper for reference */}
-      <gridHelper args={[1000, 50]} position={[0, -500, 0]} />
+      <gridHelper args={[100, 10]} position={[0, -10, 0]} />
       
-      {/* Reference text */}
-      <Text
-        position={[0, 400, 0]}
-        fontSize={10}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Galactic View - Click on stars to explore
-      </Text>
+      {/* Simple stars */}
+      {stars.slice(0, 50).map((star, index) => (
+        <mesh 
+          key={star.id} 
+          position={[star.position[0] * 0.1, star.position[1] * 0.1, star.position[2] * 0.1]}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStarClick(star);
+          }}
+        >
+          <sphereGeometry args={[0.5, 8, 6]} />
+          <meshBasicMaterial color="yellow" />
+        </mesh>
+      ))}
     </group>
   );
 }

@@ -39,17 +39,13 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       <KeyboardControls map={controls}>
         <Canvas
-          shadows
           camera={{
-            position: [0, 0, 10],
+            position: [0, 5, 20],
             fov: 75,
             near: 0.1,
-            far: 100000
+            far: 1000
           }}
-          gl={{
-            antialias: true,
-            powerPreference: "high-performance"
-          }}
+          style={{ background: '#000011' }}
         >
           <color attach="background" args={["#000011"]} />
           
@@ -76,7 +72,8 @@ function App() {
         }}>
           <NavigationBar />
           <ObjectPanel />
-          {mode === 'lore' && <AdminPanel />}
+          {/* Temporarily disable AdminPanel to fix rendering issues */}
+          {/* {mode === 'lore' && <AdminPanel />} */}
           
           {isTransitioning && (
             <div style={{
