@@ -139,10 +139,10 @@ function App() {
     setShowSelector(false);
   };
 
-  // Handle escape key to toggle mouse mode
+  // Handle Tab key to toggle mouse mode (avoids Chrome escape conflicts)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Tab') {
         event.preventDefault();
         event.stopPropagation();
         
@@ -154,7 +154,6 @@ function App() {
       }
     };
 
-    // Use capture phase to prevent default browser behavior
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, []);
@@ -191,7 +190,7 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 Galactic View • {100} Stars {mouseMode ? '• Mouse Mode (ESC for Navigation)' : '• Navigation Mode (ESC for Mouse)'}
+          📍 Galactic View • {100} Stars {mouseMode ? '• Mouse Mode (TAB for Navigation)' : '• Navigation Mode (TAB for Mouse)'}
         </div>
       )}
 
