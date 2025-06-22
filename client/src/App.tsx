@@ -133,7 +133,7 @@ function StarField({ selectedStar, setSelectedStar }: {
 function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
-  const [mouseMode, setMouseMode] = useState(false);
+  const [mouseMode, setMouseMode] = useState(true);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -143,6 +143,9 @@ function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        
         // Exit pointer lock if active
         if (document.pointerLockElement) {
           document.exitPointerLock();
@@ -151,8 +154,9 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase to prevent default browser behavior
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, []);
 
   return (
@@ -187,7 +191,7 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 Galactic View • {100} Stars {mouseMode && '• Mouse Mode (ESC to toggle)'}
+          📍 Galactic View • {100} Stars {mouseMode ? '• Mouse Mode (ESC for Navigation)' : '• Navigation Mode (ESC for Mouse)'}
         </div>
       )}
 
