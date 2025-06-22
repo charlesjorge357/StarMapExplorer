@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { StarGenerator } from "./lib/universe/StarGenerator";
-import { Star } from "../shared/schema";
+
+// Simple star type to avoid import issues
+interface SimpleStar {
+  id: string;
+  position: [number, number, number];
+  radius: number;
+  spectralClass: string;
+}
 
 // Define control keys
 const controls = [
@@ -17,11 +24,11 @@ const controls = [
 ];
 
 function StarField() {
-  const [stars, setStars] = useState<Star[]>([]);
+  const [stars, setStars] = useState<SimpleStar[]>([]);
 
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 500); // More stars
+    const generatedStars = StarGenerator.generateStars(12345, 50); // Fewer stars to avoid errors
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
@@ -30,11 +37,11 @@ function StarField() {
     <group>
       {stars.map((star) => (
         <mesh key={star.id} position={star.position}>
-          <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 16, 16]} />
-          <meshBasicMaterial 
-            color={StarGenerator.getStarColor(star.spectralClass)} 
+          <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
+          <meshStandardMaterial 
+            color={StarGenerator.getStarColor(star.spectralClass)}
             emissive={StarGenerator.getStarColor(star.spectralClass)}
-            emissiveIntensity={0.5}
+            emissiveIntensity={0.3}
           />
         </mesh>
       ))}
