@@ -147,6 +147,26 @@ function App() {
         </Canvas>
       </KeyboardControls>
 
+      {/* Current Scope Indicator */}
+      {!showSelector && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          background: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          pointerEvents: 'none',
+          zIndex: 10,
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          📍 Galactic View • {100} Stars
+        </div>
+      )}
+
       {/* Star Information Panel */}
       {!showSelector && selectedStar && (
         <div style={{
