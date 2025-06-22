@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 
 // Helper functions for planet materials
@@ -107,6 +106,19 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
 export function SystemView({ system }: SystemViewProps) {
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [selectedStar, setSelectedStar] = useState<boolean>(false);
+
+  // Make selection state available globally for main App UI
+  (window as any).systemViewState = {
+    selectedPlanet,
+    selectedStar,
+    star: system.star || { 
+      radius: 1, 
+      spectralClass: 'G', 
+      temperature: 5778,
+      name: 'Central Star',
+      mass: 1
+    }
+  };
 
 
 
@@ -243,52 +255,7 @@ export function SystemView({ system }: SystemViewProps) {
         return <PlanetWithSelection key={planet.id} />;
       })}
 
-      {/* Information Panel positioned relative to camera */}
-      {(selectedPlanet || selectedStar) && (
-        <Html 
-          position={[0, 0, 0]}
-          style={{ 
-            pointerEvents: 'none',
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            transform: 'none'
-          }}
-          center={false}
-        >
-          <div className="bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-            {selectedStar ? (
-              <div>
-                <h3 className="text-lg font-bold text-blue-300">{star.name}</h3>
-                <p className="text-sm text-gray-300 mb-2">Central Star</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-blue-200">Spectral Class:</span> {star.spectralClass}</p>
-                  <p><span className="text-blue-200">Radius:</span> {star.radius.toFixed(2)} R☉</p>
-                  <p><span className="text-blue-200">Temperature:</span> {star.temperature?.toFixed(0)} K</p>
-                  <p><span className="text-blue-200">Mass:</span> {star.mass?.toFixed(2)} M☉</p>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <h3 className="text-lg font-bold text-green-300">{selectedPlanet.name}</h3>
-                <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-green-200">Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
-                  <p><span className="text-green-200">Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                  <p><span className="text-green-200">Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
-                  <p><span className="text-green-200">Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
-                  {selectedPlanet.atmosphere.length > 0 && (
-                    <div>
-                      <p className="text-green-200">Atmosphere:</p>
-                      <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </Html>
-      )}
+
 
     </group>
   );
