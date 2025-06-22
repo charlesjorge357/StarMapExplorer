@@ -200,17 +200,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   const neptuneTexture = useTexture('/textures/neptune.jpg');
   const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const venusTexture = useTexture('/textures/venus.jpg');
+  const acidicTexture = useTexture('/textures/acidic_world.jpg');
+  const nuclearTexture = useTexture('/textures/nuclear_world.jpg');
 
   // Set texture transparency for color blending
   React.useEffect(() => {
-    [uranusTexture, neptuneTexture, jupiterTexture, venusTexture].forEach(texture => {
+    [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture].forEach(texture => {
       if (texture) {
         texture.format = THREE.RGBAFormat;
         texture.transparent = true;
         texture.opacity = 0.7; // Semi-transparent to let base color show through
       }
     });
-  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture]);
+  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture]);
 
   // Planet texture mapping - ready for expansion
   const planetTextures = {
@@ -218,8 +220,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     frost_giant: [uranusTexture, neptuneTexture],
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
-    acidic_world: null, // Ready for Venus-like textures
-    nuclear_world: null, // Ready for irradiated world textures
+    acidic_world: acidicTexture, // Acidic surface texture
+    nuclear_world: nuclearTexture, // Nuclear/irradiated surface texture
     ocean_world: null, // Ready for water world textures
     dead_world: null // Ready for barren world textures
   };
