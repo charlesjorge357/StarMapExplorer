@@ -154,8 +154,20 @@ function App() {
       }
     };
 
+    // Detect when pointer lock is lost (escape key pressed)
+    const handlePointerLockChange = () => {
+      if (!document.pointerLockElement) {
+        // Pointer lock was lost, switch to mouse mode
+        setMouseMode(true);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+    };
   }, []);
 
   return (
