@@ -74,7 +74,7 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
   
   return (
     <mesh ref={ringRef}>
-      <sphereGeometry args={[planet.radius * 20 + 0.5, 16, 16]} />
+      <sphereGeometry args={[planet.radius * 2 + 0.2, 16, 16]} />
       <meshBasicMaterial 
         color="#ffffff"
         transparent
@@ -133,7 +133,7 @@ function PlanetMesh({
           }
         }}
       >
-        <sphereGeometry args={[planet.radius * 20, 16, 16]} />
+        <sphereGeometry args={[planet.radius * 2, 16, 16]} />
         <meshStandardMaterial 
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
