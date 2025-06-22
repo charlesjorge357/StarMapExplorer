@@ -24,7 +24,8 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
     if (meshRef.current) {
       // Gentle pulsing animation
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      meshRef.current.scale.setScalar(scale * pulse * (isSelected ? 1.5 : 1));
+      const finalScale = scale * pulse * (isSelected ? 1.5 : 1);
+      meshRef.current.scale.set(finalScale, finalScale, finalScale);
     }
   });
 
