@@ -169,7 +169,7 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={getPlanetTextureForMaterial(planet.type, planetTextures)}
+          map={getPlanetTexture(planet.type, planetTextures)}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
@@ -186,7 +186,7 @@ function PlanetMesh({
 }
 
 export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
-  const [selectedStar, setSelectedStar] = useState<boolean>(false);
+  const [selectedStar, setSelectedStar] = useState<any>(null);
 
   const star = system.star || {
     radius: 1,
@@ -280,7 +280,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Make star selection available globally for UI
   React.useEffect(() => {
-    (window as any).systemStarSelected = selectedStar || null;
+    (window as any).systemStarSelected = selectedStar;
   }, [selectedStar]);
 
   // Handle star click
@@ -288,7 +288,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     if (mouseMode) {
       event.stopPropagation();
       console.log(`Selected central star: ${star.name}`);
-      setSelectedStar(true);
+      setSelectedStar(star);
       onPlanetClick(null); // Deselect any planet
     }
   };
