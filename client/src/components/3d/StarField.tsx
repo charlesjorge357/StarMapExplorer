@@ -11,6 +11,7 @@ interface SimpleStar {
   spectralClass: string;
   mass?: number;
   temperature?: number;
+  luminosity?: number;
 }
 
 // Selection ring component to match galactic view style
@@ -54,8 +55,8 @@ function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
 
   // Get star color based on spectral class
   const getStarColor = (spectralClass: string, luminosity?: number): string => {
-    // Override color for red dwarfs (low luminosity stars)
-    if (luminosity !== undefined && luminosity < 2) {
+    // Override color for red dwarfs (very low luminosity stars - only the dimmest)
+    if (luminosity !== undefined && luminosity < 0.1) {
       return '#ff4444'; // Bright red for red dwarfs
     }
     

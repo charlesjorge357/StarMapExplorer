@@ -20,6 +20,7 @@ interface SimpleStar {
   spectralClass: string;
   mass?: number;
   temperature?: number;
+  luminosity?: number;
 }
 
 // Define control keys
