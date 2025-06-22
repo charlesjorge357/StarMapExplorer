@@ -73,7 +73,7 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
   
   return (
     <mesh ref={ringRef}>
-      <sphereGeometry args={[planet.radius + 0.3, 16, 16]} />
+      <sphereGeometry args={[planet.radius * 20 + 0.5, 16, 16]} />
       <meshBasicMaterial 
         color="#ffffff"
         transparent
@@ -167,9 +167,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   return (
     <group onClick={handleBackgroundClick}>
-      {/* Central Star */}
+      {/* Central Star - doubled size from galactic view for system scale */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[star.radius * 2, 32, 32]} />
+        <sphereGeometry args={[star.radius * 4, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
@@ -178,9 +178,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
         />
       </mesh>
 
-      {/* Star glow effect */}
+      {/* Star glow effect - scaled with star size */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[star.radius * 3, 16, 16]} />
+        <sphereGeometry args={[star.radius * 6, 16, 16]} />
         <meshBasicMaterial 
           color={getStarColor(star.spectralClass)}
           transparent
