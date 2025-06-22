@@ -87,7 +87,7 @@ export function ObjectPanel() {
             <div>Temperature: {selectedPlanet?.temperature ? Math.round(selectedPlanet.temperature) + 'K' : '---'}</div>
             <div>Moons: {selectedPlanet?.moons?.length ?? '---'}</div>
             {selectedPlanet?.atmosphere?.length > 0 && (
-              <div>Atmosphere: {selectedPlanet.atmosphere.join(', ')}</div>
+              <div>Atmosphere: {selectedPlanet?.atmosphere?.join(', ') || '---'}</div>
             )}
           </div>
           
