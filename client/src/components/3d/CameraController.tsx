@@ -121,45 +121,54 @@ export function CameraController({
     forward.applyQuaternion(camera.quaternion);
     right.applyQuaternion(camera.quaternion);
 
-    // Reset target velocity
-    targetVelocityRef.current.set(0, 0, 0);
-
-    // Apply movement inputs with proper vector scaling
-    if (controls.forward) {
-      const forwardVec = forward.clone().multiplyScalar(speed);
-      targetVelocityRef.current.add(forwardVec);
-    }
-    if (controls.backward) {
-      const backwardVec = forward.clone().multiplyScalar(-speed);
-      targetVelocityRef.current.add(backwardVec);
-    }
-    if (controls.leftward) {
-      const leftVec = right.clone().multiplyScalar(-speed);
-      targetVelocityRef.current.add(leftVec);
-    }
-    if (controls.rightward) {
-      const rightVec = right.clone().multiplyScalar(speed);
-      targetVelocityRef.current.add(rightVec);
-    }
-    if (controls.up) {
-      const upVec = worldUp.clone().multiplyScalar(speed);
-      targetVelocityRef.current.add(upVec);
-    }
-    if (controls.down) {
-      const downVec = worldUp.clone().multiplyScalar(-speed);
-      targetVelocityRef.current.add(downVec);
-    }
-
-    // Smooth velocity interpolation with deadzone to prevent vibration
-    const dampingFactor = 0.15;
-    velocityRef.current.lerp(targetVelocityRef.current, dampingFactor);
+    // Check if any movement keys are pressed
+    const isMoving = controls.forward || controls.backward || controls.leftward || 
+                    controls.rightward || controls.up || controls.down;
     
-    // Apply velocity with deadzone to prevent micro-vibrations
-    const velocityMagnitude = velocityRef.current.length();
-    if (velocityMagnitude > 0.001) {
-      camera.position.add(velocityRef.current.clone().multiplyScalar(delta));
+    if (isMoving) {
+      // Reset target velocity and apply movement inputs
+      targetVelocityRef.current.set(0, 0, 0);
+      
+      if (controls.forward) {
+        const forwardVec = forward.clone().multiplyScalar(speed);
+        targetVelocityRef.current.add(forwardVec);
+      }
+      if (controls.backward) {
+        const backwardVec = forward.clone().multiplyScalar(-speed);
+        targetVelocityRef.current.add(backwardVec);
+      }
+      if (controls.leftward) {
+        const leftVec = right.clone().multiplyScalar(-speed);
+        targetVelocityRef.current.add(leftVec);
+      }
+      if (controls.rightward) {
+        const rightVec = right.clone().multiplyScalar(speed);
+        targetVelocityRef.current.add(rightVec);
+      }
+      if (controls.up) {
+        const upVec = worldUp.clone().multiplyScalar(speed);
+        targetVelocityRef.current.add(upVec);
+      }
+      if (controls.down) {
+        const downVec = worldUp.clone().multiplyScalar(-speed);
+        targetVelocityRef.current.add(downVec);
+      }
+      
+      // Apply target velocity directly when moving
+      velocityRef.current.copy(targetVelocityRef.current);
     } else {
-      velocityRef.current.set(0, 0, 0);
+      // Quickly stop when no input - aggressive damping
+      velocityRef.current.multiplyScalar(0.85);
+      
+      // Complete stop for very small velocities
+      if (velocityRef.current.length() < 0.01) {
+        velocityRef.current.set(0, 0, 0);
+      }
+    }
+    
+    // Apply velocity to camera position
+    if (velocityRef.current.length() > 0.001) {
+      camera.position.add(velocityRef.current.clone().multiplyScalar(delta));
     }
     
     // Update store with current position
