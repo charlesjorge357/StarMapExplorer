@@ -409,7 +409,7 @@ function App() {
               {/* Post-processing effects for bloom */}
               <EffectComposer>
                 <Bloom 
-                  intensity={currentView === 'system' ? 2.5 : 1.5}
+                  intensity={currentView === 'system' ? 1.0 : 0.6}
                   luminanceThreshold={0.1}
                   luminanceSmoothing={0.7}
                   height={500}
