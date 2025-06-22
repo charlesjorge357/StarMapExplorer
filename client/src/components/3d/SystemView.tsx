@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import * as THREE from 'three';
 
 // Helper functions for planet materials
 function getPlanetColor(type: string): string {
@@ -172,8 +173,8 @@ function PlanetMesh({
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={true}
-          opacity={0.95}
+          transparent={false}
+          opacity={1.0}
         />
       </mesh>
 
@@ -199,6 +200,17 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   const neptuneTexture = useTexture('/textures/neptune.jpg');
   const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const venusTexture = useTexture('/textures/venus.jpg');
+
+  // Set texture transparency for color blending
+  React.useEffect(() => {
+    [uranusTexture, neptuneTexture, jupiterTexture, venusTexture].forEach(texture => {
+      if (texture) {
+        texture.format = THREE.RGBAFormat;
+        texture.transparent = true;
+        texture.opacity = 0.7; // Semi-transparent to let base color show through
+      }
+    });
+  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture]);
 
   // Planet texture mapping - ready for expansion
   const planetTextures = {
