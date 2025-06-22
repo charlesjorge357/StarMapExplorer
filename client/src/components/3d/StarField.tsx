@@ -98,11 +98,11 @@ function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
         <meshStandardMaterial 
           color="#ffffff"
           emissive="#ffffff"
-          emissiveIntensity={1.5}
+          emissiveIntensity={0.5}
           // Star surface texture with opacity blending
           map={starBumpMap}
           transparent={true}
-          opacity={0.6}
+          opacity={0.8}
         />
       </instancedMesh>
 
