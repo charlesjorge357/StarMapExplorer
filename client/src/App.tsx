@@ -5,11 +5,7 @@ import { useUniverse } from "./lib/stores/useUniverse";
 import { useCamera } from "./lib/stores/useCamera";
 import "@fontsource/inter";
 
-// Import components
-import { UniverseMapper } from "./components/ui/UniverseMapper";
-import { NavigationBar } from "./components/ui/NavigationBar";
-import { ObjectPanel } from "./components/ui/ObjectPanel";
-// import { AdminPanel } from "./components/ui/AdminPanel";
+// Import core 3D components only
 import { GalacticView } from "./components/3d/GalacticView";
 import { SystemView } from "./components/3d/SystemView";
 import { PlanetaryView } from "./components/3d/PlanetaryView";
@@ -28,7 +24,7 @@ const controls = [
 ];
 
 function App() {
-  const { currentScope, mode, initialize } = useUniverse();
+  const { currentScope, initialize } = useUniverse();
   const { isTransitioning } = useCamera();
 
   useEffect(() => {
@@ -64,35 +60,35 @@ function App() {
           </Suspense>
         </Canvas>
 
-        {/* UI Overlay */}
+        {/* Minimal UI overlay */}
         <div style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
+          top: 10,
+          left: 10,
+          color: 'white',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '10px',
+          borderRadius: '5px',
           pointerEvents: 'none',
           zIndex: 10
         }}>
-          <NavigationBar />
-          <ObjectPanel />
-          {/* Temporarily disable AdminPanel to fix rendering issues */}
-          {/* {mode === 'lore' && <AdminPanel />} */}
-          
-          {isTransitioning && (
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: 'white',
-              fontSize: '24px',
-              pointerEvents: 'none'
-            }}>
-              Transitioning...
-            </div>
-          )}
+          3D Universe Mapper - Current Scope: {currentScope || 'loading'}
         </div>
+        
+        {isTransitioning && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: 'white',
+            fontSize: '24px',
+            pointerEvents: 'none',
+            zIndex: 20
+          }}>
+            Transitioning...
+          </div>
+        )}
       </KeyboardControls>
     </div>
   );
