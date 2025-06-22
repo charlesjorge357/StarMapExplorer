@@ -96,7 +96,7 @@ function StarField({ selectedStar, setSelectedStar }: {
               onClick={(e) => handleStarClick(star, e)}
               visible={false}
             >
-              <sphereGeometry args={[star.radius, 8, 8]} />
+              <sphereGeometry args={[star.radius * 1.5, 8, 8]} />
             </mesh>
             
             {/* Visual star */}

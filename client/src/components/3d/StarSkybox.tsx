@@ -74,7 +74,7 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
 
   return (
     <group renderOrder={-1000}>
-      <Points positions={positions} colors={colors}>
+      <Points positions={positions} colors={colors} raycast={() => null}>
         <PointMaterial
           transparent
           size={3.0}
