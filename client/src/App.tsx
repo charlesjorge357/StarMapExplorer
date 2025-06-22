@@ -199,7 +199,7 @@ function App() {
       if (i === 0) {
         orbitRadius = baseSpacing; // First planet starts far from star
       } else {
-        const previousRadius = planets[i - 1].orbitRadius;
+        const previousRadius: number = planets[i - 1].orbitRadius;
         const spacing = 2.0 + Math.random() * 1.0; // 2.0x to 3.0x spacing multiplier - doubled
         orbitRadius = previousRadius * spacing;
       }
@@ -495,7 +495,7 @@ function App() {
           )}
 
           {/* System view - planet information */}
-          {selectedPlanet && currentView === 'system' && (
+          {currentView === 'system' && selectedPlanet && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
               <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
               <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
