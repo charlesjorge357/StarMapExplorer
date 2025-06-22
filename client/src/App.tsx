@@ -4,6 +4,7 @@ import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { StarSkybox } from "./components/3d/StarSkybox";
+import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
