@@ -112,6 +112,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Enhanced galactic navigation with crosshair targeting, Tab-key mode switching (mouse/navigation), larger selection hitboxes scaling to solar radii, and robust escape-key handling to prevent browser conflicts.
 - June 22, 2025: Implemented system view with realistic orbital mechanics, 3D planetary motion, authentic stellar scaling, and procedural planet generation using real astronomical data. Added camera position saving for seamless navigation between galactic and system views.
 - June 22, 2025: Scaled up to 2000-star universe generation with expanded spatial distribution (400-unit radius) for immersive galactic exploration without separate skybox - stars serve as both navigable objects and cosmic background.
+- June 22, 2025: Added bloom post-processing effects with emissive materials for authentic stellar glow. System view features enhanced bloom intensity and scaled starfield background for visual continuity between navigation scopes.
 
 ## User Preferences
 

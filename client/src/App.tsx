@@ -1,6 +1,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useState, useRef } from "react";
 import { KeyboardControls } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { StarSkybox } from "./components/3d/StarSkybox";
@@ -105,11 +106,13 @@ function StarField({
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
             
-            {/* Visual star with gentle pulsing */}
+            {/* Visual star with gentle pulsing and emissive glow */}
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
               <meshBasicMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
+                emissive={StarGenerator.getStarColor(star.spectralClass)}
+                emissiveIntensity={0.5}
               />
             </mesh>
             
@@ -237,6 +240,16 @@ function App() {
                   <SystemView system={currentSystem} />
                 </>
               )}
+              
+              {/* Post-processing effects for bloom */}
+              <EffectComposer>
+                <Bloom 
+                  intensity={currentView === 'system' ? 1.5 : 1.0}
+                  luminanceThreshold={0.2}
+                  luminanceSmoothing={0.9}
+                  height={300}
+                />
+              </EffectComposer>
             </>
           )}
         </Canvas>
