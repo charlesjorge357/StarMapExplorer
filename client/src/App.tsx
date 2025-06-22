@@ -41,7 +41,7 @@ function SelectionRing({ star }: { star: SimpleStar }) {
 
   return (
     <mesh ref={ringRef} position={star.position}>
-      <ringGeometry args={[1.5, 2, 16]} />
+      <ringGeometry args={[star.radius * 1.5, star.radius * 2, 16]} />
       <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
     </mesh>
   );
@@ -91,7 +91,7 @@ function StarField({ selectedStar, setSelectedStar }: {
               position={star.position}
               onClick={(e) => handleStarClick(star, e)}
             >
-              <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
+              <sphereGeometry args={[star.radius, 8, 8]} />
               <meshStandardMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
                 emissive={StarGenerator.getStarColor(star.spectralClass)}
@@ -102,7 +102,7 @@ function StarField({ selectedStar, setSelectedStar }: {
             {/* Selection overlay */}
             {isSelected && (
               <mesh position={star.position}>
-                <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5) + 0.1, 8, 8]} />
+                <sphereGeometry args={[star.radius + 0.1, 8, 8]} />
                 <meshBasicMaterial 
                   color="#ffffff"
                   transparent
