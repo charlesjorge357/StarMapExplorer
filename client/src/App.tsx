@@ -143,6 +143,10 @@ function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Exit pointer lock if active
+        if (document.pointerLockElement) {
+          document.exitPointerLock();
+        }
         setMouseMode(prev => !prev);
       }
     };
@@ -160,7 +164,7 @@ function App() {
           <directionalLight position={[10, 10, 5]} intensity={0.3} />
           {!showSelector && (
             <>
-              <CameraController />
+              <CameraController mouseMode={mouseMode} />
               <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
             </>
           )}

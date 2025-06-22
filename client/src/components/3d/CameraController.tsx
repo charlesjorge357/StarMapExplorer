@@ -11,7 +11,7 @@ const BOOST_MULTIPLIER_MAX = 80; // 8000% max boost
 const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
-export function CameraController() {
+export function CameraController({ mouseMode = false }: { mouseMode?: boolean }) {
   const { camera, gl } = useThree();
   const { position, target, isTransitioning, setPosition, setTarget } = useCamera();
   const { currentScope } = useUniverse();
