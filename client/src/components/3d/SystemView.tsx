@@ -172,27 +172,72 @@ export function SystemView({ system }: SystemViewProps) {
         </mesh>
       )}
       
-      {/* Planets */}
-      {system.planets.map((planet: any) => (
-        <group key={planet.id}>
-          <PlanetMesh
-            planet={planet}
-            onClick={handlePlanetClick}
-          />
-          {/* Planet selection ring */}
-          {selectedPlanet?.id === planet.id && (
-            <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[planet.radius * 0.1 + 0.2, 16, 16]} />
-              <meshBasicMaterial 
-                color="#ffffff"
-                transparent
-                opacity={0.4}
-                wireframe
-              />
-            </mesh>
-          )}
-        </group>
-      ))}
+      {/* Planets with selection rings */}
+      {system.planets.map((planet: any) => {
+        const PlanetWithSelection = () => {
+          const planetRef = useRef<any>();
+          const selectionRef = useRef<any>();
+          
+          useFrame((state, delta) => {
+            // Sync both planet and selection ring positions
+            const time = state.clock.getElapsedTime() * planet.orbitSpeed * 0.3;
+            const x = Math.cos(time) * planet.orbitRadius * 10;
+            const z = Math.sin(time) * planet.orbitRadius * 10;
+            const y = Math.sin(planet.inclination || 0) * planet.orbitRadius * 2;
+            
+            if (planetRef.current) {
+              planetRef.current.position.set(x, y, z);
+              planetRef.current.rotation.y += planet.rotationSpeed * delta;
+            }
+            if (selectionRef.current && selectedPlanet?.id === planet.id) {
+              selectionRef.current.position.set(x, y, z);
+            }
+          });
+          
+          return (
+            <>
+              <mesh 
+                ref={planetRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlanetClick(planet);
+                }}
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={() => {
+                  document.body.style.cursor = 'auto';
+                }}
+              >
+                <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
+                <meshStandardMaterial 
+                  color={SystemGenerator.getPlanetColor(planet.type)}
+                  emissive={getPlanetEmissive(planet.type)}
+                  emissiveIntensity={getPlanetEmissiveIntensity(planet.type)}
+                  metalness={planet.type === 'nuclear_world' ? 0.8 : 0.1}
+                  roughness={planet.type === 'gas_giant' ? 0.2 : 0.7}
+                />
+              </mesh>
+              
+              {/* Selection ring */}
+              {selectedPlanet?.id === planet.id && (
+                <mesh ref={selectionRef}>
+                  <sphereGeometry args={[planet.radius * 0.1 + 0.3, 16, 16]} />
+                  <meshBasicMaterial 
+                    color="#ffffff"
+                    transparent
+                    opacity={0.4}
+                    wireframe
+                  />
+                </mesh>
+              )}
+            </>
+          );
+        };
+        
+        return <PlanetWithSelection key={planet.id} />;
+      })}
 
       {/* Information Panel */}
       {(selectedPlanet || selectedStar) && (
