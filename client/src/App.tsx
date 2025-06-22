@@ -8,6 +8,8 @@ import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
+import { NavigationBar } from "./components/ui/NavigationBar";
+import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 
