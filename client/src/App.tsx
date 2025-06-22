@@ -209,7 +209,6 @@ function App() {
           <directionalLight position={[10, 10, 5]} intensity={0.3} />
           {!showSelector && (
             <>
-              <StarSkybox count={currentView === 'galactic' ? 9000 : 4500} radius={2000} />
               <CameraController 
                 mouseMode={mouseMode}
                 savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
@@ -221,6 +220,7 @@ function App() {
               {currentView === 'system' && currentSystem && (
                 <SystemView system={currentSystem} />
               )}
+              <StarSkybox count={currentView === 'galactic' ? 9000 : 4500} radius={2000} />
             </>
           )}
         </Canvas>

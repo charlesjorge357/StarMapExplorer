@@ -76,11 +76,13 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
     <Points positions={positions} colors={colors}>
       <PointMaterial
         transparent
-        size={1.5}
+        size={2.0}
         sizeAttenuation={false}
         depthWrite={false}
+        depthTest={false}
         vertexColors
         blending={THREE.AdditiveBlending}
+        renderOrder={-1}
       />
     </Points>
   );
