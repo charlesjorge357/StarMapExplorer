@@ -28,7 +28,7 @@ export function CameraController({ mouseMode = false }: { mouseMode?: boolean })
     const canvas = gl.domElement;
     
     const handleClick = () => {
-      if (!isLockedRef.current) {
+      if (!mouseMode && !isLockedRef.current) {
         canvas.requestPointerLock();
       }
     };
@@ -38,7 +38,7 @@ export function CameraController({ mouseMode = false }: { mouseMode?: boolean })
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!isLockedRef.current || isTransitioning) return;
+      if (mouseMode || !isLockedRef.current || isTransitioning) return;
 
       const { movementX, movementY } = event;
       
@@ -62,7 +62,7 @@ export function CameraController({ mouseMode = false }: { mouseMode?: boolean })
       document.removeEventListener('pointerlockchange', handlePointerLockChange);
       document.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [camera, gl.domElement, isTransitioning]);
+  }, [camera, gl.domElement, isTransitioning, mouseMode]);
 
   // Handle keyboard movement
   useFrame((state, delta) => {
