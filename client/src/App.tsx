@@ -47,9 +47,11 @@ function SelectionRing({ star }: { star: SimpleStar }) {
   );
 }
 
-function StarField() {
+function StarField({ selectedStar, setSelectedStar }: { 
+  selectedStar: SimpleStar | null; 
+  setSelectedStar: (star: SimpleStar | null) => void; 
+}) {
   const [stars, setStars] = useState<SimpleStar[]>([]);
-  const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
 
   useEffect(() => {
     console.log("Generating stars...");
@@ -119,22 +121,34 @@ function StarField() {
   );
 }
 
-function StarFieldWithPanel() {
-  const [stars, setStars] = useState<SimpleStar[]>([]);
+
+
+function App() {
+  const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
 
-  useEffect(() => {
-    console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 50);
-    setStars(generatedStars);
-    console.log(`Generated ${generatedStars.length} stars`);
-  }, []);
+  const handleStart = () => {
+    setShowSelector(false);
+  };
 
   return (
-    <>
-      <StarField />
+    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <KeyboardControls map={controls}>
+        <Canvas camera={{ position: [0, 0, 5] }}>
+          <color attach="background" args={["#000000"]} />
+          <ambientLight intensity={0.1} />
+          <directionalLight position={[10, 10, 5]} intensity={0.3} />
+          {!showSelector && (
+            <>
+              <CameraController />
+              <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
+            </>
+          )}
+        </Canvas>
+      </KeyboardControls>
+
       {/* Star Information Panel */}
-      {selectedStar && (
+      {!showSelector && selectedStar && (
         <div style={{
           position: 'absolute',
           bottom: '20px',
@@ -166,32 +180,6 @@ function StarFieldWithPanel() {
           </div>
         </div>
       )}
-    </>
-  );
-}
-
-function App() {
-  const [showSelector, setShowSelector] = useState(true);
-
-  const handleStart = () => {
-    setShowSelector(false);
-  };
-
-  return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <KeyboardControls map={controls}>
-        <Canvas camera={{ position: [0, 0, 5] }}>
-          <color attach="background" args={["#000000"]} />
-          <ambientLight intensity={0.1} />
-          <directionalLight position={[10, 10, 5]} intensity={0.3} />
-          {!showSelector && (
-            <>
-              <CameraController />
-              <StarField />
-            </>
-          )}
-        </Canvas>
-      </KeyboardControls>
 
       {showSelector && (
         <div style={{
