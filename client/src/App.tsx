@@ -102,7 +102,6 @@ function StarField({
               position={star.position}
               onClick={(e) => handleStarClick(star, e)}
               visible={false}
-              userData={{ clickable: true }}
             >
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
@@ -149,6 +148,7 @@ function App() {
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
   const [stars, setStars] = useState<SimpleStar[]>([]);
+  const [, forceUpdate] = useState({});
 
   // Generate stars when app loads
   useEffect(() => {
@@ -157,6 +157,16 @@ function App() {
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
+
+  // Force re-render when system view state changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (currentView === 'system' && (window as any).systemViewState) {
+        forceUpdate({});
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [currentView]);
 
   const handleStart = () => {
     setShowSelector(false);

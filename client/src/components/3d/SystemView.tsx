@@ -164,7 +164,6 @@ export function SystemView({ system }: SystemViewProps) {
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
         }}
-        userData={{ clickable: true }}
       >
         <sphereGeometry args={[star.radius, 16, 16]} />
         <meshStandardMaterial 
@@ -224,7 +223,6 @@ export function SystemView({ system }: SystemViewProps) {
                 onPointerOut={() => {
                   document.body.style.cursor = 'auto';
                 }}
-                userData={{ clickable: true }}
               >
                 <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
                 <meshStandardMaterial 
