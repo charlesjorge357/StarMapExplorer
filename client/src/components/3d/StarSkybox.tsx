@@ -16,9 +16,9 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
       const theta = Math.random() * Math.PI * 2; // Azimuth
       const phi = Math.acos(1 - 2 * Math.random()); // Inclination (uniform distribution)
       
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
+      const x = 200 * Math.sin(phi) * Math.cos(theta); // Much closer radius
+      const y = 200 * Math.sin(phi) * Math.sin(theta);
+      const z = 200 * Math.cos(phi);
       
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
@@ -73,7 +73,7 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
   // Create individual star meshes for better visibility
   const starMeshes = useMemo(() => {
     const meshes = [];
-    for (let i = 0; i < Math.min(count, 1000); i++) { // Limit for performance
+    for (let i = 0; i < Math.min(count, 500); i++) { // Limit for performance
       const x = positions[i * 3];
       const y = positions[i * 3 + 1];
       const z = positions[i * 3 + 2];
@@ -88,11 +88,10 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
           renderOrder={-1000}
           raycast={() => null}
         >
-          <sphereGeometry args={[0.5, 4, 4]} />
+          <sphereGeometry args={[1.5, 6, 6]} />
           <meshBasicMaterial
             color={new THREE.Color(r, g, b)}
-            transparent
-            opacity={0.8}
+            emissive={new THREE.Color(r * 0.3, g * 0.3, b * 0.3)}
           />
         </mesh>
       );
