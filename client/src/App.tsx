@@ -116,8 +116,8 @@ function StarField({
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
               <meshStandardMaterial 
-                color={StarGenerator.getStarColor(star.spectralClass, star.luminosity)}
-                emissive={StarGenerator.getStarColor(star.spectralClass, star.luminosity)}
+                color={StarGenerator.getStarColor(star.spectralClass)}
+                emissive={StarGenerator.getStarColor(star.spectralClass)}
                 emissiveIntensity={Math.max(0.6, star.radius * 0.4)}
                 // Star surface texture with opacity blending
                 map={starBumpMap}

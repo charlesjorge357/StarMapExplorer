@@ -216,8 +216,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       >
         <sphereGeometry args={[Math.log(star.radius + 1) * 3 + 2, 32, 32]} />
         <meshStandardMaterial 
-          color={getStarColor(star.spectralClass, star.luminosity)}
-          emissive={getStarColor(star.spectralClass, star.luminosity)}
+          color={getStarColor(star.spectralClass)}
+          emissive={getStarColor(star.spectralClass)}
           emissiveIntensity={0.8}
           toneMapped={false}
           // Star surface texture with opacity blending
@@ -244,7 +244,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[Math.log(star.radius + 1) * 4 + 3, 16, 16]} />
         <meshBasicMaterial 
-          color={getStarColor(star.spectralClass, star.luminosity)}
+          color={getStarColor(star.spectralClass)}
           transparent
           opacity={0.1}
         />

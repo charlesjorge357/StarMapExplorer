@@ -111,12 +111,7 @@ export class StarGenerator {
     return stars;
   }
 
-  static getStarColor(spectralClass: string, luminosity?: number): string {
-    // Override color for red dwarfs (very low luminosity stars - only the dimmest)
-    if (luminosity !== undefined && luminosity < 0.05) {
-      return '#ff4444'; // Bright red for red dwarfs
-    }
-    
+  static getStarColor(spectralClass: string): string {
     switch (spectralClass) {
       case 'O': return '#9bb0ff';
       case 'B': return '#aabfff';

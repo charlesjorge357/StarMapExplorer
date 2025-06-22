@@ -54,12 +54,7 @@ function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
   const starBumpMap = useTexture('/textures/star_surface.jpg');
 
   // Get star color based on spectral class
-  const getStarColor = (spectralClass: string, luminosity?: number): string => {
-    // Override color for red dwarfs (very low luminosity stars - only the dimmest)
-    if (luminosity !== undefined && luminosity < 0.05) {
-      return '#ff4444'; // Bright red for red dwarfs
-    }
-    
+  const getStarColor = (spectralClass: string): string => {
     const firstChar = spectralClass.charAt(0).toUpperCase();
     switch (firstChar) {
       case 'O': return '#9bb0ff';
@@ -85,8 +80,8 @@ function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
       
-      // Set color based on spectral class and luminosity
-      const color = new THREE.Color(getStarColor(star.spectralClass, star.luminosity));
+      // Set color based on spectral class
+      const color = new THREE.Color(getStarColor(star.spectralClass));
       meshRef.current.setColorAt(i, color);
     });
     
@@ -130,7 +125,7 @@ function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
           >
             <sphereGeometry args={[star.radius * 0.5, 8, 6]} />
             <meshBasicMaterial 
-              color={getStarColor(star.spectralClass, star.luminosity)}
+              color={getStarColor(star.spectralClass)}
               transparent
               opacity={0}
             />
