@@ -249,7 +249,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Set texture transparency for color blending
   React.useEffect(() => {
-    const textures = [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture];
+    const textures = [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture].filter(Boolean);
     textures.forEach(texture => {
       if (texture && typeof texture === 'object' && texture.format !== undefined) {
         try {
@@ -261,7 +261,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
         }
       }
     });
-  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture]);
+  }, [uranusTexture, neptuneTexture, jupiterTexture, venusTexture, acidicTexture, nuclearTexture].filter(Boolean));
 
   // Planet texture mapping - ready for expansion
   const planetTextures = {
@@ -280,7 +280,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Make star selection available globally for UI
   React.useEffect(() => {
-    (window as any).systemStarSelected = selectedStar;
+    (window as any).systemStarSelected = selectedStar || null;
   }, [selectedStar]);
 
   // Handle star click
