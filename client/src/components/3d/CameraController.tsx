@@ -150,11 +150,17 @@ export function CameraController({
       targetVelocityRef.current.add(downVec);
     }
 
-    // Smooth velocity interpolation
-    velocityRef.current.lerp(targetVelocityRef.current, delta * 10);
+    // Smooth velocity interpolation with deadzone to prevent vibration
+    const dampingFactor = 0.15;
+    velocityRef.current.lerp(targetVelocityRef.current, dampingFactor);
     
-    // Apply velocity to camera position
-    camera.position.add(velocityRef.current.clone().multiplyScalar(delta));
+    // Apply velocity with deadzone to prevent micro-vibrations
+    const velocityMagnitude = velocityRef.current.length();
+    if (velocityMagnitude > 0.001) {
+      camera.position.add(velocityRef.current.clone().multiplyScalar(delta));
+    } else {
+      velocityRef.current.set(0, 0, 0);
+    }
     
     // Update store with current position
     setPosition(camera.position.clone());
