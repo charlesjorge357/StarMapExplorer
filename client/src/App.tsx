@@ -102,6 +102,7 @@ function StarField({
               position={star.position}
               onClick={(e) => handleStarClick(star, e)}
               visible={false}
+              userData={{ clickable: true }}
             >
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>

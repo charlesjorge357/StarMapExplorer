@@ -150,6 +150,7 @@ export function SystemView({ system }: SystemViewProps) {
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
         }}
+        userData={{ clickable: true }}
       >
         <sphereGeometry args={[star.radius, 16, 16]} />
         <meshStandardMaterial 
@@ -209,6 +210,7 @@ export function SystemView({ system }: SystemViewProps) {
                 onPointerOut={() => {
                   document.body.style.cursor = 'auto';
                 }}
+                userData={{ clickable: true }}
               >
                 <sphereGeometry args={[planet.radius * 0.1, 16, 16]} />
                 <meshStandardMaterial 
@@ -220,10 +222,10 @@ export function SystemView({ system }: SystemViewProps) {
                 />
               </mesh>
               
-              {/* Selection ring */}
+              {/* Selection ring - scaled to visual planet size */}
               {selectedPlanet?.id === planet.id && (
                 <mesh ref={selectionRef}>
-                  <sphereGeometry args={[planet.radius * 0.1 + 0.3, 16, 16]} />
+                  <sphereGeometry args={[planet.radius * 0.1 + 0.05, 16, 16]} />
                   <meshBasicMaterial 
                     color="#ffffff"
                     transparent
@@ -239,10 +241,19 @@ export function SystemView({ system }: SystemViewProps) {
         return <PlanetWithSelection key={planet.id} />;
       })}
 
-      {/* Information Panel */}
+      {/* Information Panel - docked to right side */}
       {(selectedPlanet || selectedStar) && (
-        <Html position={[15, 8, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-black/80 text-white p-4 rounded-lg min-w-64 backdrop-blur">
+        <Html 
+          position={[0, 0, 0]} 
+          style={{ 
+            pointerEvents: 'none',
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000
+          }}
+        >
+          <div className="bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
             {selectedStar ? (
               <div>
                 <h3 className="text-lg font-bold text-blue-300">{star.name}</h3>
