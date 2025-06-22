@@ -195,10 +195,12 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   const starBumpMap = useTexture('/textures/star_surface.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
+  const jupiterTexture = useTexture('/textures/jupiter.jpg');
+  const venusTexture = useTexture('/textures/venus.jpg');
   
   // Planet texture mapping - ready for expansion
   const planetTextures = {
-    gas_giant: null, // Ready for gas giant textures
+    gas_giant: [jupiterTexture, venusTexture], // Jupiter and Venus-like gas giants
     frost_giant: [uranusTexture, neptuneTexture],
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
