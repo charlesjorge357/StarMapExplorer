@@ -123,6 +123,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Fixed planet scaling inconsistency - changed visual scaling from radius * 20 to radius * 10 to properly represent Earth radii measurements while maintaining good visibility. Planets now display accurate relative sizes based on their actual radius values.
 - June 22, 2025: Implemented frost giant planet specifications with authentic Uranus/Neptune textures, light blue coloring, and smaller sizes than gas giants. Added comprehensive texture mapping framework for all planet types.
 - June 22, 2025: Fixed React hooks violations and planet clicking errors by simplifying texture loading system. Enhanced texture visibility by using white base color and removing emissive effects when textures are present, making frost giant textures clearly visible.
+- June 22, 2025: Added toggle selection behavior for planets in system view - clicking an already selected planet now unselects it, providing intuitive selection management.
 
 ## User Preferences
 
