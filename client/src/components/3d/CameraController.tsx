@@ -14,11 +14,13 @@ const MOUSE_SENSITIVITY = 0.002;
 export function CameraController({ 
   mouseMode = false, 
   savedPosition = null,
-  onPositionSave = null 
+  onPositionSave = null,
+  onPositionChange = null 
 }: { 
   mouseMode?: boolean;
   savedPosition?: [number, number, number] | null;
   onPositionSave?: ((pos: [number, number, number]) => void) | null;
+  onPositionChange?: ((pos: [number, number, number]) => void) | null;
 }) {
   const { camera, gl } = useThree();
   const { position, target, isTransitioning, setPosition, setTarget } = useCamera();
@@ -195,6 +197,11 @@ export function CameraController({
         onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
         lastPositionRef.current.copy(camera.position);
       }
+    }
+    
+    // Update camera position for bloom calculations
+    if (onPositionChange) {
+      onPositionChange([camera.position.x, camera.position.y, camera.position.z]);
     }
   });
 

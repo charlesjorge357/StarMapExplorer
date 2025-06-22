@@ -199,12 +199,12 @@ function App() {
       });
 
       // Map distance to bloom intensity (inverse relationship - dimmer when closer)
-      // Close distance (0-20 units) = low bloom (0.1-0.3) - lens adjusts to bright light
-      // Far distance (100+ units) = high bloom (1.0-2.0) - distant stars glow more
+      // Close distance (0-20 units) = low bloom (0.4-0.6) - lens adjusts to bright light
+      // Far distance (100+ units) = high bloom (1.0-1.5) - distant stars glow more
       const normalizedDistance = Math.min(Math.max(minDistance, 5), 150);
       const bloomIntensity = currentView === 'system' 
-        ? Math.min(2.0, 0.2 + (normalizedDistance / 75)) // System view: 0.2-2.0
-        : Math.min(1.5, 0.1 + (normalizedDistance / 100)); // Galactic view: 0.1-1.5
+        ? Math.min(1.5, 0.5 + (normalizedDistance / 150)) // System view: 0.5-1.5
+        : Math.min(1.2, 0.4 + (normalizedDistance / 187.5)); // Galactic view: 0.4-1.2
       
       setDynamicBloomIntensity(bloomIntensity);
     };
