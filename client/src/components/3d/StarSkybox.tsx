@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface StarSkyboxProps {
@@ -6,102 +7,99 @@ interface StarSkyboxProps {
   radius?: number;
 }
 
-export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
-  // Generate random star positions on a sphere
-  const positions = useMemo(() => {
-    const positions = new Float32Array(count * 3);
+export function StarSkybox({ count = 5000, radius = 800 }: StarSkyboxProps) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  
+  // Generate star data once
+  const starData = useMemo(() => {
+    const positions = [];
+    const colors = [];
+    const matrices = [];
     
     for (let i = 0; i < count; i++) {
-      // Generate points on sphere surface using spherical coordinates
-      const theta = Math.random() * Math.PI * 2; // Azimuth
-      const phi = Math.acos(1 - 2 * Math.random()); // Inclination (uniform distribution)
+      // Generate points on sphere surface
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(1 - 2 * Math.random());
       
-      const x = 200 * Math.sin(phi) * Math.cos(theta); // Much closer radius
-      const y = 200 * Math.sin(phi) * Math.sin(theta);
-      const z = 200 * Math.cos(phi);
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.sin(phi) * Math.sin(theta);
+      const z = radius * Math.cos(phi);
       
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-    }
-    
-    return positions;
-  }, [count, radius]);
-
-  // Generate random star colors and sizes
-  const colors = useMemo(() => {
-    const colors = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      // Create realistic star colors based on stellar classification
+      positions.push(x, y, z);
+      
+      // Stellar classification colors
       const rand = Math.random();
       let r, g, b;
       
       if (rand < 0.05) {
-        // O-type: Blue
-        r = 0.6; g = 0.7; b = 1.0;
+        r = 0.6; g = 0.7; b = 1.0; // O-type: Blue
       } else if (rand < 0.15) {
-        // B-type: Blue-white
-        r = 0.7; g = 0.8; b = 1.0;
+        r = 0.7; g = 0.8; b = 1.0; // B-type: Blue-white
       } else if (rand < 0.25) {
-        // A-type: White
-        r = 0.9; g = 0.9; b = 1.0;
+        r = 0.9; g = 0.9; b = 1.0; // A-type: White
       } else if (rand < 0.35) {
-        // F-type: Yellow-white
-        r = 1.0; g = 0.95; b = 0.8;
+        r = 1.0; g = 0.95; b = 0.8; // F-type: Yellow-white
       } else if (rand < 0.55) {
-        // G-type: Yellow (Sun-like)
-        r = 1.0; g = 0.9; b = 0.6;
+        r = 1.0; g = 0.9; b = 0.6; // G-type: Yellow
       } else if (rand < 0.75) {
-        // K-type: Orange
-        r = 1.0; g = 0.7; b = 0.4;
+        r = 1.0; g = 0.7; b = 0.4; // K-type: Orange
       } else {
-        // M-type: Red
-        r = 1.0; g = 0.5; b = 0.3;
+        r = 1.0; g = 0.5; b = 0.3; // M-type: Red
       }
       
-      // Add some brightness variation
-      const brightness = 0.3 + Math.random() * 0.7;
-      colors[i * 3] = r * brightness;
-      colors[i * 3 + 1] = g * brightness;
-      colors[i * 3 + 2] = b * brightness;
-    }
-    
-    return colors;
-  }, [count]);
-
-  // Create individual star meshes for better visibility
-  const starMeshes = useMemo(() => {
-    if (!positions || !colors) return [];
-    
-    const meshes = [];
-    const starCount = Math.min(count, 500, positions.length / 3); // Limit for performance
-    
-    for (let i = 0; i < starCount; i++) {
-      const x = positions[i * 3] || 0;
-      const y = positions[i * 3 + 1] || 0;
-      const z = positions[i * 3 + 2] || 0;
-      const r = colors[i * 3] || 1;
-      const g = colors[i * 3 + 1] || 1;
-      const b = colors[i * 3 + 2] || 1;
+      const brightness = 0.4 + Math.random() * 0.6;
+      colors.push(r * brightness, g * brightness, b * brightness);
       
-      meshes.push(
-        <mesh
-          key={i}
-          position={[x, y, z]}
-          renderOrder={-1000}
-          raycast={() => null}
-        >
-          <sphereGeometry args={[1.5, 6, 6]} />
-          <meshBasicMaterial
-            color={new THREE.Color(r, g, b)}
-            emissive={new THREE.Color(r * 0.3, g * 0.3, b * 0.3)}
-          />
-        </mesh>
+      // Create transformation matrix for each star
+      const matrix = new THREE.Matrix4();
+      const scale = 0.5 + Math.random() * 1.0; // Random star sizes
+      matrix.compose(
+        new THREE.Vector3(x, y, z),
+        new THREE.Quaternion(),
+        new THREE.Vector3(scale, scale, scale)
       );
+      matrices.push(matrix);
     }
-    return meshes;
-  }, [positions, colors, count]);
+    
+    return { positions, colors, matrices };
+  }, [count, radius]);
 
-  return <group>{starMeshes}</group>;
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[null, null, count]}
+      position={[0, 0, 0]}
+      renderOrder={-1000}
+      raycast={() => null}
+    >
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshBasicMaterial
+        color="#ffffff"
+        transparent
+        opacity={0.8}
+        depthWrite={false}
+      />
+      <primitive 
+        object={{
+          onBeforeRender: () => {
+            if (meshRef.current) {
+              // Set instance matrices
+              starData.matrices.forEach((matrix, i) => {
+                meshRef.current!.setMatrixAt(i, matrix);
+              });
+              
+              // Set instance colors
+              const colorArray = new Float32Array(starData.colors);
+              meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colorArray, 3);
+              
+              meshRef.current.instanceMatrix.needsUpdate = true;
+              if (meshRef.current.instanceColor) {
+                meshRef.current.instanceColor.needsUpdate = true;
+              }
+            }
+          }
+        }}
+      />
+    </instancedMesh>
+  );
 }

@@ -58,7 +58,7 @@ function StarField({ selectedStar, setSelectedStar }: {
 
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 100);
+    const generatedStars = StarGenerator.generateStars(12345, 2000);
     setStars(generatedStars);
     console.log(`Generated ${generatedStars.length} stars`);
   }, []);
@@ -242,7 +242,7 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 {currentView === 'galactic' ? `Galactic View • ${100} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} {mouseMode ? '• Mouse Mode (TAB for Navigation)' : '• Navigation Mode (TAB for Mouse)'}
+          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} {mouseMode ? '• Mouse Mode (TAB for Navigation)' : '• Navigation Mode (TAB for Mouse)'}
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               Press Backspace to return to galactic view
