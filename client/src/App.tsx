@@ -87,10 +87,17 @@ function StarField({ selectedStar, setSelectedStar }: {
         const isSelected = selectedStar?.id === star.id;
         return (
           <group key={star.id}>
+            {/* Invisible larger hitbox for easier selection */}
             <mesh 
               position={star.position}
               onClick={(e) => handleStarClick(star, e)}
+              visible={false}
             >
+              <sphereGeometry args={[star.radius, 8, 8]} />
+            </mesh>
+            
+            {/* Visual star */}
+            <mesh position={star.position}>
               <sphereGeometry args={[star.radius / 2, 8, 8]} />
               <meshStandardMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
@@ -131,6 +138,18 @@ function App() {
   const handleStart = () => {
     setShowSelector(false);
   };
+
+  // Handle escape key to toggle mouse mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMouseMode(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
