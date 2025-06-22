@@ -214,7 +214,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           }
         }}
       >
-        <sphereGeometry args={[star.radius * 4, 32, 32]} />
+        <sphereGeometry args={[star.radius * 8, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
