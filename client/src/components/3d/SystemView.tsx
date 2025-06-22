@@ -108,6 +108,8 @@ export function SystemView({ system }: SystemViewProps) {
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [selectedStar, setSelectedStar] = useState<boolean>(false);
 
+
+
   const handlePlanetClick = (planet: any) => {
     console.log(`Selected planet: ${planet.name}`);
     setSelectedPlanet(planet);
@@ -241,17 +243,18 @@ export function SystemView({ system }: SystemViewProps) {
         return <PlanetWithSelection key={planet.id} />;
       })}
 
-      {/* Information Panel - docked to right side */}
+      {/* Information Panel positioned relative to camera */}
       {(selectedPlanet || selectedStar) && (
         <Html 
-          position={[0, 0, 0]} 
+          position={[0, 0, 0]}
           style={{ 
             pointerEvents: 'none',
-            position: 'fixed',
+            position: 'absolute',
             top: '20px',
             right: '20px',
-            zIndex: 1000
+            transform: 'none'
           }}
+          center={false}
         >
           <div className="bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
             {selectedStar ? (
@@ -286,6 +289,7 @@ export function SystemView({ system }: SystemViewProps) {
           </div>
         </Html>
       )}
+
     </group>
   );
 }
