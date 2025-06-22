@@ -85,6 +85,10 @@ function StarField({
     <group onClick={handleBackgroundClick}>
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
+        // Simple fixed radius for all stars to prevent popping
+        const visualRadius = 1.5; 
+        const hitboxRadius = 2.5;
+        
         return (
           <group key={star.id}>
             {/* Invisible larger hitbox for easier selection */}
@@ -93,23 +97,21 @@ function StarField({
               onClick={(e) => handleStarClick(star, e)}
               visible={false}
             >
-              <sphereGeometry args={[star.radius * 1.5, 8, 8]} />
+              <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
             
-            {/* Visual star */}
+            {/* Visual star with fixed size to prevent LOD popping */}
             <mesh position={star.position}>
-              <sphereGeometry args={[star.radius * 2.5, 8, 8]} />
-              <meshStandardMaterial 
+              <sphereGeometry args={[visualRadius, 8, 8]} />
+              <meshBasicMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
-                emissive={StarGenerator.getStarColor(star.spectralClass)}
-                emissiveIntensity={0.3}
               />
             </mesh>
             
             {/* Selection overlay */}
             {isSelected && (
               <mesh position={star.position}>
-                <sphereGeometry args={[star.radius * 2.5 + 0.05, 8, 8]} />
+                <sphereGeometry args={[visualRadius + 0.2, 8, 8]} />
                 <meshBasicMaterial 
                   color="#ffffff"
                   transparent
