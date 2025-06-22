@@ -134,6 +134,8 @@ function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
   const [mouseMode, setMouseMode] = useState(true);
+  const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
+  const [currentSystem, setCurrentSystem] = useState<any>(null);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -173,16 +175,24 @@ function App() {
   // Handle Enter key to navigate to system view
   useEffect(() => {
     const handleSystemNavigation = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' && selectedStar) {
+      if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
-        // TODO: Implement system view transition
-        alert(`System view for ${selectedStar.name} coming soon!`);
+        const system = SystemGenerator.generateSystem(selectedStar, 12345);
+        setCurrentSystem(system);
+        setCurrentView('system');
+        setSelectedStar(null); // Clear selection when transitioning
+      }
+      
+      if (event.key === 'Backspace' && currentView === 'system') {
+        console.log('Returning to galactic view...');
+        setCurrentView('galactic');
+        setCurrentSystem(null);
       }
     };
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar]);
+  }, [selectedStar, currentView]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -194,7 +204,12 @@ function App() {
           {!showSelector && (
             <>
               <CameraController mouseMode={mouseMode} />
-              <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
+              {currentView === 'galactic' && (
+                <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
+              )}
+              {currentView === 'system' && currentSystem && (
+                <SystemView system={currentSystem} />
+              )}
             </>
           )}
         </Canvas>
@@ -216,7 +231,12 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 Galactic View • {100} Stars {mouseMode ? '• Mouse Mode (TAB for Navigation)' : '• Navigation Mode (TAB for Mouse)'}
+          📍 {currentView === 'galactic' ? `Galactic View • ${100} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} {mouseMode ? '• Mouse Mode (TAB for Navigation)' : '• Navigation Mode (TAB for Mouse)'}
+          {currentView === 'system' && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
+              Press Backspace to return to galactic view
+            </div>
+          )}
         </div>
       )}
 
