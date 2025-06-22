@@ -51,19 +51,20 @@ interface SystemViewProps {
   mouseMode: boolean;
 }
 
-// Selection ring component to match galactic view style
-function SelectionRing({ planet, isSelected }: { planet: any; isSelected: boolean }) {
+// Selection ring component that follows the planet
+function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected: boolean; index: number }) {
   const ringRef = useRef<any>();
   
   useFrame((state) => {
     if (ringRef.current && isSelected) {
+      // Match the planet's orbital position exactly
       const time = state.clock.getElapsedTime() * 0.1;
-      const angle = time * planet.orbitSpeed + (Math.PI * 2 / 8);
+      const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
       ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
       ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
       
       // Pulse effect
-      const pulse = 0.8 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
+      const pulse = 1.0 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
       ringRef.current.scale.setScalar(pulse);
     }
   });
@@ -140,18 +141,7 @@ function PlanetMesh({
       </mesh>
 
       {/* Selection ring */}
-      <SelectionRing planet={planet} isSelected={isSelected} />
-
-      {/* Orbital path */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[planet.orbitRadius - 0.05, planet.orbitRadius + 0.05, 128]} />
-        <meshBasicMaterial 
-          color="#444444" 
-          transparent 
-          opacity={0.3}
-          side={2}
-        />
-      </mesh>
+      <SelectionRing planet={planet} isSelected={isSelected} index={index} />
     </>
   );
 }
@@ -197,6 +187,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           opacity={0.1}
         />
       </mesh>
+
+      {/* Orbital paths (static) */}
+      {planets.map((planet) => (
+        <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[planet.orbitRadius - 0.05, planet.orbitRadius + 0.05, 128]} />
+          <meshBasicMaterial 
+            color="#444444" 
+            transparent 
+            opacity={0.3}
+            side={2}
+          />
+        </mesh>
+      ))}
 
       {/* Planets with selection functionality */}
       {planets.map((planet, index) => (
