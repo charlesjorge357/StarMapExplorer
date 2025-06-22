@@ -167,7 +167,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  const planets = SystemGenerator.generatePlanets(star, 12345);
+  const systemData = SystemGenerator.generateSystem(star, 12345);
+  const planets = systemData.planets;
 
   // Handle background click to deselect
   const handleBackgroundClick = () => {

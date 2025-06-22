@@ -218,6 +218,25 @@ function App() {
         // Camera positioning will be handled by CameraController
       }
       
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (currentView === 'galactic' && selectedStar) {
+          console.log(`Unselected star: ${selectedStar.name}`);
+          setSelectedStar(null);
+        } else if (currentView === 'system' && selectedPlanet) {
+          console.log(`Unselected planet: ${selectedPlanet.name}`);
+          setSelectedPlanet(null);
+        }
+      }
+      
+      if (event.key === 'Backspace' && currentView === 'system') {
+        console.log('Returning to galactic view...');
+        setCurrentView('galactic');
+        setCurrentSystem(null);
+        setSelectedPlanet(null);
+      }
+      
       if (event.key === 'Backspace' && currentView === 'system') {
         console.log('Returning to galactic view...');
         setCurrentView('galactic');
@@ -251,7 +270,12 @@ function App() {
               {currentView === 'system' && currentSystem && (
                 <>
                   <StarfieldSkybox stars={stars} scale={0.05} />
-                  <SystemView system={currentSystem} />
+                  <SystemView 
+                    system={currentSystem} 
+                    selectedPlanet={selectedPlanet}
+                    onPlanetClick={setSelectedPlanet}
+                    mouseMode={mouseMode}
+                  />
                 </>
               )}
               
@@ -327,38 +351,56 @@ function App() {
         </div>
       )}
 
-      {/* Star Information Panel */}
-      {!showSelector && selectedStar && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          width: '280px',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: 'white',
-          padding: '16px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          pointerEvents: 'none',
-          zIndex: 10
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-            {selectedStar.name || selectedStar.id}
-          </div>
-          <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-            <div>Class: {selectedStar.spectralClass}</div>
-            <div>Position: [{selectedStar.position[0].toFixed(1)}, {selectedStar.position[1].toFixed(1)}, {selectedStar.position[2].toFixed(1)}]</div>
-            <div>Radius: {selectedStar.radius.toFixed(2)} solar radii</div>
-          </div>
-          <div style={{ 
-            marginTop: '12px', 
-            fontSize: '10px', 
-            color: '#888',
-            textAlign: 'center'
-          }}>
-            Click star again to unselect • Click empty space to unselect
-          </div>
-        </div>
+      {/* Information panels */}
+      {!showSelector && (
+        <>
+          {/* Galactic view - star information */}
+          {selectedStar && currentView === 'galactic' && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <h3 className="text-lg font-bold text-blue-300">{selectedStar.name}</h3>
+              <p className="text-sm text-gray-300 mb-2">Spectral Class {selectedStar.spectralClass}</p>
+              <div className="space-y-1 text-sm">
+                <p><span className="text-blue-200">Mass:</span> {selectedStar.mass?.toFixed(2)} M☉</p>
+                <p><span className="text-blue-200">Radius:</span> {selectedStar.radius.toFixed(2)} R☉</p>
+                <p><span className="text-blue-200">Temperature:</span> {selectedStar.temperature?.toFixed(0)} K</p>
+                <p><span className="text-blue-200">Luminosity:</span> {selectedStar.luminosity?.toFixed(2)} L☉</p>
+                <p><span className="text-blue-200">Age:</span> {selectedStar.age?.toFixed(1)} Gy</p>
+                <p><span className="text-blue-200">Distance:</span> {Math.sqrt(
+                  selectedStar.position[0]**2 + 
+                  selectedStar.position[1]**2 + 
+                  selectedStar.position[2]**2
+                ).toFixed(1)} ly</p>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Press Enter to explore system</p>
+                <p>Press Escape to deselect</p>
+              </div>
+            </div>
+          )}
+
+          {/* System view - planet information */}
+          {selectedPlanet && currentView === 'system' && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <h3 className="text-lg font-bold text-green-300">{selectedPlanet.name}</h3>
+              <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
+              <div className="space-y-1 text-sm">
+                <p><span className="text-green-200">Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
+                <p><span className="text-green-200">Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
+                <p><span className="text-green-200">Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span className="text-green-200">Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
+                {selectedPlanet.atmosphere.length > 0 && (
+                  <div>
+                    <p className="text-green-200">Atmosphere:</p>
+                    <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Press Escape to deselect</p>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {showSelector && (
