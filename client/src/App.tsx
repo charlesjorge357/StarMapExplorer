@@ -91,8 +91,8 @@ function StarField({
     <group onClick={handleBackgroundClick}>
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
-        // Scale visual size by stellar radius, with minimum size for visibility
-        const visualRadius = Math.max(0.8, star.radius * 0.3); 
+        // Scale visual size by stellar radius, smaller minimum to show true variation
+        const visualRadius = Math.max(0.3, star.radius * 0.4); 
         const hitboxRadius = Math.max(2.5, star.radius * 0.5);
         
         return (

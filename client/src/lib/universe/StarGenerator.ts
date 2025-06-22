@@ -74,7 +74,18 @@ export class StarGenerator {
         temperature = 7500 + random() * 12500; // 7500-20000K
       }
 
-      const radius = Math.pow(mass, 0.8); // Mass-radius relationship
+      // More realistic radius calculation with extreme stellar variations
+      let radius;
+      if (mass < 0.5) {
+        // Red dwarfs: very small
+        radius = Math.pow(mass / 0.5, 0.8) * 0.4;
+      } else if (mass > 8) {
+        // Massive stars become giants/supergiants
+        radius = Math.pow(mass / 8, 0.6) * 8;
+      } else {
+        // Main sequence stars
+        radius = Math.pow(mass, 0.8);
+      }
       const luminosity = Math.pow(mass, 3.5); // Mass-luminosity relationship
       const age = 1 + random() * 10; // 1-11 billion years
       const spectralClass = this.getSpectralClass(temperature);
