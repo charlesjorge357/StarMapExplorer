@@ -111,8 +111,8 @@ export class SystemGenerator {
     const radius = radiusRange.min + 
       this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
     
-    // Calculate orbital speed using Kepler's laws (simplified)
-    const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.5; // Scaled for visual appeal
+    // Calculate orbital speed using Kepler's laws (simplified) - slowed down
+    const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15; // Much slower for better observation
     
     // Generate realistic mass based on radius and type
     let mass = radius * radius * radius; // Base cubic relationship
