@@ -46,8 +46,11 @@ export function CameraController() {
       camera.rotation.y -= movementX * MOUSE_SENSITIVITY;
       camera.rotation.x -= movementY * MOUSE_SENSITIVITY;
       
-      // Clamp vertical rotation
-      camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+      // Clamp vertical rotation to prevent gimbal lock
+      camera.rotation.x = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, camera.rotation.x));
+      
+      // Ensure rotation order is correct
+      camera.rotation.order = 'YXZ';
     };
 
     canvas.addEventListener('click', handleClick);
