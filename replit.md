@@ -118,7 +118,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Implemented solar surface texture mapping for all stars using high-resolution 2K solar texture with opacity blending. Surface details like granulation patterns and solar flares now show through star colors for enhanced visual realism across galactic and system views.
 - June 22, 2025: Removed dynamic bloom intensity system due to performance impact. Reverted to static bloom intensities (0.8 for system view, 0.6 for galactic view) for consistent performance while maintaining stellar visual quality.
 - June 22, 2025: Implemented hybrid scaling approach: linear scaling (radius * multiplier) for galactic view to show true stellar size relationships, and logarithmic scaling (Math.log(radius + 1) * multiplier) for system view to prevent overwhelming star sizes while maintaining visual hierarchy.
-- June 22, 2025: Modified star coloring to display red dwarfs (luminosity < 0.1) as bright red (#ff4444) instead of spectral class colors, making only the dimmest stars easily distinguishable as a rare minority across all views.
+- June 22, 2025: Modified star coloring to display red dwarfs (luminosity < 0.05) as bright red (#ff4444) instead of spectral class colors, making only the dimmest stars easily distinguishable as an extremely rare minority across all views.
 
 ## User Preferences
 
