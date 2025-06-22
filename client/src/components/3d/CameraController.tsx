@@ -126,6 +126,11 @@ export function CameraController({
     const isMoving = controls.forward || controls.backward || controls.leftward || 
                     controls.rightward || controls.up || controls.down;
     
+    // Get active controls for logging and position saving
+    const activeControls = Object.entries(controls)
+      .filter(([_, active]) => active)
+      .map(([key, _]) => key);
+    
     if (isMoving) {
       // Reset target velocity and apply movement inputs
       targetVelocityRef.current.set(0, 0, 0);
@@ -155,11 +160,11 @@ export function CameraController({
         targetVelocityRef.current.add(downVec);
       }
       
-      // Apply target velocity directly when moving
-      velocityRef.current.copy(targetVelocityRef.current);
+      // Smooth velocity interpolation when moving
+      velocityRef.current.lerp(targetVelocityRef.current, 0.2);
     } else {
-      // Quickly stop when no input - aggressive damping
-      velocityRef.current.multiplyScalar(0.85);
+      // Smooth deceleration when stopping
+      velocityRef.current.multiplyScalar(0.88);
       
       // Complete stop for very small velocities
       if (velocityRef.current.length() < 0.01) {
@@ -177,11 +182,6 @@ export function CameraController({
       setPosition(camera.position.clone());
       lastPositionRef.current.copy(camera.position);
     }
-    
-    // Check active controls for position saving
-    const activeControls = Object.entries(controls)
-      .filter(([_, active]) => active)
-      .map(([key, _]) => key);
     
     // Save position for navigation if callback provided (throttled)
     if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
