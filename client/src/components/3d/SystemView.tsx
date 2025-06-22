@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useKeyboardControls } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
-import * as THREE from 'three';
 
 // Helper functions for planet materials
 const getPlanetEmissive = (type: string): string => {
@@ -150,8 +148,6 @@ export function SystemView({ system }: SystemViewProps) {
     name: 'Central Star'
   };
 
-
-
   return (
     <group onClick={handleBackgroundClick}>
       {/* Central star with strong bloom effect scaled by radius */}
@@ -159,11 +155,11 @@ export function SystemView({ system }: SystemViewProps) {
         position={[0, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
-          handleStarClick(e);
+          handleStarClick();
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          if (mouseMode) document.body.style.cursor = 'pointer';
+          document.body.style.cursor = 'pointer';
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
@@ -218,11 +214,11 @@ export function SystemView({ system }: SystemViewProps) {
                 ref={planetRef}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePlanetClick(planet, e);
+                  handlePlanetClick(planet);
                 }}
                 onPointerOver={(e) => {
                   e.stopPropagation();
-                  if (mouseMode) document.body.style.cursor = 'pointer';
+                  document.body.style.cursor = 'pointer';
                 }}
                 onPointerOut={() => {
                   document.body.style.cursor = 'auto';

@@ -8,8 +8,6 @@ import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
-import { NavigationBar } from "./components/ui/NavigationBar";
-import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 
@@ -328,75 +326,38 @@ function App() {
         </div>
       )}
 
-        {/* Information panel - unified for both views */}
-        {!showSelector && (
-          <>
-            {/* Galactic view - star information */}
-            {selectedStar && currentView === 'galactic' && (
-              <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-                <h3 className="text-lg font-bold text-blue-300">{selectedStar.name}</h3>
-                <p className="text-sm text-gray-300 mb-2">Spectral Class {selectedStar.spectralClass}</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-blue-200">Mass:</span> {selectedStar.mass?.toFixed(2)} M☉</p>
-                  <p><span className="text-blue-200">Radius:</span> {selectedStar.radius.toFixed(2)} R☉</p>
-                  <p><span className="text-blue-200">Temperature:</span> {selectedStar.temperature?.toFixed(0)} K</p>
-                  <p><span className="text-blue-200">Luminosity:</span> {(selectedStar as any).luminosity?.toFixed(2) || 'N/A'} L☉</p>
-                  <p><span className="text-blue-200">Age:</span> {(selectedStar as any).age?.toFixed(1) || 'N/A'} Gy</p>
-                  <p><span className="text-blue-200">Distance:</span> {Math.sqrt(
-                    selectedStar.position[0]**2 + 
-                    selectedStar.position[1]**2 + 
-                    selectedStar.position[2]**2
-                  ).toFixed(1)} ly</p>
-                </div>
-                <div className="mt-3 text-xs text-gray-400">
-                  <p>Press Enter to explore system</p>
-                  <p>Press Escape to deselect</p>
-                </div>
-              </div>
-            )}
-
-            {/* System view - star information */}
-            {currentView === 'system' && (window as any).systemViewState?.selectedStar && (
-              <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-                <h3 className="text-lg font-bold text-blue-300">{(window as any).systemViewState.star.name}</h3>
-                <p className="text-sm text-gray-300 mb-2">Central Star</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-blue-200">Spectral Class:</span> {(window as any).systemViewState.star.spectralClass}</p>
-                  <p><span className="text-blue-200">Radius:</span> {(window as any).systemViewState.star.radius.toFixed(2)} R☉</p>
-                  <p><span className="text-blue-200">Temperature:</span> {(window as any).systemViewState.star.temperature?.toFixed(0)} K</p>
-                  <p><span className="text-blue-200">Mass:</span> {(window as any).systemViewState.star.mass?.toFixed(2)} M☉</p>
-                </div>
-              </div>
-            )}
-
-            {/* System view - planet information */}
-            {currentView === 'system' && (window as any).systemViewState?.selectedPlanet && (
-              <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-                <h3 className="text-lg font-bold text-green-300">{(window as any).systemViewState.selectedPlanet.name}</h3>
-                <p className="text-sm text-gray-300 mb-2 capitalize">{(window as any).systemViewState.selectedPlanet.type.replace('_', ' ')}</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-green-200">Radius:</span> {(window as any).systemViewState.selectedPlanet.radius.toFixed(2)} R⊕</p>
-                  <p><span className="text-green-200">Mass:</span> {(window as any).systemViewState.selectedPlanet.mass.toFixed(2)} M⊕</p>
-                  <p><span className="text-green-200">Orbit:</span> {(window as any).systemViewState.selectedPlanet.orbitRadius.toFixed(2)} AU</p>
-                  <p><span className="text-green-200">Temperature:</span> {(window as any).systemViewState.selectedPlanet.temperature.toFixed(0)} K</p>
-                  {(window as any).systemViewState.selectedPlanet.atmosphere.length > 0 && (
-                    <div>
-                      <p className="text-green-200">Atmosphere:</p>
-                      <p className="text-xs text-gray-400">{(window as any).systemViewState.selectedPlanet.atmosphere.join(', ')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-      {/* Navigation and UI components - visible in both views */}
-      {!showSelector && (
-        <>
-          <NavigationBar />
-          <ObjectPanel />
-        </>
+      {/* Star Information Panel */}
+      {!showSelector && selectedStar && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          width: '280px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          pointerEvents: 'none',
+          zIndex: 10
+        }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            {selectedStar.name || selectedStar.id}
+          </div>
+          <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+            <div>Class: {selectedStar.spectralClass}</div>
+            <div>Position: [{selectedStar.position[0].toFixed(1)}, {selectedStar.position[1].toFixed(1)}, {selectedStar.position[2].toFixed(1)}]</div>
+            <div>Radius: {selectedStar.radius.toFixed(2)} solar radii</div>
+          </div>
+          <div style={{ 
+            marginTop: '12px', 
+            fontSize: '10px', 
+            color: '#888',
+            textAlign: 'center'
+          }}>
+            Click star again to unselect • Click empty space to unselect
+          </div>
+        </div>
       )}
 
       {showSelector && (
