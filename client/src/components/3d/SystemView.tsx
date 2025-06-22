@@ -167,7 +167,7 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={getPlanetTextureForMaterial(planet.type, planetTextures)}
+          map={getPlanetTexture(planet.type, planetTextures)}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
