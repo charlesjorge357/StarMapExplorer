@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import { useKeyboardControls } from '@react-three/drei';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
+import * as THREE from 'three';
 
 // Helper functions for planet materials
 const getPlanetEmissive = (type: string): string => {
