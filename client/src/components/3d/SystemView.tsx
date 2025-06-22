@@ -90,13 +90,17 @@ function PlanetMesh({
   index, 
   isSelected, 
   onPlanetClick, 
-  mouseMode 
+  mouseMode,
+  uranusTexture,
+  neptuneTexture
 }: { 
   planet: any; 
   index: number; 
   isSelected: boolean;
   onPlanetClick: (planet: any) => void;
   mouseMode: boolean;
+  uranusTexture: any;
+  neptuneTexture: any;
 }) {
   const planetRef = useRef<any>();
   
@@ -275,6 +279,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           isSelected={selectedPlanet?.id === planet.id}
           onPlanetClick={onPlanetClick}
           mouseMode={mouseMode}
+          uranusTexture={uranusTexture}
+          neptuneTexture={neptuneTexture}
         />
       ))}
     </group>
