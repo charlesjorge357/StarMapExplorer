@@ -50,18 +50,15 @@ function SelectionRing({ star }: { star: SimpleStar }) {
   );
 }
 
-function StarField({ selectedStar, setSelectedStar }: { 
+function StarField({ 
+  selectedStar, 
+  setSelectedStar,
+  stars
+}: { 
   selectedStar: SimpleStar | null; 
-  setSelectedStar: (star: SimpleStar | null) => void; 
+  setSelectedStar: (star: SimpleStar | null) => void;
+  stars: SimpleStar[];
 }) {
-  const [stars, setStars] = useState<SimpleStar[]>([]);
-
-  useEffect(() => {
-    console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 2000);
-    setStars(generatedStars);
-    console.log(`Generated ${generatedStars.length} stars`);
-  }, []);
 
   const handleStarClick = (star: SimpleStar, event: any) => {
     event.stopPropagation();

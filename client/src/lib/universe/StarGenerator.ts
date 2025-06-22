@@ -45,8 +45,8 @@ export class StarGenerator {
     const stars: Star[] = [];
 
     for (let i = 0; i < count; i++) {
-      // Generate position in a sphere around origin (1000 light-years radius)
-      const distance = random() * 1000;
+      // Generate position in a much larger sphere to prevent overlapping (4000 unit radius)
+      const distance = 50 + random() * 4000; // Minimum distance of 50 units from center
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
       
