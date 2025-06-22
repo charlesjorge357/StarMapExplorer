@@ -220,6 +220,21 @@ function App() {
     return atmospheres[planetType as keyof typeof atmospheres] || [];
   };
 
+  // Get star color for UI display
+  const getStarDisplayColor = (spectralClass: string): string => {
+    const firstChar = spectralClass.charAt(0).toUpperCase();
+    switch (firstChar) {
+      case 'O': return '#9bb0ff'; // Blue
+      case 'B': return '#aabfff'; // Blue-white
+      case 'A': return '#cad7ff'; // White
+      case 'F': return '#f8f7ff'; // Yellow-white
+      case 'G': return '#fff4ea'; // Yellow (Sun-like)
+      case 'K': return '#ffd2a1'; // Orange
+      case 'M': return '#ffad51'; // Red
+      default: return '#ffffff';
+    }
+  };
+
   // Function to get planet color for UI consistency
   const getPlanetColor = (type: string): string => {
     const colors = {
@@ -431,15 +446,17 @@ function App() {
           {/* Galactic view - star information */}
           {selectedStar && currentView === 'galactic' && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-              <h3 className="text-lg font-bold text-blue-300">{selectedStar.name}</h3>
+              <h3 className="text-lg font-bold" style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>
+                {selectedStar.name}
+              </h3>
               <p className="text-sm text-gray-300 mb-2">Spectral Class {selectedStar.spectralClass}</p>
               <div className="space-y-1 text-sm">
-                <p><span className="text-blue-200">Mass:</span> {selectedStar.mass?.toFixed(2)} M☉</p>
-                <p><span className="text-blue-200">Radius:</span> {selectedStar.radius.toFixed(2)} R☉</p>
-                <p><span className="text-blue-200">Temperature:</span> {selectedStar.temperature?.toFixed(0)} K</p>
-                <p><span className="text-blue-200">Luminosity:</span> {(selectedStar as any).luminosity?.toFixed(2) || 'Unknown'} L☉</p>
-                <p><span className="text-blue-200">Age:</span> {(selectedStar as any).age?.toFixed(1) || 'Unknown'} Gy</p>
-                <p><span className="text-blue-200">Distance:</span> {Math.sqrt(
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Mass:</span> {selectedStar.mass?.toFixed(2)} M☉</p>
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Radius:</span> {selectedStar.radius.toFixed(2)} R☉</p>
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Temperature:</span> {selectedStar.temperature?.toFixed(0)} K</p>
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Luminosity:</span> {(selectedStar as any).luminosity?.toFixed(2) || 'Unknown'} L☉</p>
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Age:</span> {(selectedStar as any).age?.toFixed(1) || 'Unknown'} Gy</p>
+                <p><span style={{ color: getStarDisplayColor(selectedStar.spectralClass) }}>Distance:</span> {Math.sqrt(
                   selectedStar.position[0]**2 + 
                   selectedStar.position[1]**2 + 
                   selectedStar.position[2]**2
