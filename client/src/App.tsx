@@ -100,7 +100,12 @@ function StarField({
             {/* Invisible larger hitbox for easier selection */}
             <mesh 
               position={star.position}
-              onClick={(e) => handleStarClick(star, e)}
+              onClick={(e) => {
+                if (mouseMode) {
+                  console.log(`Selected star: ${star.name}`);
+                  setSelectedStar(star);
+                }
+              }}
               visible={false}
             >
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
@@ -113,6 +118,9 @@ function StarField({
                 color={StarGenerator.getStarColor(star.spectralClass)}
                 emissive={StarGenerator.getStarColor(star.spectralClass)}
                 emissiveIntensity={Math.max(0.8, star.radius * 0.6)}
+                // Star surface bump map
+                bumpMap={starBumpMap}
+                bumpScale={0.1}
               />
             </mesh>
 
@@ -379,7 +387,11 @@ function App() {
                 onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
               />
               {currentView === 'galactic' && (
-                <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} stars={stars} />
+                <StarField 
+                  selectedStar={selectedStar}
+                  setSelectedStar={setSelectedStar}
+                  stars={stars}
+                />
               )}
               {currentView === 'system' && currentSystem && (
                 <>
