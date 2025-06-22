@@ -9,7 +9,7 @@ import "@fontsource/inter";
 import { UniverseMapper } from "./components/ui/UniverseMapper";
 import { NavigationBar } from "./components/ui/NavigationBar";
 import { ObjectPanel } from "./components/ui/ObjectPanel";
-import { AdminPanel } from "./components/ui/AdminPanel";
+// import { AdminPanel } from "./components/ui/AdminPanel";
 import { GalacticView } from "./components/3d/GalacticView";
 import { SystemView } from "./components/3d/SystemView";
 import { PlanetaryView } from "./components/3d/PlanetaryView";

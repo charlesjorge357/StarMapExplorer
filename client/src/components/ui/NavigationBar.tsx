@@ -1,7 +1,7 @@
 import React from 'react';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { Button } from './button';
-import { Separator } from './separator';
+// import { Separator } from './separator';
 
 export function NavigationBar() {
   const { 
@@ -47,7 +47,7 @@ export function NavigationBar() {
         3D Universe Mapper
       </h1>
       
-      <Separator orientation="vertical" style={{ height: '24px' }} />
+      <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.2)' }} />
       
       {/* Mode Toggle */}
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -63,13 +63,14 @@ export function NavigationBar() {
           variant={mode === 'lore' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setMode('lore')}
-          disabled={isLoading}
+          disabled={true}
+          title="Lore mode temporarily disabled"
         >
-          Lore
+          Lore (Disabled)
         </Button>
       </div>
       
-      <Separator orientation="vertical" style={{ height: '24px' }} />
+      <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.2)' }} />
       
       {/* Breadcrumb Navigation */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
