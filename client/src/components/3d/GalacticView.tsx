@@ -60,7 +60,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
         <Text
           position={[0, scale + 2, 0]}
           fontSize={1}
-          color="white"
+          color={color}
           anchorX="center"
           anchorY="middle"
         >
@@ -72,7 +72,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
         <Text
           position={[0, scale + 1, 0]}
           fontSize={0.5}
-          color="lightblue"
+          color={color}
           anchorX="center"
           anchorY="middle"
         >
