@@ -20,10 +20,12 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
       // Update orbital angle based on orbital speed
       angleRef.current += planet.orbitSpeed * delta;
       
-      // Calculate new position
+      // Calculate new position with orbital inclination
+      const inclination = planet.inclination || 0;
       const x = Math.cos(angleRef.current) * planet.orbitRadius * 10;
       const z = Math.sin(angleRef.current) * planet.orbitRadius * 10;
-      const y = planet.position[1]; // Keep original Y position
+      const y = Math.sin(inclination) * planet.orbitRadius * 2 + 
+                Math.sin(angleRef.current) * Math.sin(inclination) * planet.orbitRadius * 1;
       
       // Update planet position
       if (planetRef.current) {
@@ -39,8 +41,11 @@ function PlanetMesh({ planet, onClick }: { planet: any; onClick: (planet: any) =
   
   return (
     <group ref={orbitGroupRef}>
-      {/* Orbit path */}
-      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      {/* Orbit path - tilted based on inclination */}
+      <mesh 
+        position={[0, 0, 0]} 
+        rotation={[Math.PI / 2 + (planet.inclination || 0), 0, 0]}
+      >
         <ringGeometry args={[planet.orbitRadius * 10 - 0.1, planet.orbitRadius * 10 + 0.1, 64]} />
         <meshBasicMaterial color="#333333" transparent opacity={0.3} />
       </mesh>

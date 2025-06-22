@@ -11,6 +11,7 @@ interface Planet {
   temperature: number;
   atmosphere: string[];
   moons: Moon[];
+  inclination?: number;
 }
 
 interface Moon {
@@ -154,11 +155,12 @@ export class SystemGenerator {
         break;
     }
     
-    // Calculate orbital position
+    // Calculate orbital position with realistic inclination
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
+    const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3; // ±8.6 degrees max
     const position: [number, number, number] = [
       Math.cos(angle) * orbitRadius * 10, // Scale up for visibility
-      this.seededRandom(planetSeed + 11) * 2 - 1, // Small vertical variation
+      Math.sin(inclination) * orbitRadius * 2, // Realistic orbital inclination
       Math.sin(angle) * orbitRadius * 10
     ];
     
@@ -174,7 +176,8 @@ export class SystemGenerator {
       rotationSpeed: this.seededRandom(planetSeed + 12) * 0.1,
       temperature,
       atmosphere,
-      moons: [] // TODO: Generate moons
+      moons: [], // TODO: Generate moons
+      inclination: (this.seededRandom(planetSeed + 13) - 0.5) * 0.3 // Store inclination for orbit
     };
   }
 
