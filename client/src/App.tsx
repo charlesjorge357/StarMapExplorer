@@ -11,6 +11,7 @@ const controls = [
   { name: "rightward", keys: ["KeyD", "ArrowRight"] },
   { name: "up", keys: ["KeyQ"] },
   { name: "down", keys: ["KeyE"] },
+  { name: "boost", keys: ["ShiftLeft", "ShiftRight"] },
 ];
 
 function MinimalUniverse() {
