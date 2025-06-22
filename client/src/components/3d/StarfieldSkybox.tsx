@@ -86,10 +86,10 @@ export function StarfieldSkybox({ stars, scale = 0.1 }: StarfieldSkyboxProps) {
       <sphereGeometry args={[1, 6, 6]} />
       <meshStandardMaterial
         transparent
-        opacity={0.6}
+        opacity={0.7}
         depthWrite={false}
         emissive="#ffffff"
-        emissiveIntensity={0.3}
+        emissiveIntensity={0.5}
       />
     </instancedMesh>
   );

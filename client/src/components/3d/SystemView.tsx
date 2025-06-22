@@ -79,13 +79,13 @@ export function SystemView({ system }: SystemViewProps) {
 
   return (
     <group onClick={handleBackgroundClick}>
-      {/* Central star with strong bloom effect */}
+      {/* Central star with strong bloom effect scaled by radius */}
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[star.radius, 16, 16]} />
         <meshStandardMaterial 
           color={SystemGenerator.getStarColor(star.spectralClass)}
           emissive={SystemGenerator.getStarColor(star.spectralClass)}
-          emissiveIntensity={1.5}
+          emissiveIntensity={Math.max(2.0, star.radius * 1.2)}
         />
       </mesh>
       

@@ -106,13 +106,13 @@ function StarField({
               <sphereGeometry args={[hitboxRadius, 8, 8]} />
             </mesh>
             
-            {/* Visual star with gentle pulsing and emissive glow */}
+            {/* Visual star with gentle pulsing and emissive glow scaled by radius */}
             <mesh position={star.position}>
               <sphereGeometry args={[visualRadius, 8, 8]} />
               <meshStandardMaterial 
                 color={StarGenerator.getStarColor(star.spectralClass)}
                 emissive={StarGenerator.getStarColor(star.spectralClass)}
-                emissiveIntensity={0.5}
+                emissiveIntensity={Math.max(0.8, star.radius * 0.6)}
               />
             </mesh>
             
@@ -244,10 +244,10 @@ function App() {
               {/* Post-processing effects for bloom */}
               <EffectComposer>
                 <Bloom 
-                  intensity={currentView === 'system' ? 1.5 : 1.0}
-                  luminanceThreshold={0.2}
-                  luminanceSmoothing={0.9}
-                  height={300}
+                  intensity={currentView === 'system' ? 2.0 : 1.5}
+                  luminanceThreshold={0.15}
+                  luminanceSmoothing={0.8}
+                  height={400}
                 />
               </EffectComposer>
             </>
