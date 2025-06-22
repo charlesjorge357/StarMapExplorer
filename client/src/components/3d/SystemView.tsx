@@ -218,7 +218,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
-          emissiveIntensity={0.4}
+          emissiveIntensity={0.8}
           toneMapped={false}
           // Star surface texture with opacity blending
           map={starBumpMap}
