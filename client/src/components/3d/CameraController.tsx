@@ -30,6 +30,7 @@ export function CameraController({
   const targetVelocityRef = useRef(new Vector3());
   const boostStartTimeRef = useRef<number | null>(null);
   const lastBoostStateRef = useRef(false);
+  const lastPositionRef = useRef(new Vector3());
 
   // Handle pointer lock
   useEffect(() => {
@@ -171,16 +172,19 @@ export function CameraController({
       camera.position.add(velocityRef.current.clone().multiplyScalar(delta));
     }
     
-    // Update store with current position
-    setPosition(camera.position.clone());
+    // Only update store position when it actually changes significantly
+    if (camera.position.distanceTo(lastPositionRef.current) > 0.1) {
+      setPosition(camera.position.clone());
+      lastPositionRef.current.copy(camera.position);
+    }
     
-    // Log controls for debugging
-    const activeControls = Object.entries(controls)
-      .filter(([_, active]) => active)
-      .map(([key, _]) => key);
-    
-    // Remove position saving to prevent star movement artifacts
-    // Position saving was causing visual issues with star positioning
+    // Save position for navigation if callback provided (throttled)
+    if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
+      if (camera.position.distanceTo(lastPositionRef.current) > 1.0) {
+        onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
+        lastPositionRef.current.copy(camera.position);
+      }
+    }
   });
 
   return null;

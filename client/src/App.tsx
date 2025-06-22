@@ -220,6 +220,8 @@ function App() {
               {/* <StarSkybox count={currentView === 'galactic' ? 500 : 300} radius={200} /> */}
               <CameraController 
                 mouseMode={mouseMode}
+                savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
+                onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
               />
               {currentView === 'galactic' && (
                 <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} stars={stars} />
