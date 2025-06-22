@@ -153,7 +153,9 @@ function PlanetMesh({
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
-          map={getPlanetTexture(planet.type, planetTextures)}
+          map={planet.type === 'frost_giant' && planetTextures.frost_giant ? 
+            planetTextures.frost_giant[Math.floor(Math.random() * planetTextures.frost_giant.length)] : 
+            undefined}
           // Bump map preparation - ready for surface texture implementation
           bumpScale={0.05}
           roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
@@ -177,15 +179,24 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  // Load all planetary textures
+  // Load all planetary textures with error handling
   const starBumpMap = useTexture('/textures/star_surface.jpg');
-  const uranusTexture = useTexture('/textures/uranus.jpg');
-  const neptuneTexture = useTexture('/textures/neptune.jpg');
+  
+  // Ice giant textures
+  let uranusTexture, neptuneTexture;
+  try {
+    uranusTexture = useTexture('/textures/uranus.jpg');
+    neptuneTexture = useTexture('/textures/neptune.jpg');
+  } catch (error) {
+    console.warn('Failed to load ice giant textures:', error);
+    uranusTexture = null;
+    neptuneTexture = null;
+  }
   
   // Planet texture mapping - ready for expansion
   const planetTextures = {
     gas_giant: null, // Ready for gas giant textures
-    frost_giant: [uranusTexture, neptuneTexture],
+    frost_giant: uranusTexture && neptuneTexture ? [uranusTexture, neptuneTexture] : null,
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
     acidic_world: null, // Ready for Venus-like textures
