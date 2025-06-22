@@ -179,24 +179,15 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
     name: 'Central Star'
   };
 
-  // Load all planetary textures with error handling
+  // Load all planetary textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
-  
-  // Ice giant textures
-  let uranusTexture, neptuneTexture;
-  try {
-    uranusTexture = useTexture('/textures/uranus.jpg');
-    neptuneTexture = useTexture('/textures/neptune.jpg');
-  } catch (error) {
-    console.warn('Failed to load ice giant textures:', error);
-    uranusTexture = null;
-    neptuneTexture = null;
-  }
+  const uranusTexture = useTexture('/textures/uranus.jpg');
+  const neptuneTexture = useTexture('/textures/neptune.jpg');
   
   // Planet texture mapping - ready for expansion
   const planetTextures = {
     gas_giant: null, // Ready for gas giant textures
-    frost_giant: uranusTexture && neptuneTexture ? [uranusTexture, neptuneTexture] : null,
+    frost_giant: [uranusTexture, neptuneTexture],
     arid_world: null, // Ready for Mars-like textures
     verdant_world: null, // Ready for Earth-like textures
     acidic_world: null, // Ready for Venus-like textures
