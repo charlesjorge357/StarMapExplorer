@@ -209,13 +209,12 @@ function App() {
     const handleSystemNavigation = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
-        // Position will be automatically saved by camera controller
-        const system = SystemGenerator.generateSystem(selectedStar, 12345);
-        setCurrentSystem(system);
         setCurrentView('system');
-        setSelectedStar(null); // Clear selection when transitioning
-        
-        // Camera positioning will be handled by CameraController
+        setCurrentSystem({ 
+          starId: selectedStar.id,
+          star: selectedStar
+        });
+        setSelectedStar(null);
       }
       
       if (event.key === 'Escape') {
@@ -363,8 +362,8 @@ function App() {
                 <p><span className="text-blue-200">Mass:</span> {selectedStar.mass?.toFixed(2)} M☉</p>
                 <p><span className="text-blue-200">Radius:</span> {selectedStar.radius.toFixed(2)} R☉</p>
                 <p><span className="text-blue-200">Temperature:</span> {selectedStar.temperature?.toFixed(0)} K</p>
-                <p><span className="text-blue-200">Luminosity:</span> {selectedStar.luminosity?.toFixed(2)} L☉</p>
-                <p><span className="text-blue-200">Age:</span> {selectedStar.age?.toFixed(1)} Gy</p>
+                <p><span className="text-blue-200">Luminosity:</span> {(selectedStar as any).luminosity?.toFixed(2) || 'Unknown'} L☉</p>
+                <p><span className="text-blue-200">Age:</span> {(selectedStar as any).age?.toFixed(1) || 'Unknown'} Gy</p>
                 <p><span className="text-blue-200">Distance:</span> {Math.sqrt(
                   selectedStar.position[0]**2 + 
                   selectedStar.position[1]**2 + 
