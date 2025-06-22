@@ -132,11 +132,15 @@ function PlanetMesh({
           }
         }}
       >
-        <sphereGeometry args={[planet.radius, 16, 16]} />
+        <sphereGeometry args={[planet.radius * 20, 16, 16]} />
         <meshStandardMaterial 
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={0.2}
+          // Bump map preparation - ready for surface texture implementation
+          bumpScale={0.05}
+          roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
+          metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
         />
       </mesh>
 
@@ -147,6 +151,8 @@ function PlanetMesh({
 }
 
 export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
+  const [selectedStar, setSelectedStar] = useState<boolean>(false);
+  
   const star = system.star || {
     radius: 1,
     spectralClass: 'G',
@@ -157,11 +163,32 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   // Use planets from the cached system
   const planets = system.planets || [];
 
+  // Make star selection available globally for UI
+  React.useEffect(() => {
+    (window as any).systemStarSelected = selectedStar;
+  }, [selectedStar]);
+
+  // Handle star click
+  const handleStarClick = (event: any) => {
+    if (mouseMode) {
+      event.stopPropagation();
+      console.log(`Selected central star: ${star.name}`);
+      setSelectedStar(true);
+      onPlanetClick(null); // Deselect any planet
+    }
+  };
+
   // Handle background click to deselect
   const handleBackgroundClick = () => {
-    if (selectedPlanet) {
-      console.log('Deselecting planet');
-      onPlanetClick(null);
+    if (mouseMode) {
+      if (selectedPlanet) {
+        console.log('Deselecting planet');
+        onPlanetClick(null);
+      }
+      if (selectedStar) {
+        console.log('Deselecting star');
+        setSelectedStar(false);
+      }
     }
   };
 

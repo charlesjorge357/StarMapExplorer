@@ -178,7 +178,12 @@ function App() {
   // Function to generate planets for a star (moved from SystemView)
   const generatePlanetsForStar = (star: SimpleStar) => {
     const planets = [];
-    const planetCount = Math.floor(Math.random() * 6) + 3; // 3-8 planets
+    // Fewer planets for larger stars (they're more disruptive to planet formation)
+    let maxPlanets = 8;
+    if (star.radius > 2) maxPlanets = 4; // Giant stars have fewer planets
+    if (star.radius > 5) maxPlanets = 2; // Super giants have very few planets
+    
+    const planetCount = Math.floor(Math.random() * maxPlanets) + 1; // 1 to maxPlanets
     const planetTypes = [
       'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
       'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
@@ -186,16 +191,30 @@ function App() {
 
     for (let i = 0; i < planetCount; i++) {
       const planetType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
-      const orbitRadius = 5 + i * (3 + Math.random() * 4); // Better spacing
+      // Base spacing increases with star size (larger stars push habitable zone further out) - doubled
+      const baseSpacing = 16 + star.radius * 8; // Doubled spacing
+      
+      // Much more realistic orbital spacing - each planet roughly 2-3x farther than previous
+      let orbitRadius;
+      if (i === 0) {
+        orbitRadius = baseSpacing; // First planet starts far from star
+      } else {
+        const previousRadius = planets[i - 1].orbitRadius;
+        const spacing = 2.0 + Math.random() * 1.0; // 2.0x to 3.0x spacing multiplier - doubled
+        orbitRadius = previousRadius * spacing;
+      }
 
       planets.push({
         id: `planet-${star.id}-${i}`,
         name: `${star.name} ${String.fromCharCode(945 + i)}`, // Greek letters
         type: planetType,
-        radius: 0.3 + Math.random() * 1.2, // 0.3 to 1.5 units
+        // Much smaller, realistic planet sizes (planets are tiny compared to stars)
+        radius: planetType === 'gas_giant' ? 
+          0.08 + Math.random() * 0.12 : // 0.08 to 0.20 (Jupiter ~0.10 relative to Sun)
+          0.02 + Math.random() * 0.06,  // 0.02 to 0.08 (Earth ~0.009 relative to Sun)
         mass: 0.5 + Math.random() * 5, // Earth masses
         orbitRadius: orbitRadius,
-        orbitSpeed: 0.1 + Math.random() * 0.3, // Orbital speed
+        orbitSpeed: 0.05 + Math.random() * 0.15, // Slower orbital speeds for realism
         rotationSpeed: 0.01 + Math.random() * 0.05,
         temperature: 200 + Math.random() * 600, // Kelvin
         atmosphere: generateAtmosphere(planetType),
