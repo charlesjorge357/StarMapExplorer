@@ -138,6 +138,7 @@ function App() {
   const [mouseMode, setMouseMode] = useState(true);
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
+  const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
 
   const handleStart = () => {
     setShowSelector(false);
@@ -179,6 +180,12 @@ function App() {
     const handleSystemNavigation = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
+        // Save current camera position before transitioning
+        const currentPosition = document.querySelector('canvas')?.getContext('webgl')?.canvas.parentElement?.querySelector('canvas');
+        if (currentPosition) {
+          // We'll get the actual camera position from the camera controller
+          setSavedCameraPosition([0, 0, 5]); // Placeholder - will be updated by camera controller
+        }
         const system = SystemGenerator.generateSystem(selectedStar, 12345);
         setCurrentSystem(system);
         setCurrentView('system');
@@ -189,6 +196,7 @@ function App() {
         console.log('Returning to galactic view...');
         setCurrentView('galactic');
         setCurrentSystem(null);
+        // Camera position will be restored by the camera controller
       }
     };
 
@@ -205,7 +213,11 @@ function App() {
           <directionalLight position={[10, 10, 5]} intensity={0.3} />
           {!showSelector && (
             <>
-              <CameraController mouseMode={mouseMode} />
+              <CameraController 
+                mouseMode={mouseMode}
+                savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
+                onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
+              />
               {currentView === 'galactic' && (
                 <StarField selectedStar={selectedStar} setSelectedStar={setSelectedStar} />
               )}

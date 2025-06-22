@@ -11,7 +11,15 @@ const BOOST_MULTIPLIER_MAX = 80; // 8000% max boost
 const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
-export function CameraController({ mouseMode = false }: { mouseMode?: boolean }) {
+export function CameraController({ 
+  mouseMode = false, 
+  savedPosition = null,
+  onPositionSave = null 
+}: { 
+  mouseMode?: boolean;
+  savedPosition?: [number, number, number] | null;
+  onPositionSave?: ((pos: [number, number, number]) => void) | null;
+}) {
   const { camera, gl } = useThree();
   const { position, target, isTransitioning, setPosition, setTarget } = useCamera();
   const { currentScope } = useUniverse();
@@ -63,6 +71,14 @@ export function CameraController({ mouseMode = false }: { mouseMode?: boolean })
       document.removeEventListener('mousemove', handleMouseMove);
     };
   }, [camera, gl.domElement, isTransitioning, mouseMode]);
+
+  // Restore saved position when provided
+  useEffect(() => {
+    if (savedPosition) {
+      camera.position.set(savedPosition[0], savedPosition[1], savedPosition[2]);
+      console.log('Restored camera position:', savedPosition);
+    }
+  }, [savedPosition, camera]);
 
   // Handle keyboard movement
   useFrame((state, delta) => {
@@ -142,6 +158,12 @@ export function CameraController({ mouseMode = false }: { mouseMode?: boolean })
     
     // Update store with current position
     setPosition(camera.position.clone());
+    
+    // Save position for navigation if callback provided
+    if (onPositionSave && activeControls.length === 0) {
+      // Only save when not actively moving to avoid constant updates
+      onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
+    }
     
     // Log controls for debugging
     const activeControls = Object.entries(controls)
