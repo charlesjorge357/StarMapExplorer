@@ -1,9 +1,10 @@
-import { Canvas } from "@react-three/fiber";
-import { useEffect, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useEffect, useState, useRef } from "react";
 import { KeyboardControls } from "@react-three/drei";
 import { CameraController } from "./components/3d/CameraController";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { useThree } from "@react-three/fiber";
+import { Vector3 } from "three";
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -24,6 +25,25 @@ const controls = [
   { name: "down", keys: ["KeyE"] },
   { name: "boost", keys: ["ShiftLeft", "ShiftRight"] },
 ];
+
+function SelectionRing({ star }: { star: SimpleStar }) {
+  const { camera } = useThree();
+  const ringRef = useRef<any>();
+
+  useFrame(() => {
+    if (ringRef.current) {
+      // Make ring face camera
+      ringRef.current.lookAt(camera.position);
+    }
+  });
+
+  return (
+    <mesh ref={ringRef} position={star.position}>
+      <ringGeometry args={[1.5, 2, 16]} />
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
+    </mesh>
+  );
+}
 
 function StarField() {
   const [stars, setStars] = useState<SimpleStar[]>([]);
@@ -46,31 +66,40 @@ function StarField() {
       {stars.map((star) => {
         const isSelected = selectedStar?.id === star.id;
         return (
-          <mesh 
-            key={star.id} 
-            position={star.position}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStarClick(star);
-            }}
-          >
-            <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
-            <meshStandardMaterial 
-              color={isSelected ? "#ffff00" : StarGenerator.getStarColor(star.spectralClass)}
-              emissive={isSelected ? "#ffff00" : StarGenerator.getStarColor(star.spectralClass)}
-              emissiveIntensity={isSelected ? 0.8 : 0.3}
-            />
-          </mesh>
+          <group key={star.id}>
+            <mesh 
+              position={star.position}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStarClick(star);
+              }}
+            >
+              <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5), 8, 8]} />
+              <meshStandardMaterial 
+                color={StarGenerator.getStarColor(star.spectralClass)}
+                emissive={StarGenerator.getStarColor(star.spectralClass)}
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+            
+            {/* Selection overlay */}
+            {isSelected && (
+              <mesh position={star.position}>
+                <sphereGeometry args={[Math.max(star.radius * 0.3, 0.5) + 0.1, 8, 8]} />
+                <meshBasicMaterial 
+                  color="#ffffff"
+                  transparent
+                  opacity={0.3}
+                  depthWrite={false}
+                />
+              </mesh>
+            )}
+          </group>
         );
       })}
       
-      {/* Selection indicator */}
-      {selectedStar && (
-        <mesh position={selectedStar.position}>
-          <ringGeometry args={[1.5, 2, 16]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
-        </mesh>
-      )}
+      {/* Camera-facing selection ring */}
+      {selectedStar && <SelectionRing star={selectedStar} />}
     </group>
   );
 }
