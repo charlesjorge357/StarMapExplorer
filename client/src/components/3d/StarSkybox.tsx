@@ -73,17 +73,18 @@ export function StarSkybox({ count = 2000, radius = 1000 }: StarSkyboxProps) {
   }, [count]);
 
   return (
-    <Points positions={positions} colors={colors}>
-      <PointMaterial
-        transparent
-        size={2.0}
-        sizeAttenuation={false}
-        depthWrite={false}
-        depthTest={false}
-        vertexColors
-        blending={THREE.AdditiveBlending}
-        renderOrder={-1}
-      />
-    </Points>
+    <group renderOrder={-1000}>
+      <Points positions={positions} colors={colors}>
+        <PointMaterial
+          transparent
+          size={3.0}
+          sizeAttenuation={false}
+          depthWrite={false}
+          depthTest={true}
+          vertexColors
+          blending={THREE.AdditiveBlending}
+        />
+      </Points>
+    </group>
   );
 }
