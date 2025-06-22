@@ -179,10 +179,8 @@ export function CameraController({
       .filter(([_, active]) => active)
       .map(([key, _]) => key);
     
-    // Save position for navigation if callback provided (only in galactic view)
-    if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
-      onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
-    }
+    // Remove position saving to prevent star movement artifacts
+    // Position saving was causing visual issues with star positioning
   });
 
   return null;
