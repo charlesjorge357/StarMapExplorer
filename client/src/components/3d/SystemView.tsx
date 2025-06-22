@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
 
 // Helper functions for planet materials
 function getPlanetColor(type: string): string {

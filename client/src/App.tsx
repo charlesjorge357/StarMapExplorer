@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useState, useRef } from "react";
-import { KeyboardControls } from "@react-three/drei";
+import { KeyboardControls, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
@@ -65,6 +65,8 @@ function StarField({
   setSelectedStar: (star: SimpleStar | null) => void;
   stars: SimpleStar[];
 }) {
+  // Load star surface texture
+  const starBumpMap = useTexture('/textures/star_surface.jpg');
 
   const handleStarClick = (star: SimpleStar, event: any) => {
     event.stopPropagation();
@@ -101,10 +103,8 @@ function StarField({
             <mesh 
               position={star.position}
               onClick={(e) => {
-                if (mouseMode) {
-                  console.log(`Selected star: ${star.name}`);
-                  setSelectedStar(star);
-                }
+                console.log(`Selected star: ${star.name}`);
+                setSelectedStar(star);
               }}
               visible={false}
             >
