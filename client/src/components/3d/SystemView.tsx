@@ -21,13 +21,15 @@ function getPlanetColor(type: string): string {
   return colors[type as keyof typeof colors] || '#888888';
 }
 
-function getPlanetTexture(type: string, planetTextures: any): any {
+function getPlanetTexture(type: string, planetTextures: any, planetId: string): any {
   const textures = planetTextures[type as keyof typeof planetTextures];
   if (!textures) return undefined;
 
-  // Handle array of textures (random selection)
+  // Handle array of textures (deterministic selection based on planet ID)
   if (Array.isArray(textures)) {
-    return textures[Math.floor(Math.random() * textures.length)];
+    // Use planet ID hash for consistent texture selection
+    const hash = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return textures[hash % textures.length];
   }
 
   // Single texture
@@ -35,14 +37,16 @@ function getPlanetTexture(type: string, planetTextures: any): any {
 }
 
 // Helper function to get texture for a planet - moved to top level
-function getPlanetTextureForMaterial(planetType: string, planetTextures: any) {
+function getPlanetTextureForMaterial(planetType: string, planetTextures: any, planetId: string) {
   const textures = planetTextures[planetType as keyof typeof planetTextures];
   if (!textures) return undefined;
 
-  // Handle array of textures (random selection)
+  // Handle array of textures (deterministic selection based on planet ID)
   if (Array.isArray(textures)) {
     if (textures.length === 0) return undefined;
-    return textures[Math.floor(Math.random() * textures.length)];
+    // Use planet ID hash for consistent texture selection
+    const hash = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return textures[hash % textures.length];
   }
 
   // Single texture
@@ -162,10 +166,10 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 0.8, 32, 32]} />
         <meshStandardMaterial 
-          color={getPlanetTexture(planet.type, planetTextures) ? '#ffffff' : getPlanetColor(planet.type)}
+          color={getPlanetTexture(planet.type, planetTextures, planet.id) ? '#ffffff' : getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
-          emissiveIntensity={getPlanetTexture(planet.type, planetTextures) ? 0.1 : 0.2}
-          map={getPlanetTexture(planet.type, planetTextures)}
+          emissiveIntensity={getPlanetTexture(planet.type, planetTextures, planet.id) ? 0.1 : 0.2}
+          map={getPlanetTexture(planet.type, planetTextures, planet.id)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
           transparent={false}
