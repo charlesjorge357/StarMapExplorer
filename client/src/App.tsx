@@ -521,17 +521,17 @@ function App() {
           )}
 
           {/* System view - star information (always shown) */}
-          {currentView === 'system' && (window as any).systemStarSelected && (
+          {currentView === 'system' && currentSystem?.star && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
-              <h3 className="text-lg font-bold" style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>
-                {(window as any).systemStarSelected.name}
+              <h3 className="text-lg font-bold" style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>
+                {currentSystem.star.name}
               </h3>
-              <p className="text-sm text-gray-300 mb-2">Central Star - Spectral Class {(window as any).systemStarSelected.spectralClass}</p>
+              <p className="text-sm text-gray-300 mb-2">Central Star - Spectral Class {currentSystem.star.spectralClass}</p>
               <div className="space-y-1 text-sm">
-                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Mass:</span> {((window as any).systemStarSelected.mass)?.toFixed(2)} M☉</p>
-                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Radius:</span> {((window as any).systemStarSelected.radius)?.toFixed(2)} R☉</p>
-                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Temperature:</span> {((window as any).systemStarSelected.temperature)?.toFixed(0)} K</p>
-                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Mass:</span> {currentSystem.star.mass?.toFixed(2)} M☉</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Radius:</span> {currentSystem.star.radius?.toFixed(2)} R☉</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Temperature:</span> {currentSystem.star.temperature?.toFixed(0)} K</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 <p>Star information always visible in system view</p>

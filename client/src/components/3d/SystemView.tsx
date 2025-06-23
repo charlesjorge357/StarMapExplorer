@@ -212,16 +212,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Use planets from the cached system
   const planets = system.planets || [];
 
-  // Make star info always available in system view - set immediately and persist
-  React.useEffect(() => {
-    (window as any).systemStarSelected = star;
-    console.log('Star info set for system view:', star.name);
-  }, [star]);
-
-  // Ensure star info is set when component mounts
-  React.useEffect(() => {
-    (window as any).systemStarSelected = star;
-  }, []);
+  // No longer needed - using currentSystem.star directly in UI
 
   // Handle background click to deselect planets only
   const handleBackgroundClick = () => {
