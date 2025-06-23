@@ -172,8 +172,8 @@ function PlanetMesh({
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={false}
-          opacity={1.0}
+          transparent={getMaterialOpacity(planet.type).transparent}
+          opacity={getMaterialOpacity(planet.type).opacity}
         />
       </mesh>
 
@@ -239,16 +239,25 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
   const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
   
-  // Configure verdant textures for full opacity (no transparency)
-  if (terrestrial1Texture) {
-    terrestrial1Texture.format = THREE.RGBAFormat;
-  }
-  if (terrestrial2Texture) {
-    terrestrial2Texture.format = THREE.RGBAFormat;
-  }
-  if (terrestrial3Texture) {
-    terrestrial3Texture.format = THREE.RGBAFormat;
-  }
+  // Material opacity settings per planet type
+  const getMaterialOpacity = (planetType: string) => {
+    switch (planetType) {
+      case 'verdant_world':
+      case 'arid_world':
+      case 'ocean_world':
+      case 'dead_world':
+      case 'nuclear_world':
+        return { transparent: false, opacity: 1.0 }; // Fully opaque for surface detail
+      case 'gas_giant':
+        return { transparent: true, opacity: 0.9 }; // Slight transparency for atmospheric effect
+      case 'frost_giant':
+        return { transparent: true, opacity: 0.85 }; // More transparency for ice giants
+      case 'acidic_world':
+        return { transparent: true, opacity: 0.95 }; // Slight transparency for toxic atmosphere
+      default:
+        return { transparent: false, opacity: 1.0 };
+    }
+  };
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
   
   // Comprehensive planet texture mapping based on planet types
