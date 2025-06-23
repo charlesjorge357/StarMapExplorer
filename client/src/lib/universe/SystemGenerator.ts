@@ -66,12 +66,15 @@ export class SystemGenerator {
 
   private static generateTextureIndex(planetType: PlanetType, planetIndex: number, starName: string): number {
     // Generate a consistent texture index based on planet properties
-    const seed = starName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + planetIndex;
+    // Include planet type in the seed to ensure variety between planets of the same type
+    const typeHash = planetType.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const nameHash = starName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const seed = nameHash + planetIndex * 1000 + typeHash * 100;
     
     // Define texture count per planet type (based on available textures)
     const textureCountMap = {
       gas_giant: 1, // Jupiter only
-      frost_giant: 2, // Uranus, Neptune
+      frost_giant: 2, // Neptune, Jupiter for variety
       arid_world: 2, // Mars, Venus surface
       verdant_world: 3, // Earth-like terrestrial textures
       acidic_world: 2, // Venus atmosphere, Venus surface
