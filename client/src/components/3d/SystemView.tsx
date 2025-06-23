@@ -170,8 +170,8 @@ function PlanetMesh({
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={false}
-          opacity={1.0}
+          transparent={getPlanetOpacity(planet.type).transparent}
+          opacity={getPlanetOpacity(planet.type).opacity}
         />
       </mesh>
 
