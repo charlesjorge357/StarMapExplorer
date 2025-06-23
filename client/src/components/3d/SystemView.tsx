@@ -65,19 +65,7 @@ function getPlanetGlow(type: string): string {
   return glows[type as keyof typeof glows] || '#444444';
 }
 
-function getPlanetOpacity(type: string): { transparent: boolean; opacity: number } {
-  const opacitySettings = {
-    gas_giant: { transparent: true, opacity: 0.9 }, // Slight transparency for atmospheric effect
-    frost_giant: { transparent: true, opacity: 0.85 }, // More transparency for ice giants
-    arid_world: { transparent: false, opacity: 1.0 }, // Fully opaque for surface detail
-    verdant_world: { transparent: false, opacity: 1.0 }, // Fully opaque for Earth-like clarity
-    acidic_world: { transparent: true, opacity: 0.95 }, // Slight transparency for toxic atmosphere
-    nuclear_world: { transparent: false, opacity: 1.0 }, // Fully opaque for surface detail
-    ocean_world: { transparent: false, opacity: 1.0 }, // Fully opaque for water surface detail
-    dead_world: { transparent: false, opacity: 1.0 } // Fully opaque for surface detail
-  };
-  return opacitySettings[type as keyof typeof opacitySettings] || { transparent: false, opacity: 1.0 };
-}
+
 
 function getStarColor(spectralClass: string): string {
   const firstChar = spectralClass.charAt(0).toUpperCase();
@@ -184,8 +172,8 @@ function PlanetMesh({
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={getPlanetOpacity(planet.type).transparent}
-          opacity={getPlanetOpacity(planet.type).opacity}
+          transparent={false}
+          opacity={1.0}
         />
       </mesh>
 
@@ -246,10 +234,21 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
   
-  // Verdant world (Earth-like) textures
+  // Verdant world (Earth-like) textures with proper opacity
   const terrestrial1Texture = useTexture('/textures/terrestrial1.jpg');
   const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
   const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
+  
+  // Configure verdant textures for full opacity (no transparency)
+  if (terrestrial1Texture) {
+    terrestrial1Texture.format = THREE.RGBAFormat;
+  }
+  if (terrestrial2Texture) {
+    terrestrial2Texture.format = THREE.RGBAFormat;
+  }
+  if (terrestrial3Texture) {
+    terrestrial3Texture.format = THREE.RGBAFormat;
+  }
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
   
   // Comprehensive planet texture mapping based on planet types
