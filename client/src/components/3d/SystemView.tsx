@@ -81,7 +81,6 @@ interface SystemViewProps {
   system: any;
   selectedPlanet: any;
   onPlanetClick: (planet: any) => void;
-  mouseMode: boolean;
 }
 
 // Selection ring component that follows the planet
@@ -157,14 +156,10 @@ function PlanetMesh({
         onClick={handleClick}
         onPointerOver={(e) => {
           e.stopPropagation();
-          if (mouseMode) {
-            document.body.style.cursor = 'pointer';
-          }
+          document.body.style.cursor = 'pointer';
         }}
         onPointerOut={() => {
-          if (mouseMode) {
-            document.body.style.cursor = 'auto';
-          }
+          document.body.style.cursor = 'auto';
         }}
       >
         <sphereGeometry args={[planet.radius * 0.8, 16, 16]} />
@@ -188,7 +183,7 @@ function PlanetMesh({
   );
 }
 
-export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
+export function SystemView({ system, selectedPlanet, onPlanetClick }: Omit<SystemViewProps, 'mouseMode'>) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const { selectStar } = useUniverse();
 

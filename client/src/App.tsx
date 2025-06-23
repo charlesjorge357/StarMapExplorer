@@ -157,7 +157,8 @@ function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
-  const [mouseMode, setMouseMode] = useState(true);
+  // Mouse mode is now always enabled - removed navigation mode
+  const mouseMode = true;
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
@@ -452,8 +453,8 @@ function App() {
         </div>
       )}
 
-      {/* Center Crosshair */}
-      {!showSelector && !mouseMode && (
+      {/* Crosshair removed - mouse mode only */}
+      {false && (
         <div style={{
           position: 'absolute',
           top: '50%',

@@ -31,27 +31,13 @@ export function CameraController({
   const lastBoostStateRef = useRef(false);
   const lastPositionRef = useRef(new Vector3());
 
-  // Handle pointer lock
+  // Mouse-only camera control with right-click drag
   useEffect(() => {
     const canvas = gl.domElement;
-    
-    const handleClick = () => {
-      if (!mouseMode && !isLockedRef.current) {
-        canvas.requestPointerLock();
-      }
-    };
-
-    const handlePointerLockChange = () => {
-      isLockedRef.current = document.pointerLockElement === canvas;
-    };
 
     const handleMouseMove = (event: MouseEvent) => {
-      // In navigation mode: use pointer lock
-      // In mouse mode: use right-click drag
-      const shouldRotateCamera = (!mouseMode && isLockedRef.current) || 
-                                (mouseMode && isRightClickDragRef.current);
-      
-      if (!shouldRotateCamera || isTransitioning) return;
+      // Only rotate camera during right-click drag
+      if (!isRightClickDragRef.current || isTransitioning) return;
 
       const { movementX, movementY } = event;
       
@@ -67,7 +53,7 @@ export function CameraController({
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (mouseMode && event.button === 2) { // Right click
+      if (event.button === 2) { // Right click
         event.preventDefault();
         isRightClickDragRef.current = true;
         document.body.style.cursor = 'grabbing';
@@ -75,32 +61,26 @@ export function CameraController({
     };
 
     const handleMouseUp = (event: MouseEvent) => {
-      if (mouseMode && event.button === 2) { // Right click release
+      if (event.button === 2) { // Right click release
         isRightClickDragRef.current = false;
         document.body.style.cursor = 'auto';
       }
     };
 
     const handleContextMenu = (event: MouseEvent) => {
-      if (mouseMode) {
-        event.preventDefault(); // Prevent context menu when right-clicking in mouse mode
-      }
+      event.preventDefault(); // Always prevent context menu
     };
 
-    canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('pointerlockchange', handlePointerLockChange);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp); // Global mouse up to catch releases outside canvas
 
     return () => {
-      canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('pointerlockchange', handlePointerLockChange);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
