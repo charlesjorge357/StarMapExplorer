@@ -90,8 +90,8 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
       // Match the planet's orbital position exactly
       const time = state.clock.getElapsedTime() * 0.1;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
-      ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+      ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
+      ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
 
       // Pulse effect
       const pulse = 1.0 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
@@ -103,7 +103,7 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
 
   return (
     <mesh ref={ringRef}>
-      <sphereGeometry args={[planet.radius * 10 + 0.5, 16, 16]} />
+      <sphereGeometry args={[planet.radius * 0.8 + 0.5, 16, 16]} />  
       <meshBasicMaterial 
         color="#ffffff"
         transparent
@@ -135,8 +135,8 @@ function PlanetMesh({
     if (planetRef.current) {
       const time = state.clock.getElapsedTime() * 0.1;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
-      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
+      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
     }
   });
 
@@ -164,7 +164,7 @@ function PlanetMesh({
           }
         }}
       >
-        <sphereGeometry args={[planet.radius * 10, 16, 16]} />
+        <sphereGeometry args={[planet.radius * 0.8, 16, 16]} />
         <meshStandardMaterial 
           color={getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
@@ -262,7 +262,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           }
         }}
       >
-        <sphereGeometry args={[Math.log(star.radius + 1) * 3 + 2, 32, 32]} />
+        <sphereGeometry args={[Math.log(star.radius + 1) * 6 + 4, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
@@ -278,7 +278,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       {/* Star selection ring */}
       {selectedStar && (
         <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[Math.log(star.radius + 1) * 3 + 3.5, 16, 16]} />
+          <sphereGeometry args={[Math.log(star.radius + 1) * 6 + 7, 16, 16]} />
           <meshBasicMaterial 
             color="#ffffff"
             transparent
@@ -290,7 +290,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
       {/* Star glow effect - scaled with star size */}
       <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[Math.log(star.radius + 1) * 4 + 3, 16, 16]} />
+        <sphereGeometry args={[Math.log(star.radius + 1) * 8 + 6, 16, 16]} />
         <meshBasicMaterial 
           color={getStarColor(star.spectralClass)}
           transparent
@@ -301,7 +301,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       {/* Orbital paths (static) */}
       {planets.map((planet) => (
         <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.orbitRadius - 0.05, planet.orbitRadius + 0.05, 128]} />
+          <ringGeometry args={[planet.orbitRadius * 2 - 0.05, planet.orbitRadius * 2 + 0.05, 128]} />
           <meshBasicMaterial 
             color="#444444" 
             transparent 
