@@ -219,33 +219,17 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   // Use planets from the cached system
   const planets = system.planets || [];
 
-  // Make star selection available globally for UI
+  // Make star info always available in system view
   React.useEffect(() => {
-    (window as any).systemStarSelected = selectedStar;
-  }, [selectedStar]);
+    (window as any).systemStarSelected = star;
+  }, [star]);
 
-  // Handle star click
-  const handleStarClick = (event: any) => {
-    if (mouseMode) {
-      event.stopPropagation();
-      console.log(`Selected central star: ${star.name}`);
-      setSelectedStar(star);
-      selectStar(star); // Update global state for UI
-      onPlanetClick(null); // Deselect any planet
-    }
-  };
-
-  // Handle background click to deselect
+  // Handle background click to deselect planets only
   const handleBackgroundClick = () => {
     if (mouseMode) {
       if (selectedPlanet) {
         console.log('Deselecting planet');
         onPlanetClick(null);
-      }
-      if (selectedStar) {
-        console.log('Deselecting star');
-        setSelectedStar(null);
-        selectStar(null); // Clear global state
       }
     }
   };
@@ -262,21 +246,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Central Star - doubled size from galactic view for system scale */}
+      {/* Central Star - non-interactive, info shown permanently */}
       <mesh 
         position={[0, 0, 0]}
-        onClick={handleStarClick}
-        onPointerOver={(e) => {
-          if (mouseMode) {
-            e.stopPropagation();
-            document.body.style.cursor = 'pointer';
-          }
-        }}
-        onPointerOut={() => {
-          if (mouseMode) {
-            document.body.style.cursor = 'auto';
-          }
-        }}
       >
         <sphereGeometry args={[Math.log((star.radius*1.1) + 1) * 6 + 4, 32, 32]} />
         <meshStandardMaterial 
@@ -291,20 +263,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
         />
       </mesh>
 
-      {/* Star selection ring */}
-      {selectedStar && (
-        <mesh position={[0, 0, 0]}
-          raycast={() => null}
-          >
-          <sphereGeometry args={[Math.log(star.radius + 1) * 6 + 7, 16, 16]} />
-          <meshBasicMaterial 
-            color="#ffffff"
-            transparent
-            opacity={0.3}
-            wireframe
-          />
-        </mesh>
-      )}
+      {/* No selection ring needed - star info always shown */}
 
       {/* Star glow effect - scaled with star size */}
       <mesh position={[0, 0, 0]}>

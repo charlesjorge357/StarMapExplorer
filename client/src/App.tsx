@@ -542,7 +542,7 @@ function App() {
             </div>
           )}
 
-          {/* System view - star information */}
+          {/* System view - star information (always shown) */}
           {currentView === 'system' && (window as any).systemStarSelected && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
               <h3 className="text-lg font-bold" style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>
@@ -556,7 +556,7 @@ function App() {
                 <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
               </div>
               <div className="mt-3 text-xs text-gray-400">
-                <p>Click star to deselect</p>
+                <p>Star information always visible in system view</p>
               </div>
             </div>
           )}
