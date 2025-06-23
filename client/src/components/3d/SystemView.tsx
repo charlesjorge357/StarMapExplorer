@@ -196,17 +196,21 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const starBumpMap = useTexture('/textures/star_surface.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
+  const jupiterTexture = useTexture('/textures/jupiter.jpg');
+  const venusTexture = useTexture('/textures/venus.jpg');
+  const acidicTexture = useTexture('/textures/acidic_world.jpg');
+  const nuclearTexture = useTexture('/textures/nuclear_world.jpg');
   
-  // Planet texture mapping - ready for expansion
+  // Comprehensive planet texture mapping
   const planetTextures = {
-    gas_giant: null, // Ready for gas giant textures
-    frost_giant: [uranusTexture, neptuneTexture],
-    arid_world: null, // Ready for Mars-like textures
-    verdant_world: null, // Ready for Earth-like textures
-    acidic_world: null, // Ready for Venus-like textures
-    nuclear_world: null, // Ready for irradiated world textures
-    ocean_world: null, // Ready for water world textures
-    dead_world: null // Ready for barren world textures
+    gas_giant: jupiterTexture, // Jupiter-like gas giants
+    frost_giant: [uranusTexture, neptuneTexture], // Ice giants variety
+    arid_world: venusTexture, // Mars/Venus-like arid worlds
+    verdant_world: null, // Earth-like (will use procedural green for now)
+    acidic_world: acidicTexture, // Toxic atmospheric worlds
+    nuclear_world: nuclearTexture, // Irradiated wasteland worlds
+    ocean_world: null, // Water worlds (will use procedural blue)
+    dead_world: null // Barren rocky worlds (will use procedural gray)
   };
 
   // Use planets from the cached system

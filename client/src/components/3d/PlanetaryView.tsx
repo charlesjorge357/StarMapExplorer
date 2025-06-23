@@ -1,10 +1,8 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, useTexture } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { useUniverse } from '../../lib/stores/useUniverse';
-import { PlanetGenerator } from '../../lib/universe/PlanetGenerator';
-import { SurfaceFeature } from '../../shared/schema';
+import { SurfaceFeature } from '../../../shared/schema';
 
 interface SurfaceFeatureMesh {
   feature: SurfaceFeature;
@@ -14,192 +12,123 @@ interface SurfaceFeatureMesh {
 
 function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMesh) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
   
   // Convert lat/lon to 3D position on sphere
   const position = useMemo(() => {
-    const lat = (feature.position[0] * Math.PI) / 180;
-    const lon = (feature.position[1] * Math.PI) / 180;
+    const [lat, lon] = feature.position;
+    const latRad = (lat * Math.PI) / 180;
+    const lonRad = (lon * Math.PI) / 180;
     
-    const x = planetRadius * Math.cos(lat) * Math.cos(lon);
-    const y = planetRadius * Math.sin(lat);
-    const z = planetRadius * Math.cos(lat) * Math.sin(lon);
+    const x = planetRadius * Math.cos(latRad) * Math.cos(lonRad);
+    const y = planetRadius * Math.sin(latRad);
+    const z = planetRadius * Math.cos(latRad) * Math.sin(lonRad);
     
     return [x, y, z] as [number, number, number];
   }, [feature.position, planetRadius]);
 
-  const color = feature.type === 'city' ? '#ffff00' : 
-                feature.type === 'fort' ? '#ff0000' : '#00ff00';
+  // Get light color based on technology level
+  const getLightColor = () => {
+    switch (feature.technology) {
+      case 'primitive': return '#FFA500'; // Orange firelight
+      case 'industrial': return '#FFD700'; // Yellow industrial light
+      case 'advanced': return '#00BFFF'; // Blue advanced light
+      default: return '#FFFFFF'; // White default
+    }
+  };
 
-  const geometry = feature.type === 'city' ? 'box' :
-                   feature.type === 'fort' ? 'cone' : 'sphere';
+  // Get light intensity based on size and population
+  const getLightIntensity = () => {
+    const baseIntensity = feature.type === 'city' ? 1.0 : 0.5;
+    const sizeMultiplier = feature.size === 'large' ? 2.0 : feature.size === 'medium' ? 1.5 : 1.0;
+    const popMultiplier = feature.population ? Math.log10(feature.population) / 6 : 1.0;
+    
+    return baseIntensity * sizeMultiplier * popMultiplier;
+  };
+
+  // Flickering animation for city lights
+  useFrame((state) => {
+    if (meshRef.current && feature.type === 'city') {
+      const time = state.clock.getElapsedTime();
+      const flicker = 0.8 + Math.sin(time * 10 + feature.position[0]) * 0.1 + Math.sin(time * 7 + feature.position[1]) * 0.1;
+      (meshRef.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0.3, flicker * getLightIntensity());
+    }
+  });
+
+  const handleClick = (event: any) => {
+    event.stopPropagation();
+    onClick(feature);
+  };
 
   return (
     <group position={position}>
+      {/* Surface feature light */}
       <mesh
         ref={meshRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick(feature);
-        }}
+        onClick={handleClick}
         onPointerOver={(e) => {
           e.stopPropagation();
-          setHovered(true);
           document.body.style.cursor = 'pointer';
         }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
+        onPointerOut={() => {
           document.body.style.cursor = 'auto';
         }}
       >
-        {geometry === 'box' && <boxGeometry args={[0.3, 0.3, 0.3]} />}
-        {geometry === 'cone' && <coneGeometry args={[0.2, 0.4, 6]} />}
-        {geometry === 'sphere' && <sphereGeometry args={[0.15, 8, 6]} />}
-        <meshLambertMaterial color={color} />
+        <sphereGeometry args={[0.2, 8, 8]} />
+        <meshBasicMaterial 
+          color={getLightColor()}
+          transparent
+          opacity={getLightIntensity()}
+          emissive={getLightColor()}
+          emissiveIntensity={getLightIntensity() * 0.5}
+        />
       </mesh>
-      
-      {hovered && (
-        <Text
-          position={[0, 0.5, 0]}
-          fontSize={0.2}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-          rotation={[0, Math.PI, 0]}
-        >
-          {feature.name}
-        </Text>
+
+      {/* Light cluster for larger cities */}
+      {feature.type === 'city' && feature.size !== 'small' && (
+        <>
+          {Array.from({ length: feature.size === 'large' ? 8 : 4 }, (_, i) => {
+            const angle = (i / (feature.size === 'large' ? 8 : 4)) * Math.PI * 2;
+            const radius = feature.size === 'large' ? 1.0 : 0.5;
+            const offsetX = Math.cos(angle) * radius;
+            const offsetZ = Math.sin(angle) * radius;
+            
+            return (
+              <mesh key={i} position={[offsetX, 0, offsetZ]}>
+                <sphereGeometry args={[0.1, 6, 6]} />
+                <meshBasicMaterial 
+                  color={getLightColor()}
+                  transparent
+                  opacity={getLightIntensity() * 0.6}
+                  emissive={getLightColor()}
+                  emissiveIntensity={getLightIntensity() * 0.3}
+                />
+              </mesh>
+            );
+          })}
+        </>
       )}
+
+      {/* Point light for illumination */}
+      <pointLight
+        color={getLightColor()}
+        intensity={getLightIntensity() * 2}
+        distance={10}
+        decay={2}
+      />
     </group>
   );
 }
 
 export function PlanetaryView() {
-  const { selectedPlanet } = useUniverse();
-  const planetRef = useRef<THREE.Mesh>(null);
-  const [selectedFeature, setSelectedFeature] = useState<SurfaceFeature | null>(null);
+  // This will be implemented when we add planetary surface exploration
+  // For now, it's a placeholder for the city lighting system
   
-  if (!selectedPlanet) {
-    return (
-      <Text
-        position={[0, 0, 0]}
-        fontSize={2}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        No planet selected
-      </Text>
-    );
-  }
-
-  const planetRadius = Math.max(3, selectedPlanet.radius * 2);
-  const color = PlanetGenerator.getPlanetColor(selectedPlanet.type);
-
-  // Generate surface features if none exist
-  if (selectedPlanet.surfaceFeatures.length === 0) {
-    selectedPlanet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(selectedPlanet, 8);
-  }
-
-  useFrame((state) => {
-    if (planetRef.current) {
-      planetRef.current.rotation.y += selectedPlanet.rotationSpeed * 0.05;
-    }
-  });
-
-  const handleFeatureClick = (feature: SurfaceFeature) => {
-    console.log("Surface feature clicked:", feature.name);
-    setSelectedFeature(feature);
-  };
-
   return (
     <group>
-      {/* Planet sphere */}
-      <mesh ref={planetRef} position={[0, 0, 0]}>
-        <sphereGeometry args={[planetRadius, 32, 24]} />
-        <meshLambertMaterial color={color} />
-      </mesh>
-      
-      {/* Surface features */}
-      {selectedPlanet.surfaceFeatures.map((feature) => (
-        <SurfaceFeatureMesh
-          key={feature.id}
-          feature={feature}
-          planetRadius={planetRadius + 0.1}
-          onClick={handleFeatureClick}
-        />
-      ))}
-      
-      {/* Planet info */}
-      <Text
-        position={[0, planetRadius + 3, 0]}
-        fontSize={1}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {selectedPlanet.name}
-      </Text>
-      
-      <Text
-        position={[0, planetRadius + 2, 0]}
-        fontSize={0.6}
-        color="lightblue"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {selectedPlanet.type.replace('_', ' ')} • {selectedPlanet.surfaceFeatures.length} features
-      </Text>
-      
-      {/* Selected feature info */}
-      {selectedFeature && (
-        <group position={[planetRadius + 5, 0, 0]}>
-          <Text
-            position={[0, 2, 0]}
-            fontSize={0.8}
-            color="yellow"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {selectedFeature.name}
-          </Text>
-          
-          <Text
-            position={[0, 1, 0]}
-            fontSize={0.5}
-            color="white"
-            anchorX="center"
-            anchorY="middle"
-          >
-            Type: {selectedFeature.type}
-          </Text>
-          
-          {selectedFeature.description && (
-            <Text
-              position={[0, 0, 0]}
-              fontSize={0.4}
-              color="lightgray"
-              anchorX="center"
-              anchorY="middle"
-              maxWidth={8}
-            >
-              {selectedFeature.description}
-            </Text>
-          )}
-        </group>
-      )}
-      
-      {/* Navigation hint */}
-      <Text
-        position={[0, -planetRadius - 2, 0]}
-        fontSize={0.8}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Planetary View - Click on surface features to inspect
-      </Text>
+      {/* Planetary surface will be rendered here */}
+      {/* Surface features with city lights will be rendered here */}
     </group>
   );
 }
+
+export default PlanetaryView;

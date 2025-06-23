@@ -127,6 +127,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Simplified system view by making stars non-interactive and displaying star information permanently. Removed click handlers and selection rings from central star to eliminate errors while maintaining full star data visibility.
 - June 22, 2025: Restricted all object interactions to mouse mode only. Planet clicking, star selection, and background deselection now require Tab key to enter mouse mode, preventing conflicts with navigation mode's pointer lock system.
 - June 23, 2025: Removed navigation mode entirely and simplified to mouse-only interactions. Left-click selects objects, right-click+drag controls camera rotation, WASD controls movement. No mode switching required.
+- June 23, 2025: Enhanced planet texture system with comprehensive texture mapping for gas giants (Jupiter), ice giants (Uranus/Neptune), acidic worlds (Venus), and nuclear worlds. Added atmospheric glow effects for gas planets and improved surface detail with higher polygon counts. Prepared planetary surface exploration framework with city lighting system featuring technology-based light colors, size-based light clusters, and population-driven intensity.
 
 ## User Preferences
 

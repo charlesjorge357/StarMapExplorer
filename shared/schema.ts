@@ -72,6 +72,9 @@ export interface SurfaceFeature {
   name: string;
   position: [number, number]; // latitude, longitude
   description?: string;
+  population?: number; // For cities - affects light intensity
+  size?: 'small' | 'medium' | 'large'; // Affects light cluster size
+  technology?: 'primitive' | 'industrial' | 'advanced'; // Affects light color
 }
 
 export type PlanetType = 
