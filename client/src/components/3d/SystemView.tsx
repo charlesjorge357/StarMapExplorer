@@ -228,8 +228,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const moonTexture = useTexture('/textures/moon.jpg');
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
-  const acidicTexture = useTexture('/textures/acidic_world.jpg');
-  const nuclearTexture = useTexture('/textures/nuclear_world.jpg');
+  // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
   
   // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
@@ -237,8 +236,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     frost_giant: [uranusTexture, neptuneTexture], // Ice giant variety
     arid_world: [marsTexture, venusSurfaceTexture], // Mars/Venus surfaces for arid worlds
     verdant_world: null, // Earth-like (awaiting Earth textures)
-    acidic_world: [acidicTexture, venusAtmosphereTexture], // Toxic atmosphere worlds
-    nuclear_world: [nuclearTexture, ceresTexture], // Irradiated/barren worlds
+    acidic_world: [venusAtmosphereTexture, venusSurfaceTexture], // Toxic atmosphere worlds
+    nuclear_world: [ceresTexture, erisTexture], // Irradiated/barren worlds
     ocean_world: null, // Water worlds (awaiting ocean textures)
     dead_world: [moonTexture, mercuryTexture, erisTexture] // Barren rocky worlds
   };
