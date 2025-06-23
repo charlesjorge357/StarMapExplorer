@@ -141,9 +141,16 @@ function PlanetMesh({
   });
 
   const handleClick = (event: any) => {
-    event.stopPropagation();
-    console.log(`Selected planet: ${planet.name}`);
-    onPlanetClick(planet);
+    if (mouseMode) {
+      event.stopPropagation();
+      if (isSelected) {
+        console.log(`Deselected planet: ${planet.name}`);
+        onPlanetClick(null); // Unselect if already selected
+      } else {
+        console.log(`Selected planet: ${planet.name}`);
+        onPlanetClick(planet);
+      }
+    }
   };
 
   return (
