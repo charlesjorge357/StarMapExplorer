@@ -181,7 +181,7 @@ function PlanetMesh({
   );
 }
 
-export function SystemView({ system, selectedPlanet, onPlanetClick }: Omit<SystemViewProps, 'mouseMode'>) {
+export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const { selectStar } = useUniverse();
 

@@ -155,8 +155,7 @@ function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
-  // Mouse mode is now always enabled - removed navigation mode
-  const mouseMode = true;
+  // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);

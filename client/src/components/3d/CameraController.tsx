@@ -84,7 +84,7 @@ export function CameraController({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [camera, gl.domElement, isTransitioning, mouseMode]);
+  }, [camera, gl.domElement, isTransitioning]);
 
   // Restore saved position when provided
   useEffect(() => {
