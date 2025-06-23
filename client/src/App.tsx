@@ -536,7 +536,7 @@ function App() {
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 <p>Press Enter to explore system</p>
-                <p>Press Escape to deselect</p>
+                <p>Click Again to deselect</p>
               </div>
             </div>
           )}

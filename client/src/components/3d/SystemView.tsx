@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
+
 
 // Helper functions for planet materials
 function getPlanetColor(type: string): string {
@@ -140,7 +142,7 @@ function PlanetMesh({
     }
   });
 
-  const handleClick = (event: any) => {
+ const handleClick = (event: any) => {
     event.stopPropagation();
     console.log(`Selected planet: ${planet.name}`);
     onPlanetClick(planet);
@@ -245,7 +247,17 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
   };
 
   return (
-    <group onClick={handleBackgroundClick}>
+    <group>
+      {/* Background plane for deselection clicks */}
+      <mesh 
+        position={[0, 0, -1000]} 
+        onClick={handleBackgroundClick}
+        visible={false}
+      >
+        <planeGeometry args={[10000, 10000]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Central Star - doubled size from galactic view for system scale */}
       <mesh 
         position={[0, 0, 0]}
@@ -262,7 +274,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
           }
         }}
       >
-        <sphereGeometry args={[Math.log(star.radius + 1) * 6 + 4, 32, 32]} />
+        <sphereGeometry args={[Math.log((star.radius*1.1) + 1) * 6 + 4, 32, 32]} />
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
@@ -277,7 +289,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
       {/* Star selection ring */}
       {selectedStar && (
-        <mesh position={[0, 0, 0]}>
+        <mesh position={[0, 0, 0]}
+          raycast={() => null}
+          >
           <sphereGeometry args={[Math.log(star.radius + 1) * 6 + 7, 16, 16]} />
           <meshBasicMaterial 
             color="#ffffff"

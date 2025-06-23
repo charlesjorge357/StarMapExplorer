@@ -6,6 +6,9 @@ import { useUniverse } from '../../lib/stores/useUniverse';
 import { useCamera } from '../../lib/stores/useCamera';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
 import { Star } from '../../shared/schema';
+import { useThree } from '@react-three/fiber';
+
+
 
 interface StarMeshProps {
   star: Star;
@@ -83,6 +86,8 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
   );
 }
 
+
+
 export function GalacticView() {
   const { universeData, selectedStar, selectStar, setScope } = useUniverse();
   const { transitionTo } = useCamera();
@@ -97,7 +102,7 @@ export function GalacticView() {
     const starPos = new THREE.Vector3(...star.position);
     const cameraPos = starPos.clone().add(new THREE.Vector3(10, 5, 10));
     
-    transitionTo(cameraPos, starPos, 2000);
+    transitionTo((starPos), cameraPos, 2000);
     
     // After transition, switch to system view
     setTimeout(() => {

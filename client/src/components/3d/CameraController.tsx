@@ -79,9 +79,21 @@ export function CameraController({
       camera.position.set(savedPosition[0], savedPosition[1], savedPosition[2]);
       console.log('Restored camera position:', savedPosition);
     } else if (currentScope === 'system') {
-      // System view camera positioned to face the star - front view
-      camera.position.set(0, 5, 50);
-      camera.lookAt(0, 0, 0);
+      // Maintain camera orientation but position it at fixed distance from star
+      const currentDistance = camera.position.length();
+      const targetDistance = 50; // Fixed distance from star
+      
+      if (currentDistance < 5) {
+        // If too close or at origin, set default position
+        camera.position.set(0, 5, 50);
+        camera.lookAt(0, 0, 0);
+      } else {
+        // Maintain current direction but set proper distance
+        const direction = camera.position.clone().normalize();
+        camera.position.copy(direction.multiplyScalar(targetDistance));
+        camera.lookAt(0, 0, 0);
+      }
+      
       camera.updateProjectionMatrix();
       console.log('Set system view camera position:', camera.position);
     }
