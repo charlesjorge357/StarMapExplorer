@@ -65,22 +65,20 @@ function getPlanetGlow(type: string): string {
   return glows[type as keyof typeof glows] || '#444444';
 }
 
-function getMaterialOpacity(planetType: string): { transparent: boolean; opacity: number } {
+function getMaterialSettings(planetType: string): { color: string; transparent: boolean; opacity: number } {
   switch (planetType) {
     case 'verdant_world':
+      return { color: '#ffffff', transparent: false, opacity: 1.0 }; // Pure white to show texture colors
     case 'arid_world':
     case 'ocean_world':
     case 'dead_world':
     case 'nuclear_world':
-      return { transparent: false, opacity: 1.0 }; // Fully opaque for surface detail
     case 'gas_giant':
-      return { transparent: true, opacity: 0.9 }; // Slight transparency for atmospheric effect
     case 'frost_giant':
-      return { transparent: true, opacity: 0.85 }; // More transparency for ice giants
     case 'acidic_world':
-      return { transparent: true, opacity: 0.95 }; // Slight transparency for toxic atmosphere
+      return { color: getPlanetColor(planetType), transparent: false, opacity: 1.0 }; // Colored tint with texture
     default:
-      return { transparent: false, opacity: 1.0 };
+      return { color: getPlanetColor(planetType), transparent: false, opacity: 1.0 };
   }
 }
 
@@ -185,14 +183,14 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 0.8, 32, 32]} />
         <meshStandardMaterial 
-          color={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? '#ffffff' : getPlanetColor(planet.type)}
+          color={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? getMaterialSettings(planet.type).color : getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
           emissiveIntensity={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? 0.1 : 0.2}
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={getMaterialOpacity(planet.type).transparent}
-          opacity={getMaterialOpacity(planet.type).opacity}
+          transparent={getMaterialSettings(planet.type).transparent}
+          opacity={getMaterialSettings(planet.type).opacity}
         />
       </mesh>
 

@@ -135,6 +135,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 23, 2025: Added comprehensive verdant world textures with three high-quality Earth-like options showing continents, oceans, cloud formations, and diverse terrestrial landscapes. Verdant planets now display authentic habitable world appearances with realistic geography and atmospheric effects.
 - June 23, 2025: Fixed texture selection algorithm to ensure proper variety between planets of the same type in a system. Enhanced seed generation to include planet type hash and multiplied planet index for better distribution, preventing multiple planets from getting identical textures.
 - June 23, 2025: Implemented per-planet-type opacity control for optimal visual clarity. Verdant and terrestrial worlds are fully opaque to showcase surface details, while gas giants have slight transparency for atmospheric effects. Ensures each planet type displays with appropriate visual fidelity.
+- June 23, 2025: Fixed material color tinting system - verdant worlds use pure white base color to show true texture colors without tinting, while other planet types maintain colored base for atmospheric effects. No planets are transparent, only color tinting is controlled.
 
 ## User Preferences
 
