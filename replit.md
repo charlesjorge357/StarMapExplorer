@@ -131,6 +131,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 23, 2025: Integrated comprehensive 2K resolution planetary textures including Jupiter (gas giants), Mars/Venus surface (arid worlds), Mercury/Moon/Eris (dead worlds), Venus atmosphere/acidic world (acidic worlds), Ceres/nuclear world (nuclear worlds), and Uranus/Neptune (frost giants). Enhanced material properties with proper texture-based coloring and atmospheric glow effects for gaseous planets.
 - June 23, 2025: Fixed planet texture consistency by implementing deterministic texture selection based on planet ID hash instead of random selection. Planets now maintain consistent textures across selections, essential for globe-scale visualization and navigation consistency. Restored full star opacity across all views (galactic, system) by removing transparency settings.
 - June 23, 2025: Implemented proper texture persistence system with textureIndex field stored in planet data during generation. Textures are randomly selected once during planet creation based on system seed, then permanently stored and consistently loaded across all visits to the system.
+- June 23, 2025: Fixed frost giant texture loading by replacing low-quality ice giant textures with high-resolution 2K versions showing atmospheric details. Added ocean world texture support with beautiful water surface patterns for ocean planets.
 
 ## User Preferences
 
