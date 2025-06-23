@@ -61,13 +61,11 @@ function SelectionRing({ star }: { star: SimpleStar }) {
 function StarField({ 
   selectedStar, 
   setSelectedStar,
-  stars,
-  mouseMode
+  stars
 }: { 
   selectedStar: SimpleStar | null; 
   setSelectedStar: (star: SimpleStar | null) => void;
   stars: SimpleStar[];
-  mouseMode: boolean;
 }) {
   // Load star surface texture
   const starBumpMap = useTexture('/textures/star_surface.jpg');
