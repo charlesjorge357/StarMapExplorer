@@ -56,6 +56,7 @@ export interface Planet {
   atmosphere: string[];
   moons: Moon[];
   surfaceFeatures: SurfaceFeature[];
+  textureIndex?: number; // Persistent texture selection index
 }
 
 export interface Moon {

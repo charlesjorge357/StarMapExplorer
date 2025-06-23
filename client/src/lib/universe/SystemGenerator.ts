@@ -12,6 +12,8 @@ interface Planet {
   atmosphere: string[];
   moons: Moon[];
   inclination?: number;
+  textureIndex?: number;
+  surfaceFeatures?: any[];
 }
 
 interface Moon {
@@ -60,6 +62,26 @@ export class SystemGenerator {
   static seededRandom(seed: number): number {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
+  }
+
+  private static generateTextureIndex(planetType: PlanetType, planetIndex: number, starName: string): number {
+    // Generate a consistent texture index based on planet properties
+    const seed = starName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + planetIndex;
+    
+    // Define texture count per planet type (based on available textures)
+    const textureCountMap = {
+      gas_giant: 1, // Jupiter only
+      frost_giant: 2, // Uranus, Neptune
+      arid_world: 2, // Mars, Venus surface
+      verdant_world: 1, // (future Earth textures)
+      acidic_world: 2, // Venus atmosphere, Venus surface
+      nuclear_world: 2, // Ceres, Eris
+      ocean_world: 1, // (future ocean textures)
+      dead_world: 3 // Moon, Mercury, Eris
+    };
+    
+    const textureCount = textureCountMap[planetType] || 1;
+    return Math.floor(this.seededRandom(seed) * textureCount);
   }
 
   static generatePlanetName(starName: string, index: number): string {
@@ -132,7 +154,9 @@ export class SystemGenerator {
       temperature,
       atmosphere,
       moons: [],
-      inclination
+      inclination,
+      textureIndex: this.generateTextureIndex(type, index, starName),
+      surfaceFeatures: []
     };
   }
 
