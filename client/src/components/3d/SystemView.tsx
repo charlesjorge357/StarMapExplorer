@@ -65,6 +65,20 @@ function getPlanetGlow(type: string): string {
   return glows[type as keyof typeof glows] || '#444444';
 }
 
+function getPlanetOpacity(type: string): { transparent: boolean; opacity: number } {
+  const opacitySettings = {
+    gas_giant: { transparent: true, opacity: 0.9 }, // Slight transparency for atmospheric effect
+    frost_giant: { transparent: true, opacity: 0.85 }, // More transparency for ice giants
+    arid_world: { transparent: false, opacity: 1.0 }, // Fully opaque for surface detail
+    verdant_world: { transparent: false, opacity: 1.0 }, // Fully opaque for Earth-like clarity
+    acidic_world: { transparent: true, opacity: 0.95 }, // Slight transparency for toxic atmosphere
+    nuclear_world: { transparent: false, opacity: 1.0 }, // Fully opaque for surface detail
+    ocean_world: { transparent: false, opacity: 1.0 }, // Fully opaque for water surface detail
+    dead_world: { transparent: false, opacity: 1.0 } // Fully opaque for surface detail
+  };
+  return opacitySettings[type as keyof typeof opacitySettings] || { transparent: false, opacity: 1.0 };
+}
+
 function getStarColor(spectralClass: string): string {
   const firstChar = spectralClass.charAt(0).toUpperCase();
   switch (firstChar) {
