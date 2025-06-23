@@ -6,6 +6,7 @@ import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
+import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
@@ -541,9 +542,28 @@ function App() {
             </div>
           )}
 
+          {/* System view - star information */}
+          {currentView === 'system' && (window as any).systemStarSelected && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <h3 className="text-lg font-bold" style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>
+                {(window as any).systemStarSelected.name}
+              </h3>
+              <p className="text-sm text-gray-300 mb-2">Central Star - Spectral Class {(window as any).systemStarSelected.spectralClass}</p>
+              <div className="space-y-1 text-sm">
+                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Mass:</span> {((window as any).systemStarSelected.mass)?.toFixed(2)} M☉</p>
+                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Radius:</span> {((window as any).systemStarSelected.radius)?.toFixed(2)} R☉</p>
+                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Temperature:</span> {((window as any).systemStarSelected.temperature)?.toFixed(0)} K</p>
+                <p><span style={{ color: getStarDisplayColor((window as any).systemStarSelected.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Click star to deselect</p>
+              </div>
+            </div>
+          )}
+
           {/* System view - planet information */}
           {currentView === 'system' && selectedPlanet && (
-            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ marginTop: (window as any).systemStarSelected ? '280px' : '0px' }}>
               <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
               <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
               <div className="space-y-1 text-sm">

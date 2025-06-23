@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 
@@ -189,6 +190,7 @@ function PlanetMesh({
 
 export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
+  const { setSelectedStar: setGlobalSelectedStar } = useUniverse();
 
   const star = system.star || {
     radius: 1,
@@ -228,6 +230,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       event.stopPropagation();
       console.log(`Selected central star: ${star.name}`);
       setSelectedStar(star);
+      setGlobalSelectedStar(star); // Update global state for UI
       onPlanetClick(null); // Deselect any planet
     }
   };
@@ -241,7 +244,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
       }
       if (selectedStar) {
         console.log('Deselecting star');
-        setSelectedStar(false);
+        setSelectedStar(null);
+        setGlobalSelectedStar(null); // Clear global state
       }
     }
   };

@@ -124,6 +124,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Implemented frost giant planet specifications with authentic Uranus/Neptune textures, light blue coloring, and smaller sizes than gas giants. Added comprehensive texture mapping framework for all planet types.
 - June 22, 2025: Doubled star size (radius multiplier from 8 to 16) and doubled orbital spacing (from 15x to 30x) in system view for better visibility and scale representation.
 - June 22, 2025: Fixed star clicking in system view by replacing group onClick with invisible background plane, and improved camera positioning to maintain viewing direction when entering system view while ensuring proper distance from star.
+- June 22, 2025: Connected system view star selection to global state and added star information UI panel for system view. Star clicks now properly display information panels and selection rings, with UI stacking when both star and planet are selected.
 
 ## User Preferences
 
