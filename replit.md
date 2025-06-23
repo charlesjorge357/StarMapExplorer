@@ -132,6 +132,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 23, 2025: Fixed planet texture consistency by implementing deterministic texture selection based on planet ID hash instead of random selection. Planets now maintain consistent textures across selections, essential for globe-scale visualization and navigation consistency. Restored full star opacity across all views (galactic, system) by removing transparency settings.
 - June 23, 2025: Implemented proper texture persistence system with textureIndex field stored in planet data during generation. Textures are randomly selected once during planet creation based on system seed, then permanently stored and consistently loaded across all visits to the system.
 - June 23, 2025: Fixed frost giant texture loading by replacing low-quality ice giant textures with high-resolution 2K versions showing atmospheric details. Added ocean world texture support with beautiful water surface patterns for ocean planets.
+- June 23, 2025: Added comprehensive verdant world textures with three high-quality Earth-like options showing continents, oceans, cloud formations, and diverse terrestrial landscapes. Verdant planets now display authentic habitable world appearances with realistic geography and atmospheric effects.
 
 ## User Preferences
 

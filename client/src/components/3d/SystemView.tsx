@@ -231,6 +231,11 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
+  
+  // Verdant world (Earth-like) textures
+  const terrestrial1Texture = useTexture('/textures/terrestrial1.jpg');
+  const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
+  const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
   
   // Comprehensive planet texture mapping based on planet types
@@ -238,7 +243,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     gas_giant: jupiterTexture, // Jupiter texture for gas giants
     frost_giant: [neptuneTexture, jupiterTexture], // Neptune has better detail than Uranus
     arid_world: [marsTexture, venusSurfaceTexture], // Mars/Venus surfaces for arid worlds
-    verdant_world: null, // Earth-like (awaiting Earth textures)
+    verdant_world: [terrestrial1Texture, terrestrial2Texture, terrestrial3Texture], // Earth-like worlds
     acidic_world: [venusAtmosphereTexture, venusSurfaceTexture], // Toxic atmosphere worlds
     nuclear_world: [ceresTexture, erisTexture], // Irradiated/barren worlds
     ocean_world: oceanTexture, // Water worlds with ocean texture

@@ -73,7 +73,7 @@ export class SystemGenerator {
       gas_giant: 1, // Jupiter only
       frost_giant: 2, // Uranus, Neptune
       arid_world: 2, // Mars, Venus surface
-      verdant_world: 1, // (future Earth textures)
+      verdant_world: 3, // Earth-like terrestrial textures
       acidic_world: 2, // Venus atmosphere, Venus surface
       nuclear_world: 2, // Ceres, Eris
       ocean_world: 1, // Ocean texture available
