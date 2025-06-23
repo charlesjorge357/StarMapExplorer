@@ -65,6 +65,25 @@ function getPlanetGlow(type: string): string {
   return glows[type as keyof typeof glows] || '#444444';
 }
 
+function getMaterialOpacity(planetType: string): { transparent: boolean; opacity: number } {
+  switch (planetType) {
+    case 'verdant_world':
+    case 'arid_world':
+    case 'ocean_world':
+    case 'dead_world':
+    case 'nuclear_world':
+      return { transparent: false, opacity: 1.0 }; // Fully opaque for surface detail
+    case 'gas_giant':
+      return { transparent: true, opacity: 0.9 }; // Slight transparency for atmospheric effect
+    case 'frost_giant':
+      return { transparent: true, opacity: 0.85 }; // More transparency for ice giants
+    case 'acidic_world':
+      return { transparent: true, opacity: 0.95 }; // Slight transparency for toxic atmosphere
+    default:
+      return { transparent: false, opacity: 1.0 };
+  }
+}
+
 
 
 function getStarColor(spectralClass: string): string {
@@ -239,25 +258,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
   const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
   
-  // Material opacity settings per planet type
-  const getMaterialOpacity = (planetType: string) => {
-    switch (planetType) {
-      case 'verdant_world':
-      case 'arid_world':
-      case 'ocean_world':
-      case 'dead_world':
-      case 'nuclear_world':
-        return { transparent: false, opacity: 1.0 }; // Fully opaque for surface detail
-      case 'gas_giant':
-        return { transparent: true, opacity: 0.9 }; // Slight transparency for atmospheric effect
-      case 'frost_giant':
-        return { transparent: true, opacity: 0.85 }; // More transparency for ice giants
-      case 'acidic_world':
-        return { transparent: true, opacity: 0.95 }; // Slight transparency for toxic atmosphere
-      default:
-        return { transparent: false, opacity: 1.0 };
-    }
-  };
+
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
   
   // Comprehensive planet texture mapping based on planet types
