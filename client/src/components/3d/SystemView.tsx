@@ -236,7 +236,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
     gas_giant: jupiterTexture, // Jupiter texture for gas giants
-    frost_giant: [uranusTexture, neptuneTexture], // Ice giant variety
+    frost_giant: [neptuneTexture, jupiterTexture], // Neptune has better detail than Uranus
     arid_world: [marsTexture, venusSurfaceTexture], // Mars/Venus surfaces for arid worlds
     verdant_world: null, // Earth-like (awaiting Earth textures)
     acidic_world: [venusAtmosphereTexture, venusSurfaceTexture], // Toxic atmosphere worlds
