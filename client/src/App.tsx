@@ -339,6 +339,14 @@ function App() {
         setCurrentView('system');
         setCurrentSystem(system);
         setSelectedStar(null);
+        
+        // Ensure star info is available immediately in system view
+        setTimeout(() => {
+          if (system.star) {
+            (window as any).systemStarSelected = system.star;
+            console.log('Star info set from system navigation:', system.star.name);
+          }
+        }, 100);
       }
 
       if (event.key === 'Escape') {
