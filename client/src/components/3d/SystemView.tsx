@@ -160,23 +160,43 @@ function PlanetMesh({
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[planet.radius * 0.8, 16, 16]} />
+        <sphereGeometry args={[planet.radius * 0.8, 32, 32]} />
         <meshStandardMaterial 
-          color={getPlanetColor(planet.type)}
+          color={getPlanetTexture(planet.type, planetTextures) ? '#ffffff' : getPlanetColor(planet.type)}
           emissive={getPlanetGlow(planet.type)}
-          emissiveIntensity={0.2}
+          emissiveIntensity={getPlanetTexture(planet.type, planetTextures) ? 0.1 : 0.2}
           map={getPlanetTexture(planet.type, planetTextures)}
-          // Bump map preparation - ready for surface texture implementation
-          bumpScale={0.05}
-          roughness={planet.type === 'gas_giant' ? 0.1 : 0.8}
+          roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
           transparent={false}
           opacity={1.0}
         />
       </mesh>
 
-      {/* Selection ring */}
-      <SelectionRing planet={planet} isSelected={isSelected} index={index} />
+      {/* Planet selection ring with pulsing effect */}
+      {isSelected && (
+        <mesh position={[0, 0, 0]} raycast={() => null}>
+          <sphereGeometry args={[planet.radius * 0.8 + 2, 16, 16]} />
+          <meshBasicMaterial 
+            color="#ffffff"
+            transparent
+            opacity={0.4}
+            wireframe
+          />
+        </mesh>
+      )}
+
+      {/* Atmospheric glow for gas planets */}
+      {(planet.type === 'gas_giant' || planet.type === 'frost_giant') && (
+        <mesh position={[0, 0, 0]} raycast={() => null}>
+          <sphereGeometry args={[planet.radius * 0.8 + 1, 16, 16]} />
+          <meshBasicMaterial 
+            color={getPlanetGlow(planet.type)}
+            transparent
+            opacity={0.15}
+          />
+        </mesh>
+      )}
     </>
   );
 }
@@ -194,23 +214,33 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // Load all planetary textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
+  
+  // Gaseous planet textures
+  const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
-  const jupiterTexture = useTexture('/textures/jupiter.jpg');
-  const venusTexture = useTexture('/textures/venus.jpg');
+  
+  // Terrestrial planet textures
+  const marsTexture = useTexture('/textures/mars.jpg');
+  const venusAtmosphereTexture = useTexture('/textures/venus_atmosphere.jpg');
+  const venusSurfaceTexture = useTexture('/textures/venus_surface.jpg');
+  const mercuryTexture = useTexture('/textures/mercury.jpg');
+  const moonTexture = useTexture('/textures/moon.jpg');
+  const ceresTexture = useTexture('/textures/ceres.jpg');
+  const erisTexture = useTexture('/textures/eris.jpg');
   const acidicTexture = useTexture('/textures/acidic_world.jpg');
   const nuclearTexture = useTexture('/textures/nuclear_world.jpg');
   
-  // Comprehensive planet texture mapping
+  // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
-    gas_giant: jupiterTexture, // Jupiter-like gas giants
-    frost_giant: [uranusTexture, neptuneTexture], // Ice giants variety
-    arid_world: venusTexture, // Mars/Venus-like arid worlds
-    verdant_world: null, // Earth-like (will use procedural green for now)
-    acidic_world: acidicTexture, // Toxic atmospheric worlds
-    nuclear_world: nuclearTexture, // Irradiated wasteland worlds
-    ocean_world: null, // Water worlds (will use procedural blue)
-    dead_world: null // Barren rocky worlds (will use procedural gray)
+    gas_giant: jupiterTexture, // Jupiter texture for gas giants
+    frost_giant: [uranusTexture, neptuneTexture], // Ice giant variety
+    arid_world: [marsTexture, venusSurfaceTexture], // Mars/Venus surfaces for arid worlds
+    verdant_world: null, // Earth-like (awaiting Earth textures)
+    acidic_world: [acidicTexture, venusAtmosphereTexture], // Toxic atmosphere worlds
+    nuclear_world: [nuclearTexture, ceresTexture], // Irradiated/barren worlds
+    ocean_world: null, // Water worlds (awaiting ocean textures)
+    dead_world: [moonTexture, mercuryTexture, erisTexture] // Barren rocky worlds
   };
 
   // Use planets from the cached system
