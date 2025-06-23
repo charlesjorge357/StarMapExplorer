@@ -45,10 +45,9 @@ interface StarFieldProps {
   selectedStar: SimpleStar | null;
   setSelectedStar: (star: SimpleStar | null) => void;
   stars: SimpleStar[];
-  mouseMode: boolean;
 }
 
-function StarField({ selectedStar, setSelectedStar, stars, mouseMode }: StarFieldProps & { mouseMode: boolean }) {
+function StarField({ selectedStar, setSelectedStar, stars }: StarFieldProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null!);
   
   // Load star surface texture
@@ -113,19 +112,15 @@ function StarField({ selectedStar, setSelectedStar, stars, mouseMode }: StarFiel
         <group key={star.id} position={star.position}>
           <mesh
             onClick={(e) => {
-              if (!mouseMode) return;
               e.stopPropagation();
               setSelectedStar(star);
             }}
             onPointerOver={(e) => {
-              if (!mouseMode) return;
               e.stopPropagation();
               document.body.style.cursor = 'pointer';
             }}
             onPointerOut={() => {
-              if (mouseMode) {
-                document.body.style.cursor = 'auto';
-              }
+              document.body.style.cursor = 'auto';
             }}
           >
             <sphereGeometry args={[star.radius * 0.5, 8, 6]} />

@@ -12,11 +12,9 @@ const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
 export function CameraController({ 
-  mouseMode = false, 
   savedPosition = null,
   onPositionSave = null,
 }: { 
-  mouseMode?: boolean;
   savedPosition?: [number, number, number] | null;
   onPositionSave?: ((pos: [number, number, number]) => void) | null;
 }) {

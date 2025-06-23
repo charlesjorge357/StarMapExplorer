@@ -73,7 +73,6 @@ function StarField({
   const starBumpMap = useTexture('/textures/star_surface.jpg');
 
   const handleStarClick = (star: SimpleStar, event: any) => {
-    if (!mouseMode) return; // Only work in mouse mode
     event.stopPropagation();
     if (selectedStar?.id === star.id) {
       // Unselect if clicking the same star
@@ -87,7 +86,6 @@ function StarField({
   };
 
   const handleBackgroundClick = () => {
-    if (!mouseMode) return; // Only work in mouse mode
     // Unselect when clicking empty space
     if (selectedStar) {
       console.log("Unselected star by clicking background");
@@ -317,36 +315,7 @@ function App() {
     return colors[type as keyof typeof colors] || '#888888';
   };
 
-  // Handle Tab key to toggle mouse mode (avoids Chrome escape conflicts)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        event.stopPropagation();
-
-        // Exit pointer lock if active
-        if (document.pointerLockElement) {
-          document.exitPointerLock();
-        }
-        setMouseMode(prev => !prev);
-      }
-    };
-
-    // Detect when pointer lock is lost (escape key pressed)
-    const handlePointerLockChange = () => {
-      if (!document.pointerLockElement) {
-        // Pointer lock was lost, switch to mouse mode
-        setMouseMode(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('pointerlockchange', handlePointerLockChange);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
-      document.removeEventListener('pointerlockchange', handlePointerLockChange);
-    };
-  }, []);
+  // Navigation mode removed - all interactions use mouse mode
 
   // Handle Enter key to navigate to system view
   useEffect(() => {
@@ -422,7 +391,6 @@ function App() {
             <>
               {/* <StarSkybox count={currentView === 'galactic' ? 500 : 300} radius={200} /> */}
               <CameraController 
-                mouseMode={mouseMode}
                 savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
                 onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
               />
@@ -431,7 +399,6 @@ function App() {
                   selectedStar={selectedStar}
                   setSelectedStar={setSelectedStar}
                   stars={stars}
-                  mouseMode={mouseMode}
                 />
               )}
               {currentView === 'system' && currentSystem && (
@@ -441,7 +408,7 @@ function App() {
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}
                     onPlanetClick={setSelectedPlanet}
-                    mouseMode={mouseMode}
+
                   />
                 </>
               )}
@@ -476,7 +443,7 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} {mouseMode ? '• Mouse Mode - Click objects, Right-click+drag camera' : '• Navigation Mode - Movement Only (TAB for Mouse)'}
+          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} • Left-click objects, Right-click+drag camera
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               Press Backspace to return to galactic view

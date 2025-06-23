@@ -126,6 +126,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Fixed star clicking in system view by replacing group onClick with invisible background plane, and improved camera positioning to maintain viewing direction when entering system view while ensuring proper distance from star.
 - June 22, 2025: Simplified system view by making stars non-interactive and displaying star information permanently. Removed click handlers and selection rings from central star to eliminate errors while maintaining full star data visibility.
 - June 22, 2025: Restricted all object interactions to mouse mode only. Planet clicking, star selection, and background deselection now require Tab key to enter mouse mode, preventing conflicts with navigation mode's pointer lock system.
+- June 23, 2025: Removed navigation mode entirely and simplified to mouse-only interactions. Left-click selects objects, right-click+drag controls camera rotation, WASD controls movement. No mode switching required.
 
 ## User Preferences
 
