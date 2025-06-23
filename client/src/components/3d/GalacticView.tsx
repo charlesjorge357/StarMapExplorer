@@ -56,6 +56,8 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
           color={color}
           emissive={color}
           emissiveIntensity={isSelected ? 0.8 : 0.4}
+          transparent={false}
+          opacity={1.0}
         />
       </mesh>
       
