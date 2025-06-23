@@ -144,6 +144,7 @@ function PlanetMesh({
   });
 
  const handleClick = (event: any) => {
+    if (!mouseMode) return; // Only work in mouse mode
     event.stopPropagation();
     console.log(`Selected planet: ${planet.name}`);
     onPlanetClick(planet);
@@ -226,11 +227,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick, mouseMode }:
 
   // Handle background click to deselect planets only
   const handleBackgroundClick = () => {
-    if (mouseMode) {
-      if (selectedPlanet) {
-        console.log('Deselecting planet');
-        onPlanetClick(null);
-      }
+    if (!mouseMode) return; // Only work in mouse mode
+    if (selectedPlanet) {
+      console.log('Deselecting planet');
+      onPlanetClick(null);
     }
   };
 

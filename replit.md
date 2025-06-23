@@ -125,6 +125,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 22, 2025: Doubled star size (radius multiplier from 8 to 16) and doubled orbital spacing (from 15x to 30x) in system view for better visibility and scale representation.
 - June 22, 2025: Fixed star clicking in system view by replacing group onClick with invisible background plane, and improved camera positioning to maintain viewing direction when entering system view while ensuring proper distance from star.
 - June 22, 2025: Simplified system view by making stars non-interactive and displaying star information permanently. Removed click handlers and selection rings from central star to eliminate errors while maintaining full star data visibility.
+- June 22, 2025: Restricted all object interactions to mouse mode only. Planet clicking, star selection, and background deselection now require Tab key to enter mouse mode, preventing conflicts with navigation mode's pointer lock system.
 
 ## User Preferences
 

@@ -71,6 +71,7 @@ function StarField({
   const starBumpMap = useTexture('/textures/star_surface.jpg');
 
   const handleStarClick = (star: SimpleStar, event: any) => {
+    if (!mouseMode) return; // Only work in mouse mode
     event.stopPropagation();
     if (selectedStar?.id === star.id) {
       // Unselect if clicking the same star
@@ -84,6 +85,7 @@ function StarField({
   };
 
   const handleBackgroundClick = () => {
+    if (!mouseMode) return; // Only work in mouse mode
     // Unselect when clicking empty space
     if (selectedStar) {
       console.log("Unselected star by clicking background");
