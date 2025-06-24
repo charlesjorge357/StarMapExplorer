@@ -35,7 +35,8 @@ function SurfaceFeatureMesh({ feature, planetRadius, isSelected, onClick }: Surf
 
   // Get light color based on technology level
   const getLightColor = () => {
-    switch (feature.technology) {
+    const technology = feature.technology || 'industrial'; // Default technology if undefined
+    switch (technology) {
       case 'primitive': return '#FFA500'; // Orange firelight
       case 'industrial': return '#FFD700'; // Yellow industrial light
       case 'advanced': return '#00BFFF'; // Blue advanced light
@@ -46,7 +47,8 @@ function SurfaceFeatureMesh({ feature, planetRadius, isSelected, onClick }: Surf
   // Get feature size based on type and size
   const getFeatureSize = () => {
     const baseSize = feature.type === 'city' ? 0.3 : feature.type === 'fort' ? 0.2 : 0.15;
-    const sizeMultiplier = feature.size === 'large' ? 1.5 : feature.size === 'medium' ? 1.2 : 1.0;
+    const size = feature.size || 'medium'; // Default size if undefined
+    const sizeMultiplier = size === 'large' ? 1.5 : size === 'medium' ? 1.2 : 1.0;
     return baseSize * sizeMultiplier;
   };
 
@@ -107,11 +109,12 @@ function SurfaceFeatureMesh({ feature, planetRadius, isSelected, onClick }: Surf
       )}
 
       {/* Light cluster for larger cities */}
-      {feature.type === 'city' && feature.size !== 'small' && (
+      {feature.type === 'city' && (feature.size || 'medium') !== 'small' && (
         <>
-          {Array.from({ length: feature.size === 'large' ? 8 : 4 }, (_, i) => {
-            const angle = (i / (feature.size === 'large' ? 8 : 4)) * Math.PI * 2;
-            const radius = feature.size === 'large' ? 1.0 : 0.5;
+          {Array.from({ length: (feature.size || 'medium') === 'large' ? 8 : 4 }, (_, i) => {
+            const size = feature.size || 'medium';
+            const angle = (i / (size === 'large' ? 8 : 4)) * Math.PI * 2;
+            const radius = size === 'large' ? 1.0 : 0.5;
             const offsetX = Math.cos(angle) * radius;
             const offsetZ = Math.sin(angle) * radius;
             
