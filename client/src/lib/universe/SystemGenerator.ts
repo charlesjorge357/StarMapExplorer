@@ -181,9 +181,9 @@ export class SystemGenerator {
     
     const name = `${starName} ${String.fromCharCode(945 + index)}`; // Greek letters
     const position: [number, number, number] = [
-      Math.cos(angle) * orbitRadius * 10,
-      Math.sin(inclination) * orbitRadius * 2,
-      Math.sin(angle) * orbitRadius * 10
+      Math.cos(angle) * orbitRadius,
+      Math.sin(inclination) * orbitRadius * 0.1,
+      Math.sin(angle) * orbitRadius
     ];
 
     return {
@@ -243,7 +243,7 @@ export class SystemGenerator {
   }
 
   static getPlanetColor(type: PlanetType, seed: number): string {
-    const variation = (this.seededRandom(seed + 2000) - 0.5) * 0.3;
+    const variation = (SystemGenerator.seededRandom(seed + 2000) - 0.5) * 0.3;
     const baseColors: Record<PlanetType, [number, number, number]> = {
       gas_giant: [30, 80, 50],
       frost_giant: [220, 60, 60],
