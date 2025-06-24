@@ -59,7 +59,7 @@ export function CameraController() {
       return;
     }
     
-    // One-time positioning with consistent distance from planet
+    // One-time positioning with offset
     const time = Date.now() * 0.0001;
     const planetIndex = planetData.index || 0;
     const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
@@ -69,16 +69,17 @@ export function CameraController() {
       Math.sin(angle) * planetData.orbitRadius * 2
     );
     
-    // Consistent camera distance from planet
-    const cameraDistance = Math.max(planetData.radius * 25, 20);
-    const cameraOffsetAngle = angle + Math.PI * 0.4;
-    const direction = new Vector3(
-      Math.cos(cameraOffsetAngle),
-      0.6, // Elevated angle
-      Math.sin(cameraOffsetAngle)
-    ).normalize();
+    const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
     
-    const targetPosition = currentPlanetPos.clone().add(direction.multiplyScalar(cameraDistance));
+    let direction: Vector3;
+    if (orbitalRadius > 0.1) {
+      const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
+      direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
+    } else {
+      direction = new Vector3(1, 0.4, 1).normalize();
+    }
+    
+    const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
     
     camera.position.copy(targetPosition);
     camera.rotation.set(0, 0, 0);
@@ -159,7 +160,7 @@ export function CameraController() {
     if (currentScope === 'system') {
       // Maintain camera orientation but position it at fixed distance from star
       const currentDistance = camera.position.length();
-      const targetDistance = 50; // Fixed distance from star
+      const targetDistance = 1; // Fixed distance from star
       
       if (currentDistance < 5) {
         // If too close or at origin, set default position
@@ -204,7 +205,7 @@ export function CameraController() {
       );
       
       // Camera follows the same orbital path but offset for viewing
-      const distance = 10;
+      const distance = 1;
       const cameraOffsetAngle = angle + Math.PI * 0.1; // Camera offset for perspective
       
       // Camera position matches planet's orbital movement
