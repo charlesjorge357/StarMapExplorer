@@ -18,11 +18,12 @@ function MoonMesh({
 
   useFrame(() => {
     if (moonRef.current) {
-      const time = Date.now() * 0.001;
-      const angle = time * moon.orbitSpeed;
+      // Use same time calculation as planets for consistency
+      const time = Date.now() * 0.0001;
+      const angle = time * moon.orbitSpeed * 10; // Scale moon speed to be visible
       
       // Moon orbit relative to planet with much tighter radius
-      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2; // Reduced from 3 to 1.2
+      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2;
       const moonZ = planetPosition[2] + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.2;
       const moonY = planetPosition[1];
 
