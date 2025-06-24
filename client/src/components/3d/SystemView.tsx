@@ -253,6 +253,8 @@ function PlanetMesh({
 
 export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const { selectStar } = useUniverse();
 
   const star = system.star || {
