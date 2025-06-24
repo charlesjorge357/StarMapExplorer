@@ -158,20 +158,15 @@ export function CameraController() {
   // Set camera position based on scope
   useEffect(() => {
     if (currentScope === 'system') {
-      // Maintain camera orientation but position it at fixed distance from star
+      // Only set initial position, don't override during orbital tracking
       const currentDistance = camera.position.length();
-      const targetDistance = 1; // Fixed distance from star
       
       if (currentDistance < 5) {
         // If too close or at origin, set default position
         camera.position.set(0, 20, 200);
         camera.lookAt(0, 0, 0);
-      } else {
-        // Maintain current direction but set proper distance
-        const direction = camera.position.clone().normalize();
-        camera.position.copy(direction.multiplyScalar(targetDistance));
-        camera.lookAt(0, 0, 0);
       }
+      // Don't force camera position if it's already positioned
       
       // Set extended camera range for system view
       camera.near = 0.1;
