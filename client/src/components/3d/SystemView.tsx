@@ -335,11 +335,16 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       const asteroids = [];
       
       for (let i = 0; i < totalAsteroids; i++) {
-        const baseAngle = (i / totalAsteroids) * Math.PI * 2;
-        const radius = belt.innerRadius + (i / totalAsteroids) * (belt.outerRadius - belt.innerRadius);
-        const size = 0.1 + (i % 7) * 0.05; // Consistent size based on index
-        const yOffset = ((i % 13) - 6) * 0.3; // Consistent y offset
-        const orbitSpeed = 0.02 + (radius * 0.001); // Slower for outer asteroids
+        // Use index-based pseudo-random for consistent distribution
+        const seed1 = (i * 73 + 37) % 1000 / 1000;
+        const seed2 = (i * 149 + 83) % 1000 / 1000;
+        const seed3 = (i * 211 + 127) % 1000 / 1000;
+        
+        const baseAngle = seed1 * Math.PI * 2;
+        const radius = belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius);
+        const size = 0.1 + (seed3 * 0.3); // Random size variation
+        const yOffset = (seed1 - 0.5) * 3; // Random y offset
+        const orbitSpeed = 0.01 + (radius * 0.0005); // Slower for outer asteroids
         
         asteroids.push({
           id: i,
