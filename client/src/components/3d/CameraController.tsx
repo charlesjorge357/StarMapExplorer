@@ -39,6 +39,14 @@ export function CameraController() {
       return;
     }
     
+    // Disable orbital tracking only - don't move camera
+    if (enableOrbitalTracking === false && !planetData) {
+      isOrbitalTrackingRef.current = false;
+      orbitalTargetRef.current = null;
+      console.log('Stopped orbital tracking - camera stays in current position');
+      return;
+    }
+    
     // Disable orbital tracking
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
