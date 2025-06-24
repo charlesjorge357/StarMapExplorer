@@ -196,10 +196,7 @@ export class SystemGenerator {
 
     // Generate asteroid belts
     const asteroidBelts = this.generateAsteroidBelts(star, planets);
-    console.log('Generated asteroid belts for', star.name, ':', asteroidBelts.length);
-    asteroidBelts.forEach(belt => {
-      console.log(`  - ${belt.name}: ${belt.innerRadius.toFixed(1)}-${belt.outerRadius.toFixed(1)} units, ${belt.asteroidCount} asteroids`);
-    });
+
 
     return {
       id: `system-${star.id}`,
@@ -247,20 +244,7 @@ export class SystemGenerator {
     let rngCounter = 0;
     const rng = () => SystemGenerator.seededRandom(seed + rngCounter++);
     
-    // Generate asteroid belts based on realistic placement
-    console.log('Star', star.name, 'spectral class:', star.spectralClass, 'planets:', planets.length);
-    
     if (planets.length < 2) {
-      console.log('Not enough planets for gap-based asteroids in', star.name);
-      // Generate at least one belt for single-planet systems
-      belts.push({
-        id: `belt-${star.id}-single`,
-        name: `${star.name} Inner Belt`,
-        innerRadius: planets.length > 0 ? planets[0].orbitRadius + 10 : 20,
-        outerRadius: planets.length > 0 ? planets[0].orbitRadius + 20 : 30,
-        density: 1.0,
-        asteroidCount: 80
-      });
       return belts;
     }
     
@@ -275,22 +259,15 @@ export class SystemGenerator {
       const gap = outerPlanet.orbitRadius - innerPlanet.orbitRadius;
       const minGapForBelt = 15; // Reduced minimum gap for more belts
       
-      console.log(`Gap ${i}: ${gap.toFixed(1)} units between ${innerPlanet.name} (${innerPlanet.orbitRadius.toFixed(1)}) and ${outerPlanet.name} (${outerPlanet.orbitRadius.toFixed(1)})`);
-      
       if (gap > minGapForBelt) {
-        // Force generate belts for testing - remove restrictions
-        const beltProbability = 1.0; // 100% probability for testing
-        const shouldGenerate = true;
-        
-        console.log(`Gap is large enough (${gap.toFixed(1)} > ${minGapForBelt}), forcing belt generation`);
+        // Generate belts with reasonable probability
+        const beltProbability = Math.min(0.7, (gap / 50) * 0.8);
+        const shouldGenerate = rng() < beltProbability;
         
         if (shouldGenerate) {
           const beltInnerRadius = innerPlanet.orbitRadius + gap * 0.15;
           const beltOuterRadius = outerPlanet.orbitRadius - gap * 0.15;
           const beltWidth = beltOuterRadius - beltInnerRadius;
-          
-          console.log(`Creating belt between ${innerPlanet.name} and ${outerPlanet.name}:`);
-          console.log(`  Inner radius: ${beltInnerRadius.toFixed(1)}, Outer radius: ${beltOuterRadius.toFixed(1)}, Width: ${beltWidth.toFixed(1)}`);
           
           // Ensure minimum belt width
           if (beltWidth > 2) {
@@ -312,12 +289,7 @@ export class SystemGenerator {
             };
             
             belts.push(belt);
-            console.log(`✓ Generated belt: ${belt.name}, radius ${belt.innerRadius.toFixed(1)}-${belt.outerRadius.toFixed(1)}, ${belt.asteroidCount} asteroids`);
-          } else {
-            console.log(`  Belt too narrow (${beltWidth.toFixed(1)} units), skipping`);
           }
-        } else {
-          console.log(`  Belt probability too low (${beltProbability.toFixed(2)}), skipping`);
         }
       }
     }
@@ -338,7 +310,6 @@ export class SystemGenerator {
       };
       
       belts.push(outerBelt);
-      console.log(`Generated outer belt: ${outerBelt.name}, radius ${outerBelt.innerRadius.toFixed(1)}-${outerBelt.outerRadius.toFixed(1)}, ${outerBelt.asteroidCount} asteroids`);
     }
     
     return belts;

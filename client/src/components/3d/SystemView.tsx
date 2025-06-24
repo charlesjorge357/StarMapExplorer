@@ -297,7 +297,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   };
 
   // Use planets from the cached system
-  const planets = system.planets || [];
+  const systemPlanets = system.planets || [];
 
   // Debug: Log planet data to check IDs
   if (planets.length > 0 && !planets[0].id) {
@@ -371,7 +371,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       ))}
 
       {/* Planets with selection functionality */}
-      {planets.map((planet, index) => (
+      {systemPlanets.map((planet, index) => (
         <PlanetMesh 
           key={planet.id} 
           planet={planet} 
@@ -383,12 +383,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       ))}
 
       {/* Asteroid Belts */}
-      {system.asteroidBelts && system.asteroidBelts.length > 0 && (
-        system.asteroidBelts.map((belt) => {
-          console.log('Rendering belt:', belt.name, 'at radius', belt.innerRadius, '-', belt.outerRadius);
-          return <AsteroidBeltComponent key={belt.id} belt={belt} />;
-        })
-      )}
+      {system.asteroidBelts && system.asteroidBelts.map((belt) => (
+        <AsteroidBeltComponent key={belt.id} belt={belt} />
+      ))}
 
 
     </group>
@@ -450,7 +447,6 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
-    console.log('Applied', matrices.length, 'asteroid positions');
   }, [belt]);
 
   return (
