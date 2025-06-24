@@ -257,6 +257,20 @@ function PlanetMesh({
           />
         </mesh>
       )}
+
+      {/* Render moons orbiting this planet */}
+      {planet.moons && planet.moons.length > 0 && planet.moons.map((moon: any, moonIndex: number) => (
+        <MoonMesh 
+          key={`${planet.id}-moon-${moonIndex}`}
+          moon={moon}
+          planetPosition={[
+            planetRef.current?.position.x || 0,
+            planetRef.current?.position.y || 0,
+            planetRef.current?.position.z || 0
+          ]}
+          planetRadius={planet.radius * 0.6}
+        />
+      ))}
     </>
   );
 }
@@ -315,6 +329,13 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Use planets from the cached system
   const planets = system.planets || [];
   const asteroidBelts = system.asteroidBelts || [];
+  
+  // Debug moon data
+  console.log('SystemView planets with moons:', planets.map(p => ({ 
+    name: p.name, 
+    moonCount: p.moons?.length || 0, 
+    moons: p.moons 
+  })));
   
   // Debug: Log system data
   console.log('System data:', {
