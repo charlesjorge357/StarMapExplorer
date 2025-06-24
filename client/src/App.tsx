@@ -326,20 +326,13 @@ function App() {
       if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
         
-        // Find the planet's index in the current system to get the correct orbital offset
-        const planetIndex = currentSystem?.planets?.findIndex(p => p.id === selectedPlanet.id) ?? 0;
-        
-        // Calculate planet's current orbital position using same timing and offset as SystemView
-        const time = Date.now() * 0.0001;
-        const angle = time * selectedPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
-        const x = Math.cos(angle) * selectedPlanet.orbitRadius * 2;
-        const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
-        const planetPosition = new Vector3(x, 0, z);
-        
-        // Call camera homing function with planet data for real-time positioning
+        // Call camera homing function with planet data - let it calculate position internally with offset
         if ((window as any).homeToPlanet) {
-          (window as any).homeToPlanet(planetPosition, Math.max(selectedPlanet.radius * 0.6, 1), selectedPlanet);
-          console.log(`Homing camera to ${selectedPlanet.name} at orbital position (index: ${planetIndex})`);
+          // Find planet index in current system for proper offset calculation
+          const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
+          const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
+          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex);
+          console.log(`Homing camera to ${selectedPlanet.name} with index ${planetIndex}`);
         }
       }
     };
@@ -392,7 +385,7 @@ function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
+                  if (e.key === 'Enter' && searchQuery.trim() && !selectedPlanet) {
                     const found = searchPlanet(searchQuery.trim());
                     if (found) {
                       setIsSearching(false);
@@ -420,7 +413,7 @@ function App() {
                     setSearchQuery('');
                   }
                 }}
-                placeholder="Type planet name..."
+                placeholder={selectedPlanet ? "Planet already selected - press Enter to focus" : "Type planet name..."}
                 style={{
                   width: '100%',
                   padding: '8px',
