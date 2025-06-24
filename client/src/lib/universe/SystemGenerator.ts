@@ -24,15 +24,15 @@ interface Moon {
   orbitSpeed: number;
 }
 
-type PlanetType =
-  | "gas_giant"
-  | "frost_giant"
-  | "arid_world"
-  | "verdant_world"
-  | "acidic_world"
-  | "nuclear_world"
-  | "ocean_world"
-  | "dead_world";
+type PlanetType = 
+  | 'gas_giant' 
+  | 'frost_giant' 
+  | 'arid_world' 
+  | 'verdant_world' 
+  | 'acidic_world' 
+  | 'nuclear_world' 
+  | 'ocean_world' 
+  | 'dead_world';
 
 interface AsteroidBelt {
   id: string;
@@ -60,13 +60,13 @@ export class SystemGenerator {
     acidic_world: { min: 0.6, max: 1.1 },
     nuclear_world: { min: 0.3, max: 0.8 },
     ocean_world: { min: 0.7, max: 1.3 },
-    dead_world: { min: 0.1, max: 0.6 },
+    dead_world: { min: 0.1, max: 0.6 }
   };
 
   static ORBITAL_ZONES = {
     inner: { min: 0.3, max: 1.5 },
     habitable: { min: 0.8, max: 2.0 },
-    outer: { min: 2.5, max: 8.0 },
+    outer: { min: 2.5, max: 8.0 }
   };
 
   static seededRandom(seed: number): number {
@@ -74,21 +74,13 @@ export class SystemGenerator {
     return x - Math.floor(x);
   }
 
-  private static generateTextureIndex(
-    planetType: PlanetType,
-    planetIndex: number,
-    starName: string,
-  ): number {
+  private static generateTextureIndex(planetType: PlanetType, planetIndex: number, starName: string): number {
     // Generate a consistent texture index based on planet properties
     // Include planet type in the seed to ensure variety between planets of the same type
-    const typeHash = planetType
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const nameHash = starName
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const typeHash = planetType.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const nameHash = starName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const seed = nameHash + planetIndex * 1000 + typeHash * 100;
-
+    
     // Define texture count per planet type (based on available textures)
     const textureCountMap = {
       gas_giant: 1, // Jupiter only
@@ -98,89 +90,60 @@ export class SystemGenerator {
       acidic_world: 2, // Venus atmosphere, Venus surface
       nuclear_world: 2, // Ceres, Eris
       ocean_world: 1, // Ocean texture available
-      dead_world: 3, // Moon, Mercury, Eris
+      dead_world: 3 // Moon, Mercury, Eris
     };
-
+    
     const textureCount = textureCountMap[planetType] || 1;
     return Math.floor(this.seededRandom(seed) * textureCount);
   }
 
   static generatePlanetName(starName: string, index: number): string {
-    const greekLetters = ["α", "β", "γ", "δ", "ε", "ζ", "η", "θ"];
-    return index < greekLetters.length
-      ? `${starName} ${greekLetters[index]}`
-      : `${starName} ${index + 1}`;
+    const greekLetters = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ'];
+    return index < greekLetters.length ? `${starName} ${greekLetters[index]}` : `${starName} ${index + 1}`;
   }
 
-  static determinePlanetType(
-    orbitRadius: number,
-    starTemp: number,
-    seed: number,
-  ): PlanetType {
+  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
     const random = this.seededRandom(seed);
     const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
 
     if (orbitRadius < 1.5) {
-      if (effectiveTemp > 800)
-        return random < 0.3 ? "dead_world" : "arid_world";
-      if (effectiveTemp > 400)
-        return random < 0.4 ? "arid_world" : "acidic_world";
-      return random < 0.6 ? "verdant_world" : "ocean_world";
+      if (effectiveTemp > 800) return random < 0.3 ? 'dead_world' : 'arid_world';
+      if (effectiveTemp > 400) return random < 0.4 ? 'arid_world' : 'acidic_world';
+      return random < 0.6 ? 'verdant_world' : 'ocean_world';
     } else if (orbitRadius < 4.0) {
-      if (random < 0.3) return "gas_giant";
-      if (random < 0.6) return "arid_world";
-      return "dead_world";
+      if (random < 0.3) return 'gas_giant';
+      if (random < 0.6) return 'arid_world';
+      return 'dead_world';
     } else {
-      return random < 0.7 ? "gas_giant" : "frost_giant";
+      return random < 0.7 ? 'gas_giant' : 'frost_giant';
     }
   }
 
-  static generatePlanet(
-    starName: string,
-    starTemp: number,
-    index: number,
-    orbitRadius: number,
-    seed: number,
-  ): Planet {
+  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
     const planetSeed = seed + index * 1000;
     const name = this.generatePlanetName(starName, index);
     const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed);
 
     const radiusRange = this.PLANET_RADII[type];
-    const radius =
-      radiusRange.min +
-      this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
+    const radius = radiusRange.min + this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
 
     const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15;
     let mass = Math.pow(radius, 3);
-    if (type === "gas_giant" || type === "frost_giant") mass *= 0.3;
+    if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
 
     const baseTemp = starTemp / (orbitRadius * orbitRadius * 16);
     let temperature = baseTemp;
-    if (type === "acidic_world") temperature *= 2;
-    if (type === "gas_giant") temperature *= 0.7;
+    if (type === 'acidic_world') temperature *= 2;
+    if (type === 'gas_giant') temperature *= 0.7;
 
     let atmosphere: string[] = [];
     switch (type) {
-      case "gas_giant":
-        atmosphere = ["Hydrogen", "Helium", "Methane"];
-        break;
-      case "frost_giant":
-        atmosphere = ["Hydrogen", "Helium", "Water", "Ammonia"];
-        break;
-      case "acidic_world":
-        atmosphere = ["Carbon Dioxide", "Sulfuric Acid", "Nitrogen"];
-        break;
-      case "verdant_world":
-      case "ocean_world":
-        atmosphere = ["Nitrogen", "Oxygen", "Water Vapor"];
-        break;
-      case "arid_world":
-        atmosphere = ["Carbon Dioxide", "Nitrogen"];
-        break;
-      case "nuclear_world":
-        atmosphere = ["Radioactive Gases", "Noble Gases"];
-        break;
+      case 'gas_giant': atmosphere = ['Hydrogen', 'Helium', 'Methane']; break;
+      case 'frost_giant': atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia']; break;
+      case 'acidic_world': atmosphere = ['Carbon Dioxide', 'Sulfuric Acid', 'Nitrogen']; break;
+      case 'verdant_world': case 'ocean_world': atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor']; break;
+      case 'arid_world': atmosphere = ['Carbon Dioxide', 'Nitrogen']; break;
+      case 'nuclear_world': atmosphere = ['Radioactive Gases', 'Noble Gases']; break;
     }
 
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
@@ -188,7 +151,7 @@ export class SystemGenerator {
     const position: [number, number, number] = [
       Math.cos(angle) * orbitRadius * 10,
       Math.sin(inclination) * orbitRadius * 2,
-      Math.sin(angle) * orbitRadius * 10,
+      Math.sin(angle) * orbitRadius * 10
     ];
 
     return {
@@ -206,7 +169,7 @@ export class SystemGenerator {
       moons: [],
       inclination,
       textureIndex: this.generateTextureIndex(type, index, starName),
-      surfaceFeatures: [],
+      surfaceFeatures: []
     };
   }
 
@@ -222,38 +185,27 @@ export class SystemGenerator {
     const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
 
     const planetTypes: PlanetType[] = [
-      "gas_giant",
-      "frost_giant",
-      "arid_world",
-      "verdant_world",
-      "acidic_world",
-      "nuclear_world",
-      "ocean_world",
-      "dead_world",
+      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
+      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
     ];
 
-    // Pre-calculate orbital zones to prevent exponential growth
-    const baseSpacing = 16 + star.radius * 8;
-    const maxOrbitRadius = baseSpacing * 6; // Cap maximum orbit distance
+    // Calculate orbital zones with proper spacing to prevent overlaps
+    const baseSpacing = 20 + star.radius * 6; // Increased base spacing
+    const maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
     for (let i = 0; i < planetCount; i++) {
       if (i === 0) {
+        // First planet starts at base spacing from star
         orbitZones.push(baseSpacing);
       } else {
         const prevOrbit = orbitZones[i - 1];
-        const prevRadius = planets[i - 1]?.radius ?? 1; // fallback to 1 if not yet populated
-        const nextEstimatedRadius = 12; // assume possible max radius of next planet
-
-        // Calculate scene-space padding between orbits (planet radius is in Earth radii, scaled ×10)
-        const minSpacing = (prevRadius + nextEstimatedRadius) * 10 * 1.2; // 1.2 = buffer multiplier
-
-        const additiveSpacing = Math.max(
-          baseSpacing * (0.8 + Math.random() * 0.8),
-          minSpacing,
-        );
-        const newOrbit = prevOrbit + additiveSpacing;
-
+        
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
+        
+        const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
         orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
       }
     }
@@ -265,20 +217,20 @@ export class SystemGenerator {
       // Earth radii scaling (realistic)
       let radius: number;
       switch (type) {
-        case "gas_giant":
+        case 'gas_giant':
           radius = 8 + Math.random() * 4; // 8–12 R⊕
           break;
-        case "frost_giant":
+        case 'frost_giant':
           radius = 4 + Math.random() * 3; // 4–7 R⊕
           break;
-        case "verdant_world":
-        case "acidic_world":
-        case "ocean_world":
-        case "arid_world":
+        case 'verdant_world':
+        case 'acidic_world':
+        case 'ocean_world':
+        case 'arid_world':
           radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
           break;
-        case "nuclear_world":
-        case "dead_world":
+        case 'nuclear_world':
+        case 'dead_world':
           radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
           break;
         default:
@@ -286,8 +238,7 @@ export class SystemGenerator {
       }
 
       // Mass = radius³ × density factor (gas giants less dense)
-      const densityFactor =
-        type === "gas_giant" || type === "frost_giant" ? 0.3 : 1.0;
+      const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
       const mass = Math.pow(radius, 3) * densityFactor;
 
       // Simplified temperature model
@@ -296,26 +247,26 @@ export class SystemGenerator {
       // Generate atmosphere
       let atmosphere: string[] = [];
       switch (type) {
-        case "gas_giant":
-          atmosphere = ["Hydrogen", "Helium", "Methane"];
+        case 'gas_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Methane'];
           break;
-        case "frost_giant":
-          atmosphere = ["Hydrogen", "Helium", "Water", "Ammonia"];
+        case 'frost_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
           break;
-        case "verdant_world":
-        case "ocean_world":
-          atmosphere = ["Nitrogen", "Oxygen", "Water Vapor"];
+        case 'verdant_world':
+        case 'ocean_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
           break;
-        case "arid_world":
-          atmosphere = ["Carbon Dioxide", "Nitrogen"];
+        case 'arid_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen'];
           break;
-        case "acidic_world":
-          atmosphere = ["Carbon Dioxide", "Sulfuric Acid", "Nitrogen"];
+        case 'acidic_world':
+          atmosphere = ['Carbon Dioxide', 'Sulfuric Acid', 'Nitrogen'];
           break;
-        case "nuclear_world":
-          atmosphere = ["Radioactive Gases", "Noble Gases"];
+        case 'nuclear_world':
+          atmosphere = ['Radioactive Gases', 'Noble Gases'];
           break;
-        case "dead_world":
+        case 'dead_world':
           atmosphere = [];
           break;
       }
@@ -325,7 +276,7 @@ export class SystemGenerator {
       const position: [number, number, number] = [
         Math.cos(angle) * orbitRadius * 10,
         Math.sin(inclination) * orbitRadius * 2,
-        Math.sin(angle) * orbitRadius * 10,
+        Math.sin(angle) * orbitRadius * 10
       ];
 
       planets.push({
@@ -340,34 +291,23 @@ export class SystemGenerator {
         rotationSpeed: 0.01 + Math.random() * 0.05,
         temperature,
         atmosphere,
-        moons: this.generateMoons(
-          radius,
-          `${star.name} ${String.fromCharCode(945 + i)}`,
-          i * 1000 + this.hashString(star.name),
-        ),
+        moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
         inclination,
         textureIndex: this.generateTextureIndex(type, i, star.name),
-        surfaceFeatures: this.generateSurfaceFeatures(
-          type,
-          `planet-${star.id}-${i}`,
-          this.hashString(star.name + i),
-        ),
+        surfaceFeatures: this.generateSurfaceFeatures(type, `planet-${star.id}-${i}`, this.hashString(star.name + i))
       });
     }
 
     // Generate asteroid belts in orbital gaps
     const asteroidBelts = this.generateAsteroidBelts(planets, star);
-    console.log(
-      `Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`,
-      asteroidBelts,
-    );
+    console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
 
     return {
       id: `system-${star.id}`,
       starId: star.id,
       star,
       planets,
-      asteroidBelts,
+      asteroidBelts
     };
   }
 
@@ -381,7 +321,7 @@ export class SystemGenerator {
       acidic_world: [55, 90, 60],
       nuclear_world: [10, 90, 50],
       ocean_world: [210, 80, 55],
-      dead_world: [0, 0, 40],
+      dead_world: [0, 0, 40]
     };
     let [h, s, l] = baseColors[type];
     h = (h + variation * 360 + 360) % 360;
@@ -389,35 +329,31 @@ export class SystemGenerator {
   }
 
   // Generate surface features for terrestrial planets
-  private static generateSurfaceFeatures(
-    planetType: string,
-    planetId: string,
-    baseSeed: number,
-  ) {
+  private static generateSurfaceFeatures(planetType: string, planetId: string, baseSeed: number) {
     // Only terrestrial planets have surface features
-    if (planetType === "gas_giant" || planetType === "frost_giant") {
+    if (planetType === 'gas_giant' || planetType === 'frost_giant') {
       return [];
     }
 
     const features = [];
     const featureSeed = baseSeed + 1000;
     const seededRandom = () => this.seededRandom(featureSeed + features.length);
-
+    
     // Number of features based on planet type - ensure all planets have at least 1 feature for exploration
     let featureCount = 0;
     switch (planetType) {
-      case "verdant_world":
-      case "ocean_world":
+      case 'verdant_world':
+      case 'ocean_world':
         featureCount = 3 + Math.floor(seededRandom() * 4); // 3-6 features
         break;
-      case "arid_world":
-      case "acidic_world":
+      case 'arid_world':
+      case 'acidic_world':
         featureCount = 2 + Math.floor(seededRandom() * 3); // 2-4 features
         break;
-      case "nuclear_world":
+      case 'nuclear_world':
         featureCount = 1 + Math.floor(seededRandom() * 2); // 1-2 features
         break;
-      case "dead_world":
+      case 'dead_world':
         featureCount = 1 + Math.floor(seededRandom() * 2); // 1-2 features
         break;
       default:
@@ -428,19 +364,16 @@ export class SystemGenerator {
       const featureType = this.getRandomFeatureType(planetType, seededRandom);
       const lat = (seededRandom() - 0.5) * 180; // -90 to 90
       const lon = (seededRandom() - 0.5) * 360; // -180 to 180
-
+      
       features.push({
         id: `${planetId}-feature-${i}`,
         type: featureType,
         name: this.generateFeatureName(featureType, i, seededRandom),
         position: [lat, lon] as [number, number],
         description: this.generateFeatureDescription(featureType, planetType),
-        population:
-          featureType === "city"
-            ? Math.floor(seededRandom() * 5000000) + 10000
-            : undefined,
+        population: featureType === 'city' ? Math.floor(seededRandom() * 5000000) + 10000 : undefined,
         size: this.getRandomSize(seededRandom),
-        technology: this.getRandomTechnology(planetType, seededRandom),
+        technology: this.getRandomTechnology(planetType, seededRandom)
       });
     }
 
@@ -448,21 +381,14 @@ export class SystemGenerator {
   }
 
   // Generate moons for planets
-  private static generateMoons(
-    planetRadius: number,
-    planetName: string,
-    seed: number,
-  ) {
+  private static generateMoons(planetRadius: number, planetName: string, seed: number) {
     const moons = [];
     let moonCount = 0;
-
+    
     // Determine moon count based on planet size
-    if (planetRadius > 6)
-      moonCount = Math.floor(this.seededRandom(seed) * 8) + 2; // 2-9 moons for gas giants
-    else if (planetRadius > 3)
-      moonCount = Math.floor(this.seededRandom(seed + 1) * 4) + 1; // 1-4 moons for large planets
-    else if (planetRadius > 1.5)
-      moonCount = Math.floor(this.seededRandom(seed + 2) * 2); // 0-1 moons for medium planets
+    if (planetRadius > 6) moonCount = Math.floor(this.seededRandom(seed) * 8) + 2; // 2-9 moons for gas giants
+    else if (planetRadius > 3) moonCount = Math.floor(this.seededRandom(seed + 1) * 4) + 1; // 1-4 moons for large planets
+    else if (planetRadius > 1.5) moonCount = Math.floor(this.seededRandom(seed + 2) * 2); // 0-1 moons for medium planets
 
     for (let j = 0; j < moonCount; j++) {
       const moonName = `${planetName} ${String.fromCharCode(97 + j)}`; // a, b, c, etc.
@@ -471,138 +397,97 @@ export class SystemGenerator {
         name: moonName,
         radius: 0.1 + this.seededRandom(seed + j + 10) * 0.4, // Small moons
         orbitRadius: 1.5 + j * 0.8, // Much tighter orbits
-        orbitSpeed: 0.3 + this.seededRandom(seed + j + 20) * 0.35, // Moon speed relative to planet timing
+        orbitSpeed: 0.3 + this.seededRandom(seed + j + 20) * 0.35 // Moon speed relative to planet timing
       });
     }
-
+    
     return moons;
   }
 
-  private static getRandomFeatureType(
-    planetType: string,
-    random: () => number,
-  ): "city" | "fort" | "landmark" {
+  private static getRandomFeatureType(planetType: string, random: () => number): 'city' | 'fort' | 'landmark' {
     const rand = random();
-
+    
     switch (planetType) {
-      case "verdant_world":
-      case "ocean_world":
-        if (rand < 0.5) return "city";
-        if (rand < 0.8) return "landmark";
-        return "fort";
-      case "arid_world":
-        if (rand < 0.3) return "city";
-        if (rand < 0.7) return "fort";
-        return "landmark";
+      case 'verdant_world':
+      case 'ocean_world':
+        if (rand < 0.5) return 'city';
+        if (rand < 0.8) return 'landmark';
+        return 'fort';
+      case 'arid_world':
+        if (rand < 0.3) return 'city';
+        if (rand < 0.7) return 'fort';
+        return 'landmark';
       default:
-        if (rand < 0.2) return "city";
-        if (rand < 0.6) return "fort";
-        return "landmark";
+        if (rand < 0.2) return 'city';
+        if (rand < 0.6) return 'fort';
+        return 'landmark';
     }
   }
 
-  private static generateFeatureName(
-    type: "city" | "fort" | "landmark",
-    index: number,
-    random: () => number,
-  ): string {
-    const cityNames = [
-      "New Haven",
-      "Central City",
-      "Port Aurora",
-      "Meridian",
-      "Haven Point",
-      "Nova City",
-    ];
-    const fortNames = [
-      "Fort Alpha",
-      "Bastion Prime",
-      "Stronghold Beta",
-      "Citadel One",
-      "Outpost Gamma",
-      "Defense Station",
-    ];
-    const landmarkNames = [
-      "Crystal Peaks",
-      "The Great Canyon",
-      "Sunset Mesa",
-      "Ancient Ruins",
-      "Mystic Falls",
-      "Titan Ridge",
-    ];
-
+  private static generateFeatureName(type: 'city' | 'fort' | 'landmark', index: number, random: () => number): string {
+    const cityNames = ['New Haven', 'Central City', 'Port Aurora', 'Meridian', 'Haven Point', 'Nova City'];
+    const fortNames = ['Fort Alpha', 'Bastion Prime', 'Stronghold Beta', 'Citadel One', 'Outpost Gamma', 'Defense Station'];
+    const landmarkNames = ['Crystal Peaks', 'The Great Canyon', 'Sunset Mesa', 'Ancient Ruins', 'Mystic Falls', 'Titan Ridge'];
+    
     let names: string[];
     switch (type) {
-      case "city":
+      case 'city':
         names = cityNames;
         break;
-      case "fort":
+      case 'fort':
         names = fortNames;
         break;
-      case "landmark":
+      case 'landmark':
         names = landmarkNames;
         break;
     }
-
+    
     const nameIndex = Math.floor(random() * names.length);
     return names[nameIndex];
   }
 
-  private static generateFeatureDescription(
-    type: "city" | "fort" | "landmark",
-    planetType: string,
-  ): string {
+  private static generateFeatureDescription(type: 'city' | 'fort' | 'landmark', planetType: string): string {
     switch (type) {
-      case "city":
-        return planetType === "verdant_world"
-          ? "A thriving metropolis with green spaces"
-          : planetType === "arid_world"
-            ? "A desert settlement with climate domes"
-            : "A hardy colonial outpost";
-      case "fort":
-        return planetType === "arid_world"
-          ? "A fortified compound protecting trade routes"
-          : "A defensive installation monitoring the region";
-      case "landmark":
-        return planetType === "verdant_world"
-          ? "A natural wonder of geological significance"
-          : planetType === "dead_world"
-            ? "Ancient ruins from a lost civilization"
-            : "A notable geographical formation";
+      case 'city':
+        return planetType === 'verdant_world' ? 'A thriving metropolis with green spaces' :
+               planetType === 'arid_world' ? 'A desert settlement with climate domes' :
+               'A hardy colonial outpost';
+      case 'fort':
+        return planetType === 'arid_world' ? 'A fortified compound protecting trade routes' :
+               'A defensive installation monitoring the region';
+      case 'landmark':
+        return planetType === 'verdant_world' ? 'A natural wonder of geological significance' :
+               planetType === 'dead_world' ? 'Ancient ruins from a lost civilization' :
+               'A notable geographical formation';
       default:
-        return "An interesting location";
+        return 'An interesting location';
     }
   }
 
-  private static getRandomSize(
-    random: () => number,
-  ): "small" | "medium" | "large" {
+  private static getRandomSize(random: () => number): 'small' | 'medium' | 'large' {
     const rand = random();
-    if (rand < 0.5) return "small";
-    if (rand < 0.8) return "medium";
-    return "large";
+    if (rand < 0.5) return 'small';
+    if (rand < 0.8) return 'medium';
+    return 'large';
   }
 
-  private static getRandomTechnology(
-    planetType: string,
-    random: () => number,
-  ): "primitive" | "industrial" | "advanced" {
+  private static getRandomTechnology(planetType: string, random: () => number): 'primitive' | 'industrial' | 'advanced' {
     const rand = random();
-
+    
     switch (planetType) {
-      case "verdant_world":
-      case "ocean_world":
-        if (rand < 0.2) return "primitive";
-        if (rand < 0.6) return "industrial";
-        return "advanced";
-      case "arid_world":
-        if (rand < 0.4) return "primitive";
-        if (rand < 0.8) return "industrial";
-        return "advanced";
+      case 'verdant_world':
+      case 'ocean_world':
+        if (rand < 0.2) return 'primitive';
+        if (rand < 0.6) return 'industrial';
+        return 'advanced';
+      case 'arid_world':
+        if (rand < 0.4) return 'primitive';
+        if (rand < 0.8) return 'industrial';
+        return 'advanced';
       default:
-        if (rand < 0.6) return "primitive";
-        if (rand < 0.9) return "industrial";
-        return "advanced";
+        if (rand < 0.6) return 'primitive';
+        if (rand < 0.9) return 'industrial';
+        return 'advanced';
     }
   }
 
@@ -610,7 +495,7 @@ export class SystemGenerator {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
+      hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return Math.abs(hash);
@@ -619,24 +504,19 @@ export class SystemGenerator {
   static generateAsteroidBelts(planets: Planet[], star: any): AsteroidBelt[] {
     const belts: AsteroidBelt[] = [];
     const beltCount = Math.floor(Math.random() * 4) + 1; // 1-4 belts
-    console.log(
-      `Attempting to generate ${beltCount} belts for ${star.name} with ${planets.length} planets`,
-    );
+    console.log(`Attempting to generate ${beltCount} belts for ${star.name} with ${planets.length} planets`);
 
     // Find potential belt locations in orbital gaps
     const potentialBelts = [];
-
+    
     // Belt before first planet
     if (planets.length > 0) {
       const firstPlanet = planets[0];
       const innerRadius = firstPlanet.orbitRadius * 0.5;
       const outerRadius = firstPlanet.orbitRadius * 0.8;
-      if (innerRadius > 8) {
-        // Only if there's enough space
-        console.log(
-          `Inner belt possible: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`,
-        );
-        potentialBelts.push({ innerRadius, outerRadius, position: "inner" });
+      if (innerRadius > 8) { // Only if there's enough space
+        console.log(`Inner belt possible: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`);
+        potentialBelts.push({ innerRadius, outerRadius, position: 'inner' });
       } else {
         console.log(`Inner belt too close: ${innerRadius.toFixed(1)} < 8`);
       }
@@ -647,19 +527,14 @@ export class SystemGenerator {
       const currentPlanet = planets[i];
       const nextPlanet = planets[i + 1];
       const gap = nextPlanet.orbitRadius - currentPlanet.orbitRadius;
-
-      if (gap > 20) {
-        // Large enough gap for asteroid belt
+      
+      if (gap > 20) { // Large enough gap for asteroid belt
         const innerRadius = currentPlanet.orbitRadius + gap * 0.3;
         const outerRadius = currentPlanet.orbitRadius + gap * 0.7;
-        console.log(
-          `Gap ${i}: ${gap.toFixed(1)} units between ${currentPlanet.name} and ${nextPlanet.name}`,
-        );
+        console.log(`Gap ${i}: ${gap.toFixed(1)} units between ${currentPlanet.name} and ${nextPlanet.name}`);
         potentialBelts.push({ innerRadius, outerRadius, position: `gap-${i}` });
       } else {
-        console.log(
-          `Gap ${i}: ${gap.toFixed(1)} units too small for belt between ${currentPlanet.name} and ${nextPlanet.name}`,
-        );
+        console.log(`Gap ${i}: ${gap.toFixed(1)} units too small for belt between ${currentPlanet.name} and ${nextPlanet.name}`);
       }
     }
 
@@ -668,35 +543,30 @@ export class SystemGenerator {
       const lastPlanet = planets[planets.length - 1];
       const innerRadius = lastPlanet.orbitRadius * 1.5;
       const outerRadius = lastPlanet.orbitRadius * 1.8;
-      console.log(
-        `Outer belt: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`,
-      );
-      potentialBelts.push({ innerRadius, outerRadius, position: "outer" });
+      console.log(`Outer belt: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`);
+      potentialBelts.push({ innerRadius, outerRadius, position: 'outer' });
     }
 
-    console.log(
-      `Found ${potentialBelts.length} potential belt locations:`,
-      potentialBelts,
-    );
-
+    console.log(`Found ${potentialBelts.length} potential belt locations:`, potentialBelts);
+    
     // Select random belts from potential locations
     const selectedBelts = potentialBelts
       .sort(() => Math.random() - 0.5)
       .slice(0, Math.min(beltCount, potentialBelts.length));
-
+    
     console.log(`Selected ${selectedBelts.length} belts to generate`);
 
     selectedBelts.forEach((belt, index) => {
       const density = 0.3 + Math.random() * 0.7; // 0.3-1.0 density
       const asteroidCount = Math.floor(density * 500 + Math.random() * 1000); // 150-1500 asteroids
-
+      
       belts.push({
         id: `belt-${star.id}-${index}`,
         name: `${star.name} Asteroid Belt ${String.fromCharCode(65 + index)}`, // A, B, C, D
         innerRadius: belt.innerRadius,
         outerRadius: belt.outerRadius,
         density,
-        asteroidCount,
+        asteroidCount
       });
     });
 
@@ -705,22 +575,14 @@ export class SystemGenerator {
 
   static getStarColor(spectralClass: string): string {
     switch (spectralClass) {
-      case "O":
-        return "#9BB0FF";
-      case "B":
-        return "#AABFFF";
-      case "A":
-        return "#CAD7FF";
-      case "F":
-        return "#F8F7FF";
-      case "G":
-        return "#FFFF00";
-      case "K":
-        return "#FFCD9B";
-      case "M":
-        return "#FF6D4D";
-      default:
-        return "#FFFF00";
+      case 'O': return '#9BB0FF';
+      case 'B': return '#AABFFF';
+      case 'A': return '#CAD7FF';
+      case 'F': return '#F8F7FF';
+      case 'G': return '#FFFF00';
+      case 'K': return '#FFCD9B';
+      case 'M': return '#FF6D4D';
+      default: return '#FFFF00';
     }
   }
 }
