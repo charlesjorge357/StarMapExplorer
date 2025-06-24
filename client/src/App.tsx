@@ -287,11 +287,15 @@ function App() {
         setLastVisitedStar(selectedStar); // Remember the star we're visiting
         setSelectedStar(null);
 
-        // Ensure star info is available immediately in system view
+        // Ensure star info is available immediately in system view and set default camera
         setTimeout(() => {
           if (system.star) {
             (window as any).systemStarSelected = system.star;
             console.log('Star info set from system navigation:', system.star.name);
+          }
+          // Set default camera position for system view
+          if ((window as any).resetToStar) {
+            (window as any).resetToStar();
           }
         }, 100);
       }
