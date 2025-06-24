@@ -6,6 +6,7 @@ import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
+import { PlanetaryView } from "./components/3d/PlanetaryView";
 import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
