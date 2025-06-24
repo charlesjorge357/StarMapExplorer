@@ -299,6 +299,13 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // Use planets from the cached system
   const planets = system.planets || [];
+  
+  // Debug: Log planet data to check IDs
+  if (planets.length > 0 && !planets[0].id) {
+    console.warn('Planets missing IDs:', planets);
+  } else if (planets.length > 0) {
+    console.log('Planets have IDs:', planets.map(p => ({ name: p.name, id: p.id })));
+  }
 
   // No longer needed - using currentSystem.star directly in UI
 

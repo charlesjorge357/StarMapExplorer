@@ -137,6 +137,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 23, 2025: Implemented per-planet-type opacity control for optimal visual clarity. Verdant and terrestrial worlds are fully opaque to showcase surface details, while gas giants have slight transparency for atmospheric effects. Ensures each planet type displays with appropriate visual fidelity.
 - June 23, 2025: Fixed material color tinting system - verdant worlds use pure white base color to show true texture colors without tinting, while other planet types maintain colored base for atmospheric effects. No planets are transparent, only color tinting is controlled.
 - June 23, 2025: Completely removed all color tinting and emissive effects from verdant worlds with textures. Verdant planets now display pure texture colors with no white tint, green glow, or any color modifications - showing authentic Earth-like blues, greens, and browns.
+- June 23, 2025: Implemented comprehensive color variation system in SystemView using seeded HSL generation. Replaced static planet colors with dynamic variation based on planet IDs, matching SystemGenerator's sophisticated color system. Added debug logging to investigate missing planet IDs issue.
 
 ## User Preferences
 
