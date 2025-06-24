@@ -169,7 +169,7 @@ export class SystemGenerator {
       type,
       orbitRadius,
       orbitSpeed,
-      rotationSpeed: this.seededRandom(planetSeed + 12) * 0.1,
+      rotationSpeed,
       temperature,
       atmosphere,
       moons: [],
@@ -190,10 +190,10 @@ export class SystemGenerator {
     for (let i = 0; i < planetCount; i++) {
       let orbitRadius: number;
       if (i === 0) {
-        orbitRadius = 0.3 + this.seededRandom(systemSeed + i) * 0.7;
+        orbitRadius = 0.3 + SystemGenerator.seededRandom(systemSeed + i) * 0.7;
       } else {
         const previousRadius = planets[i - 1].orbitRadius;
-        const spacing = 1.4 + this.seededRandom(systemSeed + i + 100) * 0.6;
+        const spacing = 1.4 + SystemGenerator.seededRandom(systemSeed + i + 100) * 0.6;
         orbitRadius = previousRadius * spacing;
       }
 
