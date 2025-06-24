@@ -407,7 +407,10 @@ function App() {
                         const planetPosition = new Vector3(x, 0, z);
                         
                         if ((window as any).homeToPlanet) {
-                          (window as any).homeToPlanet(planetPosition, Math.max(found.radius * 0.6, 1), found);
+                          // Find planet index in current system for proper offset calculation
+                          const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === found.id) || 0;
+                          const planetDataWithIndex = { ...found, index: planetIndex };
+                          (window as any).homeToPlanet(planetPosition, Math.max(found.radius * 0.6, 1), planetDataWithIndex);
                         }
                       }, 100);
                     } else {

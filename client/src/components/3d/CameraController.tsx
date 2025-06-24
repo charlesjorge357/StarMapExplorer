@@ -47,9 +47,10 @@ export function CameraController() {
         return;
       }
       
-      // Use the same timing as SystemView planet animation
-      const time = Date.now() * 0.0001; // Changed to Date.now() to match SystemView
-      const angle = time * planetData.orbitSpeed;
+      // Use the same timing and offset as SystemView planet animation
+      const time = Date.now() * 0.0001;
+      const planetIndex = planetData.index || 0; // Get planet index for offset
+      const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8); // Include index offset
       const currentPlanetPos = new Vector3(
         Math.cos(angle) * planetData.orbitRadius * 2,
         0,
@@ -80,7 +81,7 @@ export function CameraController() {
     // Execute immediately
     trackingFunction();
     
-    console.log(`Camera homed to planet ${planetData?.name || 'Unknown'} with synchronized timing`);
+    console.log(`Camera homed to planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
   };
 
   // Expose camera homing to window for external access
