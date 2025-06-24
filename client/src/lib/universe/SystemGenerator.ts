@@ -121,16 +121,17 @@ export class SystemGenerator {
 
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, systemSeed: number): Planet {
     const planetSeed = systemSeed + index * 1000;
-    const baseRadius = Math.max(0.1, this.seededRandom(planetSeed) * 0.8 + 0.1);
+    const baseRadius = Math.max(0.1, SystemGenerator.seededRandom(planetSeed) * 0.8 + 0.1);
     
     const zone = orbitRadius < 1.5 ? 'inner' : orbitRadius < 4 ? 'habitable' : 'outer';
-    const type = this.selectPlanetType(zone, planetSeed + 50);
+    const type = SystemGenerator.selectPlanetType(zone, planetSeed + 50);
     
     let radius = baseRadius;
     if (type === 'gas_giant') radius *= 8;
     if (type === 'frost_giant') radius *= 4;
     
     const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15;
+    const rotationSpeed = 0.01 + SystemGenerator.seededRandom(planetSeed + 20) * 0.05;
     let mass = Math.pow(radius, 3);
     if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
 
@@ -149,8 +150,8 @@ export class SystemGenerator {
       case 'nuclear_world': atmosphere = ['Radioactive Gases', 'Noble Gases']; break;
     }
 
-    const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
-    const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
+    const angle = SystemGenerator.seededRandom(planetSeed + 10) * Math.PI * 2;
+    const inclination = (SystemGenerator.seededRandom(planetSeed + 13) - 0.5) * 0.3;
     
     const name = `${starName} ${String.fromCharCode(945 + index)}`; // Greek letters
     const position: [number, number, number] = [
@@ -173,7 +174,7 @@ export class SystemGenerator {
       atmosphere,
       moons: [],
       inclination,
-      textureIndex: this.generateTextureIndex(type, index, starName),
+      textureIndex: SystemGenerator.generateTextureIndex(type, index, starName),
       surfaceFeatures: []
     };
   }
@@ -199,12 +200,12 @@ export class SystemGenerator {
       // Scale orbit radius based on star mass (restored original)
       orbitRadius *= Math.sqrt(star.mass) * 30;
 
-      const planet = this.generatePlanet(star.name, star.temperature || 5778, i, orbitRadius, systemSeed);
+      const planet = SystemGenerator.generatePlanet(star.name, star.temperature || 5778, i, orbitRadius, systemSeed);
       planets.push(planet);
     }
 
     // Generate asteroid belts
-    const asteroidBelts = this.generateAsteroidBelts(star, planets);
+    const asteroidBelts = SystemGenerator.generateAsteroidBelts(star, planets);
 
 
     return {

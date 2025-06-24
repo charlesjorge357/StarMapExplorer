@@ -419,7 +419,7 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
       const angle = baseAngle + angleVariation;
 
       const radiusVariation = seededRandom() * (belt.outerRadius - belt.innerRadius);
-      const radius = belt.innerRadius + radiusVariation;
+      const radius = (belt.innerRadius + radiusVariation) * 2; // Scale to match planet orbits
 
       // Add some vertical variation
       const y = (seededRandom() - 0.5) * 3;
@@ -447,10 +447,15 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.computeBoundingSphere();
   }, [belt]);
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, belt.asteroidCount]}>
+    <instancedMesh 
+      ref={meshRef} 
+      args={[undefined, undefined, belt.asteroidCount]}
+      frustumCulled={false}
+    >
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial 
         color="#999999"
@@ -458,6 +463,7 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
         metalness={0.1}
         emissive="#222222"
         emissiveIntensity={0.05}
+        side={THREE.DoubleSide}
       />
     </instancedMesh>
   );
