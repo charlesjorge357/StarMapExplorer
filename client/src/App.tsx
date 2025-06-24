@@ -341,6 +341,18 @@ function App() {
   // Add keyboard handler for Enter key planet homing
   useEffect(() => {
     const handlePlanetHoming = (event: KeyboardEvent) => {
+      if (event.key === 'f' && currentView === 'system' && selectedPlanet) {
+        event.preventDefault();
+        
+        // Check if planet has surface features for planetary view
+        if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
+          console.log(`Entering planetary view for ${selectedPlanet.name}`);
+          setCurrentView('planetary');
+        } else {
+          console.log(`${selectedPlanet.name} has no surface features to explore`);
+        }
+      }
+      
       if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
         
@@ -517,6 +529,13 @@ function App() {
                   onFeatureClick={setSelectedFeature}
                 />
               )}
+              {currentView === 'planetary' && selectedPlanet && (
+                <PlanetaryView 
+                  planet={selectedPlanet}
+                  selectedFeature={selectedFeature}
+                  onFeatureClick={setSelectedFeature}
+                />
+              )}
 
               {/* Post-processing effects for bloom */}
               <EffectComposer>
@@ -554,7 +573,7 @@ function App() {
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedPlanet 
-                ? `Selected: ${selectedPlanet.name} • Enter: ${selectedPlanet.surfaceFeatures?.length ? 'planetary view' : 'orbital track'} • Escape: look at star • Backspace: galactic view`
+                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Escape: look at star • Backspace: galactic view`
                 : 'Press Backspace to return to galactic view'
               }
             </div>

@@ -284,7 +284,7 @@ export class SystemGenerator {
         moons: [],
         inclination,
         textureIndex: this.generateTextureIndex(type, i, star.name),
-        surfaceFeatures: []
+        surfaceFeatures: this.generateSurfaceFeatures(type, `planet-${star.id}-${i}`, this.hashString(star.name + i))
       });
     }
 
@@ -316,6 +316,145 @@ export class SystemGenerator {
     let [h, s, l] = baseColors[type];
     h = (h + variation * 360 + 360) % 360;
     return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
+  }
+
+  // Generate surface features for terrestrial planets
+  private static generateSurfaceFeatures(planetType: string, planetId: string, baseSeed: number) {
+    // Only terrestrial planets have surface features
+    if (planetType === 'gas_giant' || planetType === 'frost_giant') {
+      return [];
+    }
+
+    const features = [];
+    const featureSeed = baseSeed + 1000;
+    const seededRandom = () => this.seededRandom(featureSeed + features.length);
+    
+    // Number of features based on planet type
+    let featureCount = 0;
+    switch (planetType) {
+      case 'verdant_world':
+      case 'ocean_world':
+        featureCount = 3 + Math.floor(seededRandom() * 4); // 3-6 features
+        break;
+      case 'arid_world':
+      case 'acidic_world':
+        featureCount = 1 + Math.floor(seededRandom() * 3); // 1-3 features
+        break;
+      case 'nuclear_world':
+        featureCount = Math.floor(seededRandom() * 2); // 0-1 features
+        break;
+      case 'dead_world':
+        featureCount = Math.floor(seededRandom() * 2); // 0-1 features
+        break;
+      default:
+        featureCount = 1;
+    }
+
+    for (let i = 0; i < featureCount; i++) {
+      const featureType = this.getRandomFeatureType(planetType, seededRandom);
+      const lat = (seededRandom() - 0.5) * 180; // -90 to 90
+      const lon = (seededRandom() - 0.5) * 360; // -180 to 180
+      
+      features.push({
+        id: `${planetId}-feature-${i}`,
+        type: featureType,
+        name: this.generateFeatureName(featureType, i, seededRandom),
+        position: [lat, lon] as [number, number],
+        description: this.generateFeatureDescription(featureType, planetType),
+        population: featureType === 'city' ? Math.floor(seededRandom() * 5000000) + 10000 : undefined,
+        size: this.getRandomSize(seededRandom),
+        technology: this.getRandomTechnology(planetType, seededRandom)
+      });
+    }
+
+    return features;
+  }
+
+  private static getRandomFeatureType(planetType: string, random: () => number): 'city' | 'fort' | 'landmark' {
+    const rand = random();
+    
+    switch (planetType) {
+      case 'verdant_world':
+      case 'ocean_world':
+        if (rand < 0.5) return 'city';
+        if (rand < 0.8) return 'landmark';
+        return 'fort';
+      case 'arid_world':
+        if (rand < 0.3) return 'city';
+        if (rand < 0.7) return 'fort';
+        return 'landmark';
+      default:
+        if (rand < 0.2) return 'city';
+        if (rand < 0.6) return 'fort';
+        return 'landmark';
+    }
+  }
+
+  private static generateFeatureName(type: 'city' | 'fort' | 'landmark', index: number, random: () => number): string {
+    const cityNames = ['New Haven', 'Central City', 'Port Aurora', 'Meridian', 'Haven Point', 'Nova City'];
+    const fortNames = ['Fort Alpha', 'Bastion Prime', 'Stronghold Beta', 'Citadel One', 'Outpost Gamma', 'Defense Station'];
+    const landmarkNames = ['Crystal Peaks', 'The Great Canyon', 'Sunset Mesa', 'Ancient Ruins', 'Mystic Falls', 'Titan Ridge'];
+    
+    let names: string[];
+    switch (type) {
+      case 'city':
+        names = cityNames;
+        break;
+      case 'fort':
+        names = fortNames;
+        break;
+      case 'landmark':
+        names = landmarkNames;
+        break;
+    }
+    
+    const nameIndex = Math.floor(random() * names.length);
+    return names[nameIndex];
+  }
+
+  private static generateFeatureDescription(type: 'city' | 'fort' | 'landmark', planetType: string): string {
+    switch (type) {
+      case 'city':
+        return planetType === 'verdant_world' ? 'A thriving metropolis with green spaces' :
+               planetType === 'arid_world' ? 'A desert settlement with climate domes' :
+               'A hardy colonial outpost';
+      case 'fort':
+        return planetType === 'arid_world' ? 'A fortified compound protecting trade routes' :
+               'A defensive installation monitoring the region';
+      case 'landmark':
+        return planetType === 'verdant_world' ? 'A natural wonder of geological significance' :
+               planetType === 'dead_world' ? 'Ancient ruins from a lost civilization' :
+               'A notable geographical formation';
+      default:
+        return 'An interesting location';
+    }
+  }
+
+  private static getRandomSize(random: () => number): 'small' | 'medium' | 'large' {
+    const rand = random();
+    if (rand < 0.5) return 'small';
+    if (rand < 0.8) return 'medium';
+    return 'large';
+  }
+
+  private static getRandomTechnology(planetType: string, random: () => number): 'primitive' | 'industrial' | 'advanced' {
+    const rand = random();
+    
+    switch (planetType) {
+      case 'verdant_world':
+      case 'ocean_world':
+        if (rand < 0.2) return 'primitive';
+        if (rand < 0.6) return 'industrial';
+        return 'advanced';
+      case 'arid_world':
+        if (rand < 0.4) return 'primitive';
+        if (rand < 0.8) return 'industrial';
+        return 'advanced';
+      default:
+        if (rand < 0.6) return 'primitive';
+        if (rand < 0.9) return 'industrial';
+        return 'advanced';
+    }
   }
 
   static generateAsteroidBelts(planets: Planet[], star: any): AsteroidBelt[] {
