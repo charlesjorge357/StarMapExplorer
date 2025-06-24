@@ -189,19 +189,24 @@ export class SystemGenerator {
       'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
     ];
 
-    // Pre-calculate orbital zones to prevent exponential growth
-    const baseSpacing = 16 + star.radius * 8;
-    const maxOrbitRadius = baseSpacing * 6; // Cap maximum orbit distance
+    // Calculate orbital zones with proper spacing to prevent overlaps
+    const baseSpacing = 20 + star.radius * 6; // Increased base spacing
+    const maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
-    
+
     for (let i = 0; i < planetCount; i++) {
       if (i === 0) {
+        // First planet starts at base spacing from star
         orbitZones.push(baseSpacing);
       } else {
-        // Use additive spacing instead of multiplicative to prevent exponential growth
-        const additiveSpacing = baseSpacing * (0.8 + Math.random() * 0.8); // 0.8x to 1.4x base spacing
-        const newOrbit = orbitZones[i - 1] + additiveSpacing;
-        orbitZones.push(Math.min(newOrbit, maxOrbitRadius)); // Cap at maximum distance
+        const prevOrbit = orbitZones[i - 1];
+        
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
+        
+        const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
       }
     }
 

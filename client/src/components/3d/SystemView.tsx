@@ -25,8 +25,8 @@ function MoonMesh({
       const angle = time * moon.orbitSpeed * 10 + moonIndex * (Math.PI * 2 / 8); // Apply planetary offset pattern
       
       // Moon orbit relative to planet's current position
-      const moonX = planetRef.current.position.x + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2;
-      const moonZ = planetRef.current.position.z + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.2;
+      const moonX = planetRef.current.position.x + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.05;
+      const moonZ = planetRef.current.position.z + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.05;
       const moonY = planetRef.current.position.y;
 
       moonRef.current.position.set(moonX, moonY, moonZ);
@@ -281,18 +281,6 @@ function PlanetMesh({
         />
       </mesh>
 
-      {/* Planet selection ring with pulsing effect */}
-      {isSelected && (
-        <mesh position={[0, 0, 0]} raycast={() => null}>
-          <sphereGeometry args={[planet.radius * 0.8 + 2, 16, 16]} />
-          <meshBasicMaterial 
-            color="#ffffff"
-            transparent
-            opacity={0.4}
-            wireframe
-          />
-        </mesh>
-      )}
 
       {/* Atmospheric glow for gas planets */}
       {(planet.type === 'gas_giant' || planet.type === 'frost_giant') && (
@@ -362,7 +350,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
     gas_giant: jupiterTexture, // Jupiter texture for gas giants
-    frost_giant: [neptuneTexture, jupiterTexture], // Neptune has better detail than Uranus
+    frost_giant: [neptuneTexture, jupiterTexture, uranusTexture], // Neptune has better detail than Uranus
     arid_world: [marsTexture, venusSurfaceTexture], // Mars/Venus surfaces for arid worlds
     verdant_world: [terrestrial1Texture, terrestrial2Texture, terrestrial3Texture], // Earth-like worlds
     acidic_world: [venusAtmosphereTexture, venusSurfaceTexture], // Toxic atmosphere worlds
