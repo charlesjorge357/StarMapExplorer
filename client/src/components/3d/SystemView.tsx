@@ -5,6 +5,43 @@ import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 
+function MoonMesh({ 
+  moon, 
+  planetPosition, 
+  planetRadius 
+}: { 
+  moon: any; 
+  planetPosition: [number, number, number];
+  planetRadius: number;
+}) {
+  const moonRef = useRef<THREE.Mesh>(null);
+
+  useFrame(() => {
+    if (moonRef.current) {
+      const time = Date.now() * 0.001;
+      const angle = time * moon.orbitSpeed;
+      
+      // Moon orbit relative to planet
+      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 3;
+      const moonZ = planetPosition[2] + Math.sin(angle) * moon.orbitRadius * planetRadius * 3;
+      const moonY = planetPosition[1];
+
+      moonRef.current.position.set(moonX, moonY, moonZ);
+    }
+  });
+
+  return (
+    <mesh ref={moonRef}>
+      <sphereGeometry args={[moon.radius * planetRadius * 0.3, 8, 8]} />
+      <meshStandardMaterial 
+        color="#888888" 
+        emissive="#222222"
+        emissiveIntensity={0.1}
+      />
+    </mesh>
+  );
+}
+
 
 // Helper functions for planet materials
 function getPlanetColor(type: string, planetId?: string): string {
