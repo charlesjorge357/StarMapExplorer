@@ -25,47 +25,62 @@ export function CameraController() {
   const lastBoostStateRef = useRef(false);
   const lastPositionRef = useRef(new Vector3());
 
-  // Camera homing functionality
+  // Camera homing functionality with frame-synced positioning
   const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any) => {
     if (!camera) return;
     
     const distance = Math.max(planetRadius * 25, 15);
     
-    // Get real-time planet position if planet data is available
-    let currentPlanetPos = planetPosition;
-    if (planetData) {
-      const time = performance.now() * 0.0001;
+    // Create a continuous tracking function that updates with the frame
+    const trackingFunction = () => {
+      if (!planetData) {
+        // Simple positioning for non-orbiting objects
+        const direction = new Vector3(1, 0.4, 1).normalize();
+        const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
+        camera.position.copy(targetPosition);
+        camera.rotation.set(0, 0, 0);
+        camera.rotation.order = 'YXZ';
+        camera.up.set(0, 1, 0);
+        camera.lookAt(planetPosition);
+        camera.updateMatrix();
+        camera.updateMatrixWorld(true);
+        return;
+      }
+      
+      // Use the same timing as SystemView planet animation
+      const time = Date.now() * 0.0001; // Changed to Date.now() to match SystemView
       const angle = time * planetData.orbitSpeed;
-      const x = Math.cos(angle) * planetData.orbitRadius * 2;
-      const z = Math.sin(angle) * planetData.orbitRadius * 2;
-      currentPlanetPos = new Vector3(x, 0, z);
-    }
+      const currentPlanetPos = new Vector3(
+        Math.cos(angle) * planetData.orbitRadius * 2,
+        0,
+        Math.sin(angle) * planetData.orbitRadius * 2
+      );
+      
+      const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
+      
+      let direction: Vector3;
+      if (orbitalRadius > 0.1) {
+        const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
+        direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
+      } else {
+        direction = new Vector3(1, 0.4, 1).normalize();
+      }
+      
+      const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
+      
+      camera.position.copy(targetPosition);
+      camera.rotation.set(0, 0, 0);
+      camera.rotation.order = 'YXZ';
+      camera.up.set(0, 1, 0);
+      camera.lookAt(currentPlanetPos);
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+    };
     
-    const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
+    // Execute immediately
+    trackingFunction();
     
-    let direction: Vector3;
-    
-    if (orbitalRadius > 0.1) {
-      // Position camera at a good viewing angle: outward from star + elevated
-      const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
-      // Combine radial direction with elevation for optimal viewing
-      direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
-    } else {
-      direction = new Vector3(1, 0.4, 1).normalize();
-    }
-    
-    const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
-    
-    // Move camera and orient toward current planet position
-    camera.position.copy(targetPosition);
-    camera.rotation.set(0, 0, 0);
-    camera.rotation.order = 'YXZ';
-    camera.up.set(0, 1, 0);
-    camera.lookAt(currentPlanetPos);
-    camera.updateMatrix();
-    camera.updateMatrixWorld(true);
-    
-    console.log(`Camera homed to planet at real-time orbital position (${currentPlanetPos.x.toFixed(1)}, ${currentPlanetPos.z.toFixed(1)})`);
+    console.log(`Camera homed to planet ${planetData?.name || 'Unknown'} with synchronized timing`);
   };
 
   // Expose camera homing to window for external access

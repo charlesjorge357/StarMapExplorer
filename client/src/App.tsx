@@ -326,8 +326,8 @@ function App() {
       if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
         
-        // Calculate planet's current orbital position
-        const time = performance.now() * 0.0001;
+        // Calculate planet's current orbital position using same timing as SystemView
+        const time = Date.now() * 0.0001;
         const angle = time * selectedPlanet.orbitSpeed;
         const x = Math.cos(angle) * selectedPlanet.orbitRadius * 2;
         const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
@@ -397,7 +397,7 @@ function App() {
                       
                       // Auto-home camera to found planet
                       setTimeout(() => {
-                        const time = performance.now() * 0.0001;
+                        const time = Date.now() * 0.0001;
                         const angle = time * found.orbitSpeed;
                         const x = Math.cos(angle) * found.orbitRadius * 2;
                         const z = Math.sin(angle) * found.orbitRadius * 2;
