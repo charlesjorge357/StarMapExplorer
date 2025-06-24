@@ -94,7 +94,7 @@ export function CameraController({
     } else if (currentScope === 'system') {
       // Maintain camera orientation but position it at fixed distance from star
       const currentDistance = camera.position.length();
-      const targetDistance = 200; // Increased distance from star for better system overview
+      const targetDistance = 50; // Fixed distance from star
       
       if (currentDistance < 5) {
         // If too close or at origin, set default position

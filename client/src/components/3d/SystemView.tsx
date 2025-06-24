@@ -337,7 +337,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         <meshStandardMaterial 
           color={getStarColor(star.spectralClass)}
           emissive={getStarColor(star.spectralClass)}
-          emissiveIntensity={0.8}
+          emissiveIntensity={2.0}
           toneMapped={false}
           // Star surface texture - fully opaque
           map={starBumpMap || undefined}
@@ -354,7 +354,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         <meshBasicMaterial 
           color={getStarColor(star.spectralClass)}
           transparent
-          opacity={0.1}
+          opacity={0.3}
         />
       </mesh>
 
