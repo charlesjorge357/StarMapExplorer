@@ -119,14 +119,17 @@ export class SystemGenerator {
     }
   }
 
-  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
-    const planetSeed = seed + index * 1000;
-    const name = this.generatePlanetName(starName, index);
-    const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed);
-
-    const radiusRange = this.PLANET_RADII[type];
-    const radius = radiusRange.min + this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
-
+  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, systemSeed: number): Planet {
+    const planetSeed = systemSeed + index * 1000;
+    const baseRadius = Math.max(0.1, this.seededRandom(planetSeed) * 0.8 + 0.1);
+    
+    const zone = orbitRadius < 1.5 ? 'inner' : orbitRadius < 4 ? 'habitable' : 'outer';
+    const type = this.selectPlanetType(zone, planetSeed + 50);
+    
+    let radius = baseRadius;
+    if (type === 'gas_giant') radius *= 8;
+    if (type === 'frost_giant') radius *= 4;
+    
     const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15;
     let mass = Math.pow(radius, 3);
     if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
@@ -148,6 +151,8 @@ export class SystemGenerator {
 
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
     const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
+    
+    const name = `${starName} ${String.fromCharCode(945 + index)}`; // Greek letters
     const position: [number, number, number] = [
       Math.cos(angle) * orbitRadius * 10,
       Math.sin(inclination) * orbitRadius * 2,
@@ -184,16 +189,17 @@ export class SystemGenerator {
     for (let i = 0; i < planetCount; i++) {
       let orbitRadius: number;
       if (i === 0) {
-        // First planet starts well outside the star
-        orbitRadius = Math.max(star.radius * 3, 15) + this.seededRandom(systemSeed + i) * 20;
+        orbitRadius = 0.3 + this.seededRandom(systemSeed + i) * 0.7;
       } else {
-        // Subsequent planets use additive spacing
         const previousRadius = planets[i - 1].orbitRadius;
-        const spacing = 20 + this.seededRandom(systemSeed + i + 100) * 30;
-        orbitRadius = previousRadius + spacing;
+        const spacing = 1.4 + this.seededRandom(systemSeed + i + 100) * 0.6;
+        orbitRadius = previousRadius * spacing;
       }
+
+      // Scale orbit radius based on star mass (restored original)
+      orbitRadius *= Math.sqrt(star.mass) * 30;
+
       const planet = this.generatePlanet(star.name, star.temperature || 5778, i, orbitRadius, systemSeed);
-      console.log(`Planet ${i}: ${planet.name} at orbit radius ${orbitRadius.toFixed(1)} (star radius: ${star.radius.toFixed(1)})`);
       planets.push(planet);
     }
 

@@ -167,8 +167,8 @@ function PlanetMesh({
     if (planetRef.current) {
       const time = state.clock.getElapsedTime() * 0.1;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
-      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
+      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
     }
   });
 
@@ -192,7 +192,7 @@ function PlanetMesh({
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
+        <sphereGeometry args={[planet.radius * 10, 32, 32]} />
         <meshStandardMaterial 
           color={
             // Special handling for verdant worlds with textures
@@ -360,7 +360,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       {/* Orbital paths (static) */}
       {systemPlanets.map((planet) => (
         <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.orbitRadius - 0.2, planet.orbitRadius + 0.2, 128]} />
+          <ringGeometry args={[planet.orbitRadius * 2 - 0.05, planet.orbitRadius * 2 + 0.05, 128]} />
           <meshBasicMaterial 
             color="#444444" 
             transparent 
