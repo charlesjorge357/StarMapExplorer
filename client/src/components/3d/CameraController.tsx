@@ -59,7 +59,7 @@ export function CameraController() {
       return;
     }
     
-    // One-time positioning with offset
+    // One-time positioning with consistent distance from planet
     const time = Date.now() * 0.0001;
     const planetIndex = planetData.index || 0;
     const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
@@ -69,17 +69,16 @@ export function CameraController() {
       Math.sin(angle) * planetData.orbitRadius * 2
     );
     
-    const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
+    // Consistent camera distance from planet
+    const cameraDistance = Math.max(planetData.radius * 25, 20);
+    const cameraOffsetAngle = angle + Math.PI * 0.4;
+    const direction = new Vector3(
+      Math.cos(cameraOffsetAngle),
+      0.6, // Elevated angle
+      Math.sin(cameraOffsetAngle)
+    ).normalize();
     
-    let direction: Vector3;
-    if (orbitalRadius > 0.1) {
-      const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
-      direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
-    } else {
-      direction = new Vector3(1, 0.4, 1).normalize();
-    }
-    
-    const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
+    const targetPosition = currentPlanetPos.clone().add(direction.multiplyScalar(cameraDistance));
     
     camera.position.copy(targetPosition);
     camera.rotation.set(0, 0, 0);
@@ -205,8 +204,8 @@ export function CameraController() {
       );
       
       // Camera follows the same orbital path but offset for viewing
-      const distance = Math.max(planetData.radius * 30, 25);
-      const cameraOffsetAngle = angle + Math.PI * 0.3; // Camera offset for perspective
+      const distance = 10;
+      const cameraOffsetAngle = angle + Math.PI * 0.1; // Camera offset for perspective
       
       // Camera position matches planet's orbital movement
       const cameraPos = new Vector3(

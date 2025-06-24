@@ -270,42 +270,41 @@ function App() {
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
+        
+        // Always stop orbital tracking first
+        if ((window as any).homeToPlanet) {
+          (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        }
+        
         if (currentView === 'galactic' && selectedStar) {
           console.log(`Unselected star: ${selectedStar.name}`);
           setSelectedStar(null);
         } else if (currentView === 'system') {
           if (selectedPlanet) {
             console.log(`Unselected planet: ${selectedPlanet.name}`);
-            // Stop orbital tracking when unselecting planet
-            if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
-            }
             setSelectedPlanet(null);
           } else if ((window as any).systemStarSelected) {
             console.log('Unselected central star');
             (window as any).systemStarSelected = false;
-            // Stop orbital tracking
-            if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
-            }
           }
         }
       }
 
       if (event.key === 'Backspace' && currentView === 'system') {
         console.log('Returning to galactic view...');
+        
+        // Stop orbital tracking when leaving system view
+        if ((window as any).homeToPlanet) {
+          (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        }
+        
         setCurrentView('galactic');
         setCurrentSystem(null);
         setSelectedPlanet(null);
-        (window as any).systemStarSelected = false; // Clear star selection
+        (window as any).systemStarSelected = false;
       }
 
-      if (event.key === 'Backspace' && currentView === 'system') {
-        console.log('Returning to galactic view...');
-        setCurrentView('galactic');
-        setCurrentSystem(null);
-        // Camera position will be restored by the camera controller
-      }
+      // Remove duplicate backspace handler
     };
 
     document.addEventListener('keydown', handleSystemNavigation);
