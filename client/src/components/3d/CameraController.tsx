@@ -190,40 +190,38 @@ export function CameraController() {
       return;
     }
 
-    // Handle orbital tracking first - direct planet movement copying
+    // Handle orbital tracking - copy planet's movement data directly to camera
     if (isOrbitalTrackingRef.current && orbitalTargetRef.current) {
       const planetData = orbitalTargetRef.current;
       const time = Date.now() * 0.0001;
       const planetIndex = planetData.index || 0;
       const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
       
-      // Calculate exact planet position (same as SystemView)
+      // Calculate exact planet position (identical to SystemView calculation)
       const planetPos = new Vector3(
         Math.cos(angle) * planetData.orbitRadius * 2,
         0,
         Math.sin(angle) * planetData.orbitRadius * 2
       );
       
-      // Position camera to follow planet but offset for viewing
-      const distance = Math.max(planetData.radius * 25, 20);
-      const cameraOffsetAngle = angle + Math.PI * 0.25; // Camera leads slightly
+      // Camera follows the same orbital path but offset for viewing
+      const distance = Math.max(planetData.radius * 30, 25);
+      const cameraOffsetAngle = angle + Math.PI * 0.3; // Camera offset for perspective
       
-      // Calculate camera position following the orbital path
+      // Camera position matches planet's orbital movement
       const cameraPos = new Vector3(
         Math.cos(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance),
-        planetData.orbitRadius * 0.6, // Elevated view
+        planetData.orbitRadius * 0.7, // Elevated for better view
         Math.sin(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance)
       );
       
-      // Directly copy the calculated position (no lerp for immediate tracking)
+      // Direct position copy - no interpolation for instant sync
       camera.position.copy(cameraPos);
-      
-      // Always look at the planet
       camera.lookAt(planetPos);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
       
-      return; // Skip manual controls during tracking
+      return; // Skip all other controls during tracking
     }
 
     const controls = get();

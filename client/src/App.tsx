@@ -276,10 +276,18 @@ function App() {
         } else if (currentView === 'system') {
           if (selectedPlanet) {
             console.log(`Unselected planet: ${selectedPlanet.name}`);
+            // Stop orbital tracking when unselecting planet
+            if ((window as any).homeToPlanet) {
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+            }
             setSelectedPlanet(null);
           } else if ((window as any).systemStarSelected) {
             console.log('Unselected central star');
             (window as any).systemStarSelected = false;
+            // Stop orbital tracking
+            if ((window as any).homeToPlanet) {
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+            }
           }
         }
       }
