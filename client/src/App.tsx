@@ -408,7 +408,7 @@ function App() {
               )}
               {currentView === 'system' && currentSystem && (
                 <>
-                  <StarSkybox count={12000} radius={3000} />
+                  <StarSkybox count={8000} radius={5000} />
                   <SystemView 
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}
