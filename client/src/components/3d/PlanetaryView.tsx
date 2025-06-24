@@ -193,22 +193,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
         />
       </mesh>
 
-      {/* Subtle atmospheric glow for applicable planets - minimal opacity to preserve texture colors */}
-      {(planet.type === 'gas_giant' || planet.type === 'frost_giant' || planet.type === 'verdant_world') && (
-        <mesh>
-          <sphereGeometry args={[planetRadius * 1.005, 64, 32]} />
-          <meshBasicMaterial 
-            color={
-              planet.type === 'gas_giant' ? '#ffa500' : 
-              planet.type === 'frost_giant' ? '#87ceeb' : 
-              '#87ceeb'
-            }
-            transparent 
-            opacity={0.03} 
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
+      
 
       {/* Lighting */}
       <ambientLight intensity={0.3} />
