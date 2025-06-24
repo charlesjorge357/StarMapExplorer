@@ -383,20 +383,31 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         />
       ))}
 
-      {/* Asteroid Belts */}
-      {system.asteroidBelts && system.asteroidBelts.length > 0 && 
-        console.log('Rendering', system.asteroidBelts.length, 'asteroid belts') &&
-        system.asteroidBelts.map((belt) => (
-          <AsteroidBeltComponent key={belt.id} belt={belt} />
-        ))}
+      {/* Debug asteroid belts existence */}
+      {console.log('System has asteroidBelts:', !!system.asteroidBelts, 'length:', system.asteroidBelts?.length)}
       
-      {/* Debug: Show belt count */}
-      {system.asteroidBelts && system.asteroidBelts.length > 0 && (
-        <mesh position={[0, 50, 0]}>
-          <sphereGeometry args={[2, 8, 8]} />
-          <meshBasicMaterial color="#ff0000" />
-        </mesh>
+      {/* Asteroid Belts */}
+      {system.asteroidBelts && system.asteroidBelts.length > 0 ? (
+        system.asteroidBelts.map((belt) => {
+          console.log('Rendering belt:', belt.name);
+          return <AsteroidBeltComponent key={belt.id} belt={belt} />;
+        })
+      ) : (
+        console.log('No asteroid belts to render')
       )}
+      
+      {/* Always show test asteroid belt */}
+      <AsteroidBeltComponent 
+        key="test-belt" 
+        belt={{
+          id: 'test',
+          name: 'Test Belt',
+          innerRadius: 40,
+          outerRadius: 50,
+          density: 1.0,
+          asteroidCount: 50
+        }} 
+      />
     </group>
   );
 }

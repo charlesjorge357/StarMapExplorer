@@ -233,15 +233,21 @@ export class SystemGenerator {
     const seed = star.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const rng = () => SystemGenerator.seededRandom(seed + belts.length * 1000);
     
-    // Only generate asteroid belts for certain stellar types and configurations
-    const shouldHaveAsteroids = star.spectralClass.startsWith('G') || 
-                               star.spectralClass.startsWith('F') || 
-                               star.spectralClass.startsWith('K');
+    // Generate asteroid belts for all star types for testing
+    console.log('Star', star.name, 'spectral class:', star.spectralClass, 'planets:', planets.length);
     
-    console.log('Star', star.name, 'spectral class:', star.spectralClass, 'should have asteroids:', shouldHaveAsteroids, 'planets:', planets.length);
-    
-    if (!shouldHaveAsteroids || planets.length < 2) {
-      console.log('Not generating asteroids for', star.name);
+    if (planets.length < 2) {
+      console.log('Not enough planets for asteroids in', star.name);
+      // Force generate at least one belt for testing
+      belts.push({
+        id: `belt-${star.id}-test`,
+        name: `${star.name} Test Belt`,
+        innerRadius: 25,
+        outerRadius: 35,
+        density: 1.0,
+        asteroidCount: 100
+      });
+      console.log('Generated test belt for', star.name);
       return belts;
     }
     
