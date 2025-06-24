@@ -5,9 +5,9 @@ import { Vector3 } from 'three';
 import { useCamera } from '../../lib/stores/useCamera';
 import { useUniverse } from '../../lib/stores/useUniverse';
 
-const MOVEMENT_SPEED = 1.5; // 200% faster base speed
-const BOOST_MULTIPLIER_MIN = 2; // Starting boost
-const BOOST_MULTIPLIER_MAX = 80; // 8000% max boost
+const MOVEMENT_SPEED = 8.0; // Much faster base speed
+const BOOST_MULTIPLIER_MIN = 3; // Starting boost
+const BOOST_MULTIPLIER_MAX = 150; // 15000% max boost
 const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
