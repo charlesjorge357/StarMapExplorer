@@ -383,17 +383,25 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         />
       ))}
 
-      {/* Debug asteroid belts existence */}
-      {console.log('System has asteroidBelts:', !!system.asteroidBelts, 'length:', system.asteroidBelts?.length)}
-      
-      {/* Asteroid Belts */}
+      {/* Asteroid Belts - always render with fallback */}
       {system.asteroidBelts && system.asteroidBelts.length > 0 ? (
         system.asteroidBelts.map((belt) => {
-          console.log('Rendering belt:', belt.name);
+          console.log('Rendering belt:', belt.name, 'at radius', belt.innerRadius, '-', belt.outerRadius);
           return <AsteroidBeltComponent key={belt.id} belt={belt} />;
         })
       ) : (
-        console.log('No asteroid belts to render')
+        // Render a basic belt for testing if none exist
+        <AsteroidBeltComponent 
+          key="fallback-belt" 
+          belt={{
+            id: 'fallback',
+            name: 'Fallback Belt',
+            innerRadius: 30,
+            outerRadius: 40,
+            density: 1.0,
+            asteroidCount: 100
+          }} 
+        />
       )}
       
 
@@ -413,25 +421,36 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
     const matrices = [];
     const dummy = new THREE.Object3D();
     
+    // Use deterministic random for consistent positioning
+    let seed = belt.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const seededRandom = () => {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    };
+    
     // Generate asteroid positions in a ring
     for (let i = 0; i < belt.asteroidCount; i++) {
-      // Random position within belt radius range
-      const angle = (Math.PI * 2 * i) / belt.asteroidCount + (Math.random() - 0.5) * 0.5;
-      const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
+      // Distribute asteroids evenly around the ring with some randomness
+      const baseAngle = (Math.PI * 2 * i) / belt.asteroidCount;
+      const angleVariation = (seededRandom() - 0.5) * 0.8;
+      const angle = baseAngle + angleVariation;
+      
+      const radiusVariation = seededRandom() * (belt.outerRadius - belt.innerRadius);
+      const radius = belt.innerRadius + radiusVariation;
       
       // Add some vertical variation
-      const y = (Math.random() - 0.5) * 4; // Increased vertical spread
+      const y = (seededRandom() - 0.5) * 3;
       
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
       
-      // Larger asteroids for visibility
-      const scale = 0.5 + Math.random() * 1.0;
+      // Varied asteroid sizes
+      const scale = 0.3 + seededRandom() * 0.8;
       dummy.position.set(x, y, z);
       dummy.rotation.set(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI
+        seededRandom() * Math.PI * 2,
+        seededRandom() * Math.PI * 2,
+        seededRandom() * Math.PI * 2
       );
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
@@ -445,17 +464,18 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
     }
     
     meshRef.current.instanceMatrix.needsUpdate = true;
+    console.log('Applied', matrices.length, 'asteroid positions');
   }, [belt]);
   
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, belt.asteroidCount]}>
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial 
-        color="#888888"
-        roughness={0.8}
-        metalness={0.2}
-        emissive="#111111"
-        emissiveIntensity={0.1}
+        color="#999999"
+        roughness={0.9}
+        metalness={0.1}
+        emissive="#222222"
+        emissiveIntensity={0.05}
       />
     </instancedMesh>
   );

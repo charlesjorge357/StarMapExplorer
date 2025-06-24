@@ -231,13 +231,23 @@ export class SystemGenerator {
     
     // Create seeded random function
     const seed = star.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const rng = () => SystemGenerator.seededRandom(seed + belts.length * 1000);
+    let rngCounter = 0;
+    const rng = () => SystemGenerator.seededRandom(seed + rngCounter++);
     
     // Generate asteroid belts based on realistic placement
     console.log('Star', star.name, 'spectral class:', star.spectralClass, 'planets:', planets.length);
     
     if (planets.length < 2) {
       console.log('Not enough planets for gap-based asteroids in', star.name);
+      // Generate at least one belt for single-planet systems
+      belts.push({
+        id: `belt-${star.id}-single`,
+        name: `${star.name} Inner Belt`,
+        innerRadius: planets.length > 0 ? planets[0].orbitRadius + 10 : 20,
+        outerRadius: planets.length > 0 ? planets[0].orbitRadius + 20 : 30,
+        density: 1.0,
+        asteroidCount: 80
+      });
       return belts;
     }
     
