@@ -186,6 +186,7 @@ export class SystemGenerator {
 
     // Generate asteroid belts
     const asteroidBelts = this.generateAsteroidBelts(star, planets);
+    console.log('Generated asteroid belts for', star.name, ':', asteroidBelts.length);
 
     return {
       id: `system-${star.id}`,
@@ -237,7 +238,12 @@ export class SystemGenerator {
                                star.spectralClass.startsWith('F') || 
                                star.spectralClass.startsWith('K');
     
-    if (!shouldHaveAsteroids || planets.length < 2) return belts;
+    console.log('Star', star.name, 'spectral class:', star.spectralClass, 'should have asteroids:', shouldHaveAsteroids, 'planets:', planets.length);
+    
+    if (!shouldHaveAsteroids || planets.length < 2) {
+      console.log('Not generating asteroids for', star.name);
+      return belts;
+    }
     
     // Sort planets by orbital distance for gap detection
     const sortedPlanets = [...planets].sort((a, b) => a.orbitRadius - b.orbitRadius);

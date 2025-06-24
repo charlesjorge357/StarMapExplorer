@@ -384,9 +384,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       ))}
 
       {/* Asteroid Belts */}
-      {system.asteroidBelts && system.asteroidBelts.map((belt) => (
-        <AsteroidBeltComponent key={belt.id} belt={belt} />
-      ))}
+      {system.asteroidBelts && system.asteroidBelts.length > 0 && 
+        console.log('Rendering', system.asteroidBelts.length, 'asteroid belts') &&
+        system.asteroidBelts.map((belt) => (
+          <AsteroidBeltComponent key={belt.id} belt={belt} />
+        ))}
+      
+      {/* Debug: Show belt count */}
+      {system.asteroidBelts && system.asteroidBelts.length > 0 && (
+        <mesh position={[0, 50, 0]}>
+          <sphereGeometry args={[2, 8, 8]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -395,6 +405,9 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
   useEffect(() => {
+    console.log('Creating asteroid belt:', belt.name, 'with', belt.asteroidCount, 'asteroids');
+    console.log('Belt radius:', belt.innerRadius, 'to', belt.outerRadius);
+    
     if (!meshRef.current) return;
     
     const matrices = [];
@@ -407,13 +420,13 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
       const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
       
       // Add some vertical variation
-      const y = (Math.random() - 0.5) * 2;
+      const y = (Math.random() - 0.5) * 4; // Increased vertical spread
       
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
       
-      // Random size and rotation
-      const scale = 0.1 + Math.random() * 0.3;
+      // Larger asteroids for visibility
+      const scale = 0.5 + Math.random() * 1.0;
       dummy.position.set(x, y, z);
       dummy.rotation.set(
         Math.random() * Math.PI,
@@ -438,9 +451,11 @@ function AsteroidBeltComponent({ belt }: { belt: any }) {
     <instancedMesh ref={meshRef} args={[undefined, undefined, belt.asteroidCount]}>
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial 
-        color="#666666"
-        roughness={0.9}
-        metalness={0.1}
+        color="#888888"
+        roughness={0.8}
+        metalness={0.2}
+        emissive="#111111"
+        emissiveIntensity={0.1}
       />
     </instancedMesh>
   );
