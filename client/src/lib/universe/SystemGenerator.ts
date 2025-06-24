@@ -221,4 +221,74 @@ export class SystemGenerator {
       default: return '#FFFF00';
     }
   }
+
+  private generateAsteroidBelts(star: Star, planets: Planet[]): AsteroidBelt[] {
+    const belts: AsteroidBelt[] = [];
+    const rng = this.createSeededRandom(star.name + 'asteroids');
+    
+    // Only generate asteroid belts for certain stellar types and configurations
+    const shouldHaveAsteroids = star.spectralClass.startsWith('G') || 
+                               star.spectralClass.startsWith('F') || 
+                               star.spectralClass.startsWith('K');
+    
+    if (!shouldHaveAsteroids || planets.length < 2) return belts;
+    
+    // Sort planets by orbital distance for gap detection
+    const sortedPlanets = [...planets].sort((a, b) => a.orbitRadius - b.orbitRadius);
+    
+    // Look for gaps between planets large enough for asteroid belts
+    for (let i = 0; i < sortedPlanets.length - 1; i++) {
+      const innerPlanet = sortedPlanets[i];
+      const outerPlanet = sortedPlanets[i + 1];
+      
+      const gap = outerPlanet.orbitRadius - innerPlanet.orbitRadius;
+      const minGapForBelt = 30; // Minimum gap size for asteroid belt
+      
+      if (gap > minGapForBelt) {
+        // Chance of asteroid belt based on gap size and stellar properties
+        const beltProbability = Math.min(0.8, (gap / 100) * 0.6);
+        
+        if (rng() < beltProbability) {
+          const beltInnerRadius = innerPlanet.orbitRadius + gap * 0.2;
+          const beltOuterRadius = outerPlanet.orbitRadius - gap * 0.2;
+          const beltWidth = beltOuterRadius - beltInnerRadius;
+          
+          // Density based on stellar mass and distance from star
+          const baseDensity = star.mass * 0.3;
+          const distanceFactor = 1 / Math.sqrt(beltInnerRadius / 50);
+          const density = baseDensity * distanceFactor * (0.5 + rng() * 0.5);
+          
+          // Asteroid count based on belt size and density
+          const asteroidCount = Math.floor(density * beltWidth * (200 + rng() * 300));
+          
+          belts.push({
+            id: `belt-${star.id}-${i}`,
+            name: `${star.name} Belt ${String.fromCharCode(65 + belts.length)}`,
+            innerRadius: beltInnerRadius,
+            outerRadius: beltOuterRadius,
+            density: density,
+            asteroidCount: Math.max(50, asteroidCount)
+          });
+        }
+      }
+    }
+    
+    // Sometimes add an outer asteroid belt beyond all planets
+    if (rng() < 0.3 && sortedPlanets.length > 0) {
+      const outermost = sortedPlanets[sortedPlanets.length - 1];
+      const outerBeltStart = outermost.orbitRadius + 40 + rng() * 60;
+      const outerBeltEnd = outerBeltStart + 20 + rng() * 40;
+      
+      belts.push({
+        id: `belt-${star.id}-outer`,
+        name: `${star.name} Outer Belt`,
+        innerRadius: outerBeltStart,
+        outerRadius: outerBeltEnd,
+        density: star.mass * 0.15 * (0.3 + rng() * 0.4),
+        asteroidCount: Math.floor(100 + rng() * 200)
+      });
+    }
+    
+    return belts;
+  }
 }

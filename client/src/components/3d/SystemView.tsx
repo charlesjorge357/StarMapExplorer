@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
+import { useUniverse } from '../../lib/stores/useUniverse';
 import { useThree } from '@react-three/fiber';
 
 
@@ -383,5 +383,60 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         />
       ))}
     </group>
+  );
+}
+
+function AsteroidBeltComponent({ belt }: { belt: any }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  
+  useEffect(() => {
+    if (!meshRef.current) return;
+    
+    const matrices = [];
+    const dummy = new THREE.Object3D();
+    
+    // Generate asteroid positions in a ring
+    for (let i = 0; i < belt.asteroidCount; i++) {
+      // Random position within belt radius range
+      const angle = (Math.PI * 2 * i) / belt.asteroidCount + (Math.random() - 0.5) * 0.5;
+      const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
+      
+      // Add some vertical variation
+      const y = (Math.random() - 0.5) * 2;
+      
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      
+      // Random size and rotation
+      const scale = 0.1 + Math.random() * 0.3;
+      dummy.position.set(x, y, z);
+      dummy.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+      dummy.scale.setScalar(scale);
+      dummy.updateMatrix();
+      
+      matrices.push(dummy.matrix.clone());
+    }
+    
+    // Apply matrices to instanced mesh
+    for (let i = 0; i < matrices.length; i++) {
+      meshRef.current.setMatrixAt(i, matrices[i]);
+    }
+    
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  }, [belt]);
+  
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, belt.asteroidCount]}>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial 
+        color="#666666"
+        roughness={0.9}
+        metalness={0.1}
+      />
+    </instancedMesh>
   );
 }
