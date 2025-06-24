@@ -400,17 +400,11 @@ function App() {
                       
                       // Auto-home camera to found planet
                       setTimeout(() => {
-                        const time = Date.now() * 0.0001;
-                        const angle = time * found.orbitSpeed;
-                        const x = Math.cos(angle) * found.orbitRadius * 2;
-                        const z = Math.sin(angle) * found.orbitRadius * 2;
-                        const planetPosition = new Vector3(x, 0, z);
-                        
                         if ((window as any).homeToPlanet) {
                           // Find planet index in current system for proper offset calculation
                           const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === found.id) || 0;
                           const planetDataWithIndex = { ...found, index: planetIndex };
-                          (window as any).homeToPlanet(planetPosition, Math.max(found.radius * 0.6, 1), planetDataWithIndex);
+                          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(found.radius * 0.6, 1), planetDataWithIndex);
                         }
                       }, 100);
                     } else {
