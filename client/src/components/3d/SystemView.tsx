@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
@@ -169,6 +169,9 @@ function PlanetMesh({
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
       planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
       planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
+      
+      // Axis rotation
+      planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;
     }
   });
 
