@@ -183,14 +183,29 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 0.8, 32, 32]} />
         <meshStandardMaterial 
-          color={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? getMaterialSettings(planet.type).color : getPlanetColor(planet.type)}
-          emissive={getPlanetGlow(planet.type)}
-          emissiveIntensity={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? 0.1 : 0.2}
+          color={
+            // Special handling for verdant worlds with textures
+            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+              ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
+              : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) 
+                ? '#ffffff'  // White for all textured planets
+                : getPlanetColor(planet.type)  // Fallback color for non-textured planets
+          }
+          emissive={
+            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+              ? '#000000'  // No emissive glow for verdant worlds with textures
+              : getPlanetGlow(planet.type)
+          }
+          emissiveIntensity={
+            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+              ? 0.0  // No emissive intensity for verdant worlds
+              : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? 0.1 : 0.2
+          }
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={getMaterialSettings(planet.type).transparent}
-          opacity={getMaterialSettings(planet.type).opacity}
+          transparent={false}
+          opacity={1.0}
         />
       </mesh>
 
