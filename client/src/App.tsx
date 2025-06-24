@@ -609,7 +609,7 @@ function App() {
           fontWeight: '500'
         }}>
           📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : 
-               currentView === 'system' ? `System View • ${currentSystem?.starId || 'Unknown'}` :
+               currentView === 'system' ? `System View • ${currentSystem?.star?.name || lastVisitedStar?.name || 'Unknown'}` :
                `Planetary View • ${selectedPlanet?.name || 'Unknown'}`} • Left-click objects, Right-click+drag camera
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
