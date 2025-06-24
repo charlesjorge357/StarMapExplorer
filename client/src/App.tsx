@@ -535,7 +535,10 @@ function App() {
           📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} • Left-click objects, Right-click+drag camera
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-              Press Backspace to return to galactic view
+              {selectedPlanet 
+                ? `Selected: ${selectedPlanet.name} • Escape: look at star • Click background: deselect • Backspace: galactic view`
+                : 'Press Backspace to return to galactic view'
+              }
             </div>
           )}
         </div>

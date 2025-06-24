@@ -178,8 +178,17 @@ function PlanetMesh({
 
  const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log(`Selected planet: ${planet.name}`);
-    onPlanetClick(planet);
+    if (isSelected) {
+      // Stop orbital tracking when deselecting
+      if ((window as any).homeToPlanet) {
+        (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+      }
+      console.log(`Deselected planet: ${planet.name}`);
+      onPlanetClick(null);
+    } else {
+      console.log(`Selected planet: ${planet.name}`);
+      onPlanetClick(planet);
+    }
   };
 
   return (
@@ -327,6 +336,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const handleBackgroundClick = () => {
     if (selectedPlanet) {
       console.log('Deselecting planet');
+      // Stop orbital tracking
+      if ((window as any).homeToPlanet) {
+        (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+      }
       onPlanetClick(null);
     }
   };
