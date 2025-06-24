@@ -404,25 +404,26 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
               ]} 
             />
             <meshBasicMaterial 
-              color="#8B4513" 
+              color="#666666" 
               transparent 
               opacity={0.3}
               side={2}
             />
           </mesh>
           
-          {/* Individual asteroids (simplified as small dots) */}
-          {Array.from({ length: Math.min(belt.asteroidCount / 10, 100) }, (_, i) => {
-            const angle = (i / (belt.asteroidCount / 10)) * Math.PI * 2;
+          {/* Individual asteroids (exponentially scaled by belt radius) */}
+          {Array.from({ length: Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500) }, (_, i) => {
+            const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500);
+            const angle = (i / totalAsteroids) * Math.PI * 2 + Math.random() * 0.5;
             const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
             const x = Math.cos(angle) * radius * 2;
             const z = Math.sin(angle) * radius * 2;
-            const y = (Math.random() - 0.5) * 2;
+            const y = (Math.random() - 0.5) * 3;
             
             return (
               <mesh key={i} position={[x, y, z]}>
-                <sphereGeometry args={[0.2, 4, 4]} />
-                <meshBasicMaterial color="#666666" />
+                <sphereGeometry args={[0.1 + Math.random() * 0.3, 4, 4]} />
+                <meshBasicMaterial color="#888888" />
               </mesh>
             );
           })}
