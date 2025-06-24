@@ -12,7 +12,7 @@ function getPlanetColor(type: string): string {
     gas_giant: '#FF7043',
     frost_giant: '#5DADE2', 
     arid_world: '#D4A574',
-    verdant_world: '#4CAF50',
+    verdant_world: '#ffffff', // White for pure texture colors
     acidic_world: '#FFC107',
     nuclear_world: '#F44336',
     ocean_world: '#2196F3',
@@ -56,7 +56,7 @@ function getPlanetGlow(type: string): string {
     gas_giant: '#FF5722',
     frost_giant: '#5DADE2', 
     arid_world: '#D4AF37',
-    verdant_world: '#388E3C',
+    verdant_world: '#ffffff', // No colored glow for pure texture display
     acidic_world: '#FF9800',
     nuclear_world: '#D32F2F',
     ocean_world: '#1976D2',
