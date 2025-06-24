@@ -94,11 +94,11 @@ export function CameraController({
     } else if (currentScope === 'system') {
       // Maintain camera orientation but position it at fixed distance from star
       const currentDistance = camera.position.length();
-      const targetDistance = 50; // Fixed distance from star
+      const targetDistance = 200; // Increased distance from star for better system overview
       
       if (currentDistance < 5) {
         // If too close or at origin, set default position
-        camera.position.set(0, 5, 50);
+        camera.position.set(0, 20, 200);
         camera.lookAt(0, 0, 0);
       } else {
         // Maintain current direction but set proper distance
@@ -109,7 +109,7 @@ export function CameraController({
       
       // Set extended camera range for system view
       camera.near = 0.1;
-      camera.far = 15000;
+      camera.far = 500000;
       camera.updateProjectionMatrix();
       console.log('Set system view camera position:', camera.position);
     }

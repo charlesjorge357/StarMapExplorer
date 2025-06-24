@@ -26,7 +26,7 @@ export function StarfieldSkybox({ stars, scale = 0.1 }: StarfieldSkyboxProps) {
       );
       
       // Push to distance for skybox effect
-      const distance = 500;
+      const distance = 3000;
       scaledPos.normalize().multiplyScalar(distance);
       
       positions.push(scaledPos);
