@@ -196,19 +196,7 @@ function App() {
   };
 
 
-  const generateAtmosphere = (planetType: string): string[] => {
-    const atmospheres = {
-      gas_giant: ['Hydrogen', 'Helium', 'Methane'],
-      frost_giant: ['Nitrogen', 'Methane', 'Argon'],
-      arid_world: ['Carbon Dioxide', 'Nitrogen'],
-      verdant_world: ['Nitrogen', 'Oxygen', 'Argon'],
-      acidic_world: ['Sulfuric Acid', 'Carbon Dioxide'],
-      nuclear_world: ['Radioactive Gases', 'Xenon'],
-      ocean_world: ['Nitrogen', 'Oxygen', 'Water Vapor'],
-      dead_world: []
-    };
-    return atmospheres[planetType as keyof typeof atmospheres] || [];
-  };
+
 
   // Get star color for UI display
   const getStarDisplayColor = (spectralClass: string): string => {
@@ -255,7 +243,7 @@ function App() {
           system = {
             starId: selectedStar.id,
             star: selectedStar,
-            planets: generatePlanetsForStar(selectedStar)
+            planets: generateSystemForStar(selectedStar).planets
           };
           setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
           console.log(`Generated new system for ${selectedStar.name}`);
