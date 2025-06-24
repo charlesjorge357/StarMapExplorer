@@ -192,7 +192,10 @@ function App() {
   // Use SystemGenerator for consistent planet generation
   const generateSystemForStar = (star: SimpleStar) => {
     const seed = parseInt(star.id.slice(-3), 36) || Math.floor(Math.random() * 1000);
-    return SystemGenerator.generateSystem(star, seed);
+    console.log(`Generating system for ${star.name} with seed ${seed}`);
+    const system = SystemGenerator.generateSystem(star, seed);
+    console.log('SystemGenerator returned:', system);
+    return system;
   };
 
 
@@ -240,11 +243,8 @@ function App() {
         let system = systemCache.get(selectedStar.id);
         if (!system) {
           // Generate new system and cache it
-          system = {
-            starId: selectedStar.id,
-            star: selectedStar,
-            planets: generateSystemForStar(selectedStar).planets
-          };
+          system = generateSystemForStar(selectedStar);
+          console.log('Generated system:', system);
           setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
           console.log(`Generated new system for ${selectedStar.name}`);
         } else {
