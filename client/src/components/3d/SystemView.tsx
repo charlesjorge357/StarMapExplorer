@@ -396,18 +396,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         console.log('No asteroid belts to render')
       )}
       
-      {/* Always show test asteroid belt */}
-      <AsteroidBeltComponent 
-        key="test-belt" 
-        belt={{
-          id: 'test',
-          name: 'Test Belt',
-          innerRadius: 40,
-          outerRadius: 50,
-          density: 1.0,
-          asteroidCount: 50
-        }} 
-      />
+
     </group>
   );
 }
