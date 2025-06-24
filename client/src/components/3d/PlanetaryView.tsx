@@ -11,6 +11,11 @@ interface PlanetaryViewProps {
 
 export function PlanetaryView({ planet }: PlanetaryViewProps) {
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
+  console.log('Planet computed properties:', {
+    computedColor: planet?.computedColor,
+    computedGlow: planet?.computedGlow,
+    computedEmissiveIntensity: planet?.computedEmissiveIntensity
+  });
   
   const { camera, gl } = useThree();
   const planetRef = useRef<THREE.Mesh>(null);
@@ -170,15 +175,15 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial 
           color={
-            // Use existing computed colors from planet object or fallback to white for textured planets
-            planet.color || (texture ? '#ffffff' : '#666666')
+            // Use computed values from SystemView if available, otherwise fallback
+            planet.computedColor || (texture ? '#ffffff' : '#666666')
           }
           emissive={
-            // Use existing computed glow from planet object or fallback
-            planet.glow || '#000000'
+            // Use computed glow from SystemView if available, otherwise fallback
+            planet.computedGlow || '#000000'
           }
           emissiveIntensity={
-            planet.emissiveIntensity !== undefined ? planet.emissiveIntensity : (texture ? 0.1 : 0.2)
+            planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : (texture ? 0.1 : 0.2)
           }
           map={texture}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}

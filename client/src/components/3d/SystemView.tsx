@@ -216,25 +216,28 @@ function PlanetMesh({
     }
   });
 
-  // Store computed material properties on the planet object for reuse in planetary view
-  const materialColor = planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+  // Compute material properties and store them on the planet object for reuse in planetary view
+  const hasTexture = getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0);
+  const isVerdantWithTexture = planet.type === 'verdant_world' && hasTexture;
+  
+  const materialColor = isVerdantWithTexture
     ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
-    : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) 
+    : hasTexture 
       ? '#ffffff'  // White for all textured planets
       : getPlanetColor(planet.type, planet.id || planet.name);  // Use seeded color variation
 
-  const materialEmissive = planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+  const materialEmissive = isVerdantWithTexture
     ? '#000000'  // No emissive glow for verdant worlds with textures
     : getPlanetGlow(planet.type, planet.id || planet.name);
 
-  const materialEmissiveIntensity = planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
+  const materialEmissiveIntensity = isVerdantWithTexture
     ? 0.0  // No emissive intensity for verdant worlds
-    : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? 0.1 : 0.2;
+    : hasTexture ? 0.1 : 0.2;
 
-  // Store these values on the planet object for planetary view
-  planet.color = materialColor;
-  planet.glow = materialEmissive;
-  planet.emissiveIntensity = materialEmissiveIntensity;
+  // Store these computed values directly on the planet object for planetary view
+  planet.computedColor = materialColor;
+  planet.computedGlow = materialEmissive;
+  planet.computedEmissiveIntensity = materialEmissiveIntensity;
 
  const handleClick = (event: any) => {
     event.stopPropagation();
