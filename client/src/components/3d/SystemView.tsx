@@ -7,14 +7,14 @@ import { useThree } from '@react-three/fiber';
 
 
 // Helper functions for planet materials
-function getPlanetColor(type: string, planetId: string): string {
+function getPlanetColor(type: string, planetId?: string): string {
   // Use the same color variation system as SystemGenerator
   const seededRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
   
-  const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
   
   const baseColors: Record<string, [number, number, number]> = {
@@ -65,14 +65,14 @@ function getPlanetTextureForMaterial(planetType: string, planetTextures: any, pl
 
 
 
-function getPlanetGlow(type: string, planetId: string): string {
+function getPlanetGlow(type: string, planetId?: string): string {
   // Generate varied glow colors based on planet type and ID
   const seededRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
   
-  const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 3000) - 0.5) * 0.2; // Less variation for glow
   
   const baseGlows: Record<string, [number, number, number]> = {
@@ -200,12 +200,12 @@ function PlanetMesh({
               ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
               : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) 
                 ? '#ffffff'  // White for all textured planets
-                : getPlanetColor(planet.type, planet.id)  // Use seeded color variation
+                : getPlanetColor(planet.type, planet.id || planet.name)  // Use seeded color variation
           }
           emissive={
             planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
               ? '#000000'  // No emissive glow for verdant worlds with textures
-              : getPlanetGlow(planet.type, planet.id)
+              : getPlanetGlow(planet.type, planet.id || planet.name)
           }
           emissiveIntensity={
             planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
