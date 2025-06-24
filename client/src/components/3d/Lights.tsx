@@ -13,7 +13,7 @@ export function Lights() {
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-far={50}
+        shadow-camera-far={250}
         shadow-camera-left={-10}
         shadow-camera-right={10}
         shadow-camera-top={10}
@@ -30,7 +30,7 @@ export function Lights() {
       <pointLight
         position={[0, 0, 0]}
         intensity={0.5}
-        distance={1000}
+        distance={5000}
       />
     </>
   );

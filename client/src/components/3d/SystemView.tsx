@@ -321,11 +321,11 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     <group>
       {/* Background plane for deselection clicks */}
       <mesh 
-        position={[0, 0, -1000]} 
+        position={[0, 0, -5000]} 
         onClick={handleBackgroundClick}
         visible={false}
       >
-        <planeGeometry args={[10000, 10000]} />
+        <planeGeometry args={[50000, 50000]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
