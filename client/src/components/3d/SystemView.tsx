@@ -325,6 +325,61 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     }
   };
 
+  // Asteroid field component with stable generation
+  function AsteroidField({ belt }: { belt: any }) {
+    const asteroidData = useMemo(() => {
+      const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500);
+      const asteroids = [];
+      
+      for (let i = 0; i < totalAsteroids; i++) {
+        const baseAngle = (i / totalAsteroids) * Math.PI * 2;
+        const radius = belt.innerRadius + (i / totalAsteroids) * (belt.outerRadius - belt.innerRadius);
+        const size = 0.1 + (i % 7) * 0.05; // Consistent size based on index
+        const yOffset = ((i % 13) - 6) * 0.3; // Consistent y offset
+        const orbitSpeed = 0.02 + (radius * 0.001); // Slower for outer asteroids
+        
+        asteroids.push({
+          id: i,
+          baseAngle,
+          radius,
+          size,
+          yOffset,
+          orbitSpeed
+        });
+      }
+      
+      return asteroids;
+    }, [belt.id]); // Only regenerate if belt ID changes
+
+    const groupRef = useRef<any>();
+
+    useFrame((state) => {
+      if (groupRef.current) {
+        const time = state.clock.getElapsedTime();
+        groupRef.current.children.forEach((child: any, i: number) => {
+          const asteroid = asteroidData[i];
+          if (asteroid) {
+            const angle = asteroid.baseAngle + time * asteroid.orbitSpeed;
+            const x = Math.cos(angle) * asteroid.radius * 2;
+            const z = Math.sin(angle) * asteroid.radius * 2;
+            child.position.set(x, asteroid.yOffset, z);
+          }
+        });
+      }
+    });
+
+    return (
+      <group ref={groupRef}>
+        {asteroidData.map((asteroid) => (
+          <mesh key={asteroid.id}>
+            <sphereGeometry args={[asteroid.size, 4, 4]} />
+            <meshBasicMaterial color="#888888" />
+          </mesh>
+        ))}
+      </group>
+    );
+  }
+
   return (
     <group>
       {/* Background plane for deselection clicks */}
@@ -412,21 +467,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           </mesh>
           
           {/* Individual asteroids (exponentially scaled by belt radius) */}
-          {Array.from({ length: Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500) }, (_, i) => {
-            const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500);
-            const angle = (i / totalAsteroids) * Math.PI * 2 + Math.random() * 0.5;
-            const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
-            const x = Math.cos(angle) * radius * 2;
-            const z = Math.sin(angle) * radius * 2;
-            const y = (Math.random() - 0.5) * 3;
-            
-            return (
-              <mesh key={i} position={[x, y, z]}>
-                <sphereGeometry args={[0.1 + Math.random() * 0.3, 4, 4]} />
-                <meshBasicMaterial color="#888888" />
-              </mesh>
-            );
-          })}
+          <AsteroidField belt={belt} />
         </group>
       ))}
     </group>
