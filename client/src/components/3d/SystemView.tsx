@@ -328,6 +328,21 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     }
   };
 
+  // Planet search and camera homing
+  const searchPlanet = (planetName: string) => {
+    const planet = system.planets.find((p: any) => 
+      p.name.toLowerCase().includes(planetName.toLowerCase())
+    );
+    
+    if (planet) {
+      // Select the planet
+      onPlanetClick(planet);
+      console.log(`Found and selected planet: ${planet.name}`);
+      return planet;
+    }
+    return null;
+  };
+
   // Asteroid field component with stable generation
   function AsteroidField({ belt }: { belt: any }) {
     const asteroidData = useMemo(() => {
@@ -390,21 +405,41 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <>
+      {/* Search Button */}
+      <button
+        onClick={() => setIsSearching(!isSearching)}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000,
+          background: isSearching ? '#4CAF50' : 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          border: '1px solid #666',
+          borderRadius: '6px',
+          padding: '10px 15px',
+          cursor: 'pointer',
+          fontSize: '14px'
+        }}
+      >
+        {isSearching ? 'Close Search' : 'Search Planets'}
+      </button>
+
       {/* Search Interface */}
       {isSearching && (
         <div style={{
           position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: '70px',
+          right: '20px',
           zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'rgba(0, 0, 0, 0.9)',
           padding: '15px',
           borderRadius: '8px',
-          border: '1px solid #333'
+          border: '1px solid #333',
+          minWidth: '300px'
         }}>
           <div style={{ marginBottom: '10px', color: 'white', fontSize: '14px' }}>
-            Search Planet (ESC to close)
+            Find Planet
           </div>
           <input
             type="text"
@@ -424,21 +459,26 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
                   }, 500);
                 }
               }
+              if (e.key === 'Escape') {
+                setIsSearching(false);
+                setSearchQuery('');
+              }
             }}
             placeholder="Type planet name..."
             style={{
-              width: '300px',
+              width: '100%',
               padding: '8px',
               background: '#222',
               color: 'white',
               border: '1px solid #666',
               borderRadius: '4px',
-              outline: 'none'
+              outline: 'none',
+              marginBottom: '10px'
             }}
             autoFocus
           />
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#aaa' }}>
-            Planets: {system.planets.map((p: any) => p.name).join(', ')}
+          <div style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.4' }}>
+            Available: {system.planets.map((p: any) => p.name).join(', ')}
           </div>
         </div>
       )}
