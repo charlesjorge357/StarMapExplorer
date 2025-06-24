@@ -5,6 +5,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { StarSkybox } from "./components/3d/StarSkybox";
+import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
@@ -408,7 +409,7 @@ function App() {
               )}
               {currentView === 'system' && currentSystem && (
                 <>
-                  <StarSkybox count={8000} radius={5000} />
+                  <StarfieldSkybox stars={stars} scale={0.05} />
                   <SystemView 
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}

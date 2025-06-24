@@ -109,7 +109,7 @@ export function CameraController({
       
       // Set extended camera range for system view
       camera.near = 0.1;
-      camera.far = 10000;
+      camera.far = 15000;
       camera.updateProjectionMatrix();
       console.log('Set system view camera position:', camera.position);
     }
