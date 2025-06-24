@@ -158,7 +158,7 @@ function App() {
   // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
-  const [savedCameraPosition, setSavedCameraPosition] = useState<[number, number, number] | null>(null);
+
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
@@ -311,10 +311,7 @@ function App() {
           {!showSelector && (
             <>
               {/* <StarSkybox count={currentView === 'galactic' ? 500 : 300} radius={200} /> */}
-              <CameraController 
-                savedPosition={currentView === 'galactic' ? savedCameraPosition : null}
-                onPositionSave={currentView === 'galactic' ? setSavedCameraPosition : null}
-              />
+              <CameraController />
               {currentView === 'galactic' && (
                 <StarField 
                   selectedStar={selectedStar}

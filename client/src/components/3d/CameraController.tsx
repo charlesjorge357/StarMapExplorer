@@ -11,13 +11,7 @@ const BOOST_MULTIPLIER_MAX = 80; // 8000% max boost
 const BOOST_BUILDUP_TIME = 3; // Seconds to reach max boost
 const MOUSE_SENSITIVITY = 0.002;
 
-export function CameraController({ 
-  savedPosition = null,
-  onPositionSave = null,
-}: { 
-  savedPosition?: [number, number, number] | null;
-  onPositionSave?: ((pos: [number, number, number]) => void) | null;
-}) {
+export function CameraController() {
   const { camera, gl } = useThree();
   const { position, target, isTransitioning, setPosition, setTarget } = useCamera();
   const { currentScope } = useUniverse();
@@ -86,12 +80,9 @@ export function CameraController({
     };
   }, [camera, gl.domElement, isTransitioning]);
 
-  // Restore saved position when provided
+  // Set camera position based on scope
   useEffect(() => {
-    if (savedPosition && currentScope === 'galactic') {
-      camera.position.set(savedPosition[0], savedPosition[1], savedPosition[2]);
-      console.log('Restored camera position:', savedPosition);
-    } else if (currentScope === 'system') {
+    if (currentScope === 'system') {
       // Maintain camera orientation but position it at fixed distance from star
       const currentDistance = camera.position.length();
       const targetDistance = 50; // Fixed distance from star
@@ -113,7 +104,7 @@ export function CameraController({
       camera.updateProjectionMatrix();
       console.log('Set system view camera position:', camera.position);
     }
-  }, [savedPosition, camera, currentScope]);
+  }, [camera, currentScope]);
 
   // Handle keyboard movement
   useFrame((state, delta) => {
@@ -217,13 +208,7 @@ export function CameraController({
       lastPositionRef.current.copy(camera.position);
     }
     
-    // Save position for navigation if callback provided (throttled)
-    if (onPositionSave && activeControls.length === 0 && currentScope === 'galactic') {
-      if (camera.position.distanceTo(lastPositionRef.current) > 1.0) {
-        onPositionSave([camera.position.x, camera.position.y, camera.position.z]);
-        lastPositionRef.current.copy(camera.position);
-      }
-    }
+    // Removed camera position saving functionality
   });
 
   return null;
