@@ -155,32 +155,18 @@ export function CameraController() {
     };
   }, [camera, gl.domElement, isTransitioning]);
 
-  // Teleport to star function
-  const teleportToStar = () => {
-    if (currentScope === 'system') {
-      // Disable orbital tracking
-      isOrbitalTrackingRef.current = false;
-      orbitalTargetRef.current = null;
-      
-      // Position camera at good viewing distance from star
-      camera.position.set(0, 20, 100);
-      camera.lookAt(0, 0, 0);
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
-      console.log('Teleported to star view');
-    }
-  };
-
   // Set camera position based on scope
   useEffect(() => {
     if (currentScope === 'system') {
-      // Only set initial position if needed
+      // Only set initial position, don't override during orbital tracking
       const currentDistance = camera.position.length();
       
       if (currentDistance < 5) {
+        // If too close or at origin, set default position
         camera.position.set(0, 20, 200);
         camera.lookAt(0, 0, 0);
       }
+      // Don't force camera position if it's already positioned
       
       // Set extended camera range for system view
       camera.near = 0.1;

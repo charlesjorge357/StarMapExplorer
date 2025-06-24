@@ -271,18 +271,18 @@ function App() {
         event.preventDefault();
         event.stopPropagation();
         
-        // Escape teleports to star in system view
-        if (currentView === 'system') {
-          if ((window as any).teleportToStar) {
-            (window as any).teleportToStar();
-          }
-          // Clear planet selection
-          if (selectedPlanet) {
-            setSelectedPlanet(null);
-          }
-        } else if (currentView === 'galactic' && selectedStar) {
+        // Always stop orbital tracking first
+        if ((window as any).homeToPlanet) {
+          (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        }
+        
+        if (currentView === 'galactic' && selectedStar) {
           console.log(`Unselected star: ${selectedStar.name}`);
           setSelectedStar(null);
+        } else if (currentView === 'system' && selectedPlanet) {
+          // Only unselect planets in system view, not the central star
+          console.log(`Unselected planet: ${selectedPlanet.name}`);
+          setSelectedPlanet(null);
         }
       }
 
