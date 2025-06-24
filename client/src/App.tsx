@@ -156,8 +156,9 @@ function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
+  const [selectedFeature, setSelectedFeature] = useState<any>(null);
   // Navigation mode removed - all interactions now use direct mouse controls
-  const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
+  const [currentView, setCurrentView] = useState<'galactic' | 'system' | 'planetary'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -315,12 +316,41 @@ function App() {
         }
       }
 
-      // Remove duplicate backspace handler
+      // Handle F key for planetary exploration
+      if (event.key === 'f' || event.key === 'F') {
+        console.log(`F key detected - currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}, features: ${selectedPlanet?.surfaceFeatures?.length}`);
+        
+        if (currentView === 'system' && selectedPlanet) {
+          event.preventDefault();
+          
+          if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
+            console.log(`Entering planetary view for ${selectedPlanet.name}`);
+            setCurrentView('planetary');
+          } else {
+            console.log(`${selectedPlanet.name} has no surface features to explore`);
+          }
+        }
+      }
+
+      // Handle Enter key for orbital tracking
+      if (event.key === 'Enter') {
+        if (currentView === 'system' && selectedPlanet && !isSearching) {
+          event.preventDefault();
+          
+          // Enable orbital tracking for selected planet
+          if ((window as any).homeToPlanet) {
+            const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
+            const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
+            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
+            console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
+          }
+        }
+      }
     };
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar, currentView, systemCache]);
+  }, [selectedStar, currentView, systemCache, selectedPlanet, setCurrentView, isSearching, currentSystem, setSelectedFeature]);
 
   // Planet search function for system view
   const searchPlanet = (planetName: string) => {
@@ -337,42 +367,6 @@ function App() {
     }
     return null;
   };
-
-  // Add keyboard handler for Enter key planet homing
-  useEffect(() => {
-    const handlePlanetHoming = (event: KeyboardEvent) => {
-      console.log(`Key pressed: ${event.key}, currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}`);
-      
-      if (event.key === 'f' && currentView === 'system' && selectedPlanet) {
-        event.preventDefault();
-        console.log(`F key detected with planet ${selectedPlanet.name}, features: ${selectedPlanet.surfaceFeatures?.length}`);
-        
-        // Check if planet has surface features for planetary view
-        if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
-          console.log(`Entering planetary view for ${selectedPlanet.name}`);
-          setCurrentView('planetary');
-        } else {
-          console.log(`${selectedPlanet.name} has no surface features to explore`);
-        }
-      }
-      
-      if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
-        event.preventDefault();
-        
-        // Enable orbital tracking for selected planet
-        if ((window as any).homeToPlanet) {
-          // Find planet index in current system for proper offset calculation
-          const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
-          const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
-          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
-          console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handlePlanetHoming);
-    return () => document.removeEventListener('keydown', handlePlanetHoming);
-  }, [currentView, selectedPlanet]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -578,6 +572,15 @@ function App() {
               {selectedPlanet 
                 ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Escape: look at star • Backspace: galactic view`
                 : 'Press Backspace to return to galactic view'
+              }
+            </div>
+          )}
+          
+          {currentView === 'planetary' && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
+              {selectedFeature 
+                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Escape: deselect • Backspace: system view`
+                : 'Click surface features to inspect • Backspace: return to system view'
               }
             </div>
           )}
