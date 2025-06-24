@@ -286,7 +286,7 @@ export class SystemGenerator {
         rotationSpeed: 0.01 + Math.random() * 0.05,
         temperature,
         atmosphere,
-        moons: [],
+        moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
         inclination,
         textureIndex: this.generateTextureIndex(type, i, star.name),
         surfaceFeatures: this.generateSurfaceFeatures(type, `planet-${star.id}-${i}`, this.hashString(star.name + i))
@@ -373,6 +373,30 @@ export class SystemGenerator {
     }
 
     return features;
+  }
+
+  // Generate moons for planets
+  private static generateMoons(planetRadius: number, planetName: string, seed: number) {
+    const moons = [];
+    let moonCount = 0;
+    
+    // Determine moon count based on planet size
+    if (planetRadius > 6) moonCount = Math.floor(this.seededRandom(seed) * 8) + 2; // 2-9 moons for gas giants
+    else if (planetRadius > 3) moonCount = Math.floor(this.seededRandom(seed + 1) * 4) + 1; // 1-4 moons for large planets
+    else if (planetRadius > 1.5) moonCount = Math.floor(this.seededRandom(seed + 2) * 2); // 0-1 moons for medium planets
+
+    for (let j = 0; j < moonCount; j++) {
+      const moonName = `${planetName} ${String.fromCharCode(97 + j)}`; // a, b, c, etc.
+      moons.push({
+        id: `${planetName}-moon-${j}`,
+        name: moonName,
+        radius: 0.1 + this.seededRandom(seed + j + 10) * 0.4, // Small moons
+        orbitRadius: 2 + j * 1.5, // Spread out moons
+        orbitSpeed: 0.8 + this.seededRandom(seed + j + 20) * 0.4 // Faster orbit for visibility
+      });
+    }
+    
+    return moons;
   }
 
   private static getRandomFeatureType(planetType: string, random: () => number): 'city' | 'fort' | 'landmark' {
