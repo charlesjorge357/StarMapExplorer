@@ -149,6 +149,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 24, 2025: Rebuilt PlanetaryView component from scratch as Google Earth-like globe view. Features mouse drag rotation, scroll wheel zoom, high-detail planet rendering with proper textures, and atmospheric effects. Simplified to focus on globe navigation without surface features for now.
 - June 24, 2025: Fixed planetary view accessibility by ensuring all terrestrial planets have surface features (1-6 based on type) and allowing F key exploration for all non-gas giant planets. Gas giants and frost giants remain non-explorable as they have no solid surface.
 - June 24, 2025: Enhanced planetary view texture consistency by ensuring full opacity (1.0) for all planet materials and reducing atmospheric glow to minimal levels (0.03 opacity) to preserve authentic texture colors in Google Earth-like globe view.
+- June 24, 2025: Synchronized planetary view material properties with system view, including seeded color variation, emissive effects for nuclear worlds (red tinting), proper metalness values, and consistent texture handling. Nuclear worlds now display the same red glow in both system and planetary views.
 
 ## User Preferences
 

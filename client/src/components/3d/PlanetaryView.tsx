@@ -36,6 +36,58 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     return paths[textureIndex % paths.length];
   };
 
+  // Get planet color with seeded variation (matching SystemView)
+  const getPlanetColor = (type: string, planetId: string) => {
+    const seededRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
+    
+    const baseColors: Record<string, [number, number, number]> = {
+      gas_giant: [30, 80, 50],
+      frost_giant: [220, 60, 60],
+      arid_world: [30, 50, 45],
+      verdant_world: [125, 70, 45],
+      acidic_world: [55, 90, 60],
+      nuclear_world: [10, 90, 50],
+      ocean_world: [210, 80, 55],
+      dead_world: [0, 0, 40]
+    };
+    
+    let [h, s, l] = baseColors[type] || [0, 0, 50];
+    h = (h + variation * 360 + 360) % 360;
+    return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
+  };
+
+  // Get planet glow color (matching SystemView)
+  const getPlanetGlow = (type: string, planetId: string) => {
+    const seededRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = (seededRandom(seed + 3000) - 0.5) * 0.2;
+    
+    const baseGlows: Record<string, [number, number, number]> = {
+      gas_giant: [30, 100, 30],
+      frost_giant: [220, 80, 40],
+      arid_world: [30, 70, 25],
+      verdant_world: [125, 50, 25],
+      acidic_world: [55, 100, 40],
+      nuclear_world: [10, 100, 35],
+      ocean_world: [210, 100, 35],
+      dead_world: [0, 0, 20]
+    };
+    
+    let [h, s, l] = baseGlows[type] || [0, 0, 20];
+    h = (h + variation * 360 + 360) % 360;
+    return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
+  };
+
   // Load planet texture
   let texture;
   try {
@@ -166,23 +218,31 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
       {/* Planet sphere with high detail */}
       <mesh ref={planetRef}>
         <sphereGeometry args={[planetRadius, 128, 64]} />
-        {texture ? (
-          <meshStandardMaterial 
-            map={texture}
-            color="#ffffff"
-            roughness={0.8}
-            metalness={0.1}
-            transparent={false}
-            opacity={1.0}
-          />
-        ) : (
-          <meshStandardMaterial 
-            color="#666666" 
-            roughness={0.9}
-            transparent={false}
-            opacity={1.0}
-          />
-        )}
+        <meshStandardMaterial 
+          color={
+            // Special handling for verdant worlds with textures
+            planet.type === 'verdant_world' && texture
+              ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
+              : texture 
+                ? '#ffffff'  // White for all textured planets
+                : getPlanetColor(planet.type, planet.id || planet.name)  // Use seeded color variation
+          }
+          emissive={
+            planet.type === 'verdant_world' && texture
+              ? '#000000'  // No emissive glow for verdant worlds with textures
+              : getPlanetGlow(planet.type, planet.id || planet.name)
+          }
+          emissiveIntensity={
+            planet.type === 'verdant_world' && texture
+              ? 0.0  // No emissive intensity for verdant worlds
+              : texture ? 0.1 : 0.2
+          }
+          map={texture}
+          roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
+          metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
+          transparent={false}
+          opacity={1.0}
+        />
       </mesh>
 
       {/* Subtle atmospheric glow for applicable planets - minimal opacity to preserve texture colors */}
