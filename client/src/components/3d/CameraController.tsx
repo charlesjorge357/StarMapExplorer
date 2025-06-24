@@ -29,21 +29,30 @@ export function CameraController() {
   const homeToPlanet = (planetPosition: Vector3, planetRadius: number) => {
     if (!camera) return;
     
-    const distance = planetRadius * 25; // Position camera at 25x planet radius distance
+    const distance = Math.max(planetRadius * 25, 10); // Minimum distance of 10 units
     const direction = new Vector3().subVectors(camera.position, planetPosition).normalize();
     
-    // If camera is too close, use a default direction
-    if (direction.length() < 0.1) {
-      direction.set(1, 0.5, 1).normalize();
+    // If camera is too close or direction is invalid, use a good default viewing angle
+    if (direction.length() < 0.1 || isNaN(direction.x)) {
+      direction.set(1, 0.3, 1).normalize();
     }
     
     const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
     
-    // Move camera to target position and look at planet
+    // Move camera to target position
     camera.position.copy(targetPosition);
+    
+    // Reset rotation to ensure clean lookAt
+    camera.rotation.set(0, 0, 0);
+    camera.rotation.order = 'YXZ';
+    
+    // Look at planet
     camera.lookAt(planetPosition);
     
-    console.log(`Camera homed to planet at position (${planetPosition.x}, ${planetPosition.y}, ${planetPosition.z}) from distance ${distance}`);
+    // Store the current rotation for consistency
+    camera.updateMatrix();
+    
+    console.log(`Camera homed to planet at (${planetPosition.x.toFixed(1)}, ${planetPosition.y.toFixed(1)}, ${planetPosition.z.toFixed(1)}) from distance ${distance.toFixed(1)}`);
   };
 
   // Expose camera homing to window for external access
