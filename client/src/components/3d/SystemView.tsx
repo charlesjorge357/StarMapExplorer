@@ -192,7 +192,7 @@ function PlanetMesh({
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[planet.radius * 0.8, 32, 32]} />
+        <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
         <meshStandardMaterial 
           color={
             // Special handling for verdant worlds with textures
