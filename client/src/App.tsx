@@ -284,6 +284,7 @@ function App() {
 
         setCurrentView('system');
         setCurrentSystem(system);
+        setLastVisitedStar(selectedStar); // Remember the star we're visiting
         setSelectedStar(null);
 
         // Ensure star info is available immediately in system view
@@ -337,11 +338,17 @@ function App() {
           }
 
           setCurrentView('galactic');
-          setLastVisitedStar(selectedStar);
-          
           setCurrentSystem(null);
           setSelectedPlanet(null);
           (window as any).systemStarSelected = false;
+          
+          // Position camera with offset from last visited star
+          setTimeout(() => {
+            if (lastVisitedStar && (window as any).setCameraLookingAtStar) {
+              console.log(`Positioning camera to look at ${lastVisitedStar.name}`);
+              (window as any).setCameraLookingAtStar(lastVisitedStar);
+            }
+          }, 100); // Small delay to ensure view change is processed
         }
       }
 
