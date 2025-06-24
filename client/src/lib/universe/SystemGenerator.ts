@@ -187,6 +187,9 @@ export class SystemGenerator {
     // Generate asteroid belts
     const asteroidBelts = this.generateAsteroidBelts(star, planets);
     console.log('Generated asteroid belts for', star.name, ':', asteroidBelts.length);
+    asteroidBelts.forEach(belt => {
+      console.log(`  - ${belt.name}: ${belt.innerRadius.toFixed(1)}-${belt.outerRadius.toFixed(1)} units, ${belt.asteroidCount} asteroids`);
+    });
 
     return {
       id: `system-${star.id}`,
@@ -265,36 +268,46 @@ export class SystemGenerator {
       console.log(`Gap ${i}: ${gap.toFixed(1)} units between ${innerPlanet.name} (${innerPlanet.orbitRadius.toFixed(1)}) and ${outerPlanet.name} (${outerPlanet.orbitRadius.toFixed(1)})`);
       
       if (gap > minGapForBelt) {
-        // Higher probability for asteroid belt generation
-        const beltProbability = Math.min(0.9, (gap / 50) * 0.8);
-        const shouldGenerate = rng() < beltProbability;
+        // Force generate belts for testing - remove restrictions
+        const beltProbability = 1.0; // 100% probability for testing
+        const shouldGenerate = true;
         
-        console.log(`Belt probability: ${beltProbability.toFixed(2)}, generating: ${shouldGenerate}`);
+        console.log(`Gap is large enough (${gap.toFixed(1)} > ${minGapForBelt}), forcing belt generation`);
         
         if (shouldGenerate) {
           const beltInnerRadius = innerPlanet.orbitRadius + gap * 0.15;
           const beltOuterRadius = outerPlanet.orbitRadius - gap * 0.15;
           const beltWidth = beltOuterRadius - beltInnerRadius;
           
-          // Density based on stellar mass and distance from star
-          const baseDensity = star.mass * 0.5;
-          const distanceFactor = 1 / Math.sqrt(beltInnerRadius / 30);
-          const density = baseDensity * distanceFactor * (0.7 + rng() * 0.6);
+          console.log(`Creating belt between ${innerPlanet.name} and ${outerPlanet.name}:`);
+          console.log(`  Inner radius: ${beltInnerRadius.toFixed(1)}, Outer radius: ${beltOuterRadius.toFixed(1)}, Width: ${beltWidth.toFixed(1)}`);
           
-          // Asteroid count based on belt size and density
-          const asteroidCount = Math.floor(density * beltWidth * (150 + rng() * 250));
-          
-          const belt = {
-            id: `belt-${star.id}-${i}`,
-            name: `${star.name} Belt ${String.fromCharCode(65 + belts.length)}`,
-            innerRadius: beltInnerRadius,
-            outerRadius: beltOuterRadius,
-            density: density,
-            asteroidCount: Math.max(75, Math.min(400, asteroidCount))
-          };
-          
-          belts.push(belt);
-          console.log(`Generated belt: ${belt.name}, radius ${belt.innerRadius.toFixed(1)}-${belt.outerRadius.toFixed(1)}, ${belt.asteroidCount} asteroids`);
+          // Ensure minimum belt width
+          if (beltWidth > 2) {
+            // Density based on stellar mass and distance from star
+            const baseDensity = star.mass * 0.5;
+            const distanceFactor = 1 / Math.sqrt(beltInnerRadius / 30);
+            const density = baseDensity * distanceFactor * (0.7 + rng() * 0.6);
+            
+            // Asteroid count based on belt size and density
+            const asteroidCount = Math.floor(density * beltWidth * (150 + rng() * 250));
+            
+            const belt = {
+              id: `belt-${star.id}-${i}`,
+              name: `${star.name} Belt ${String.fromCharCode(65 + belts.length)}`,
+              innerRadius: beltInnerRadius,
+              outerRadius: beltOuterRadius,
+              density: density,
+              asteroidCount: Math.max(75, Math.min(400, asteroidCount))
+            };
+            
+            belts.push(belt);
+            console.log(`✓ Generated belt: ${belt.name}, radius ${belt.innerRadius.toFixed(1)}-${belt.outerRadius.toFixed(1)}, ${belt.asteroidCount} asteroids`);
+          } else {
+            console.log(`  Belt too narrow (${beltWidth.toFixed(1)} units), skipping`);
+          }
+        } else {
+          console.log(`  Belt probability too low (${beltProbability.toFixed(2)}), skipping`);
         }
       }
     }

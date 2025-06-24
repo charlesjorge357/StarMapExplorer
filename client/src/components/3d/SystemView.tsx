@@ -383,25 +383,12 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         />
       ))}
 
-      {/* Asteroid Belts - always render with fallback */}
-      {system.asteroidBelts && system.asteroidBelts.length > 0 ? (
+      {/* Asteroid Belts */}
+      {system.asteroidBelts && system.asteroidBelts.length > 0 && (
         system.asteroidBelts.map((belt) => {
           console.log('Rendering belt:', belt.name, 'at radius', belt.innerRadius, '-', belt.outerRadius);
           return <AsteroidBeltComponent key={belt.id} belt={belt} />;
         })
-      ) : (
-        // Render a basic belt for testing if none exist
-        <AsteroidBeltComponent 
-          key="fallback-belt" 
-          belt={{
-            id: 'fallback',
-            name: 'Fallback Belt',
-            innerRadius: 30,
-            outerRadius: 40,
-            density: 1.0,
-            asteroidCount: 100
-          }} 
-        />
       )}
       
 
