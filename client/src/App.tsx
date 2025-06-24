@@ -389,7 +389,7 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <KeyboardControls map={controls}>
-        <Canvas camera={{ position: [0, 0, 5] }}>
+        <Canvas camera={{ position: [0, 0, 5], far: 500000, near: 0.1 }}>
           <color attach="background" args={["#000000"]} />
           <ambientLight intensity={0.1} />
           <directionalLight position={[10, 10, 5]} intensity={0.3} />
