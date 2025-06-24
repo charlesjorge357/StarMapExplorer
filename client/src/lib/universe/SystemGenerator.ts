@@ -119,6 +119,32 @@ export class SystemGenerator {
     }
   }
 
+  static selectPlanetType(zone: string, seed: number): PlanetType {
+    const random = this.seededRandom(seed);
+    
+    switch (zone) {
+      case 'inner':
+        if (random < 0.4) return 'arid_world';
+        if (random < 0.7) return 'verdant_world';
+        if (random < 0.85) return 'acidic_world';
+        return 'dead_world';
+        
+      case 'habitable':
+        if (random < 0.3) return 'verdant_world';
+        if (random < 0.5) return 'ocean_world';
+        if (random < 0.7) return 'arid_world';
+        return 'gas_giant';
+        
+      case 'outer':
+        if (random < 0.6) return 'gas_giant';
+        if (random < 0.8) return 'frost_giant';
+        return 'dead_world';
+        
+      default:
+        return 'dead_world';
+    }
+  }
+
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, systemSeed: number): Planet {
     const planetSeed = systemSeed + index * 1000;
     const baseRadius = Math.max(0.1, SystemGenerator.seededRandom(planetSeed) * 0.8 + 0.1);
