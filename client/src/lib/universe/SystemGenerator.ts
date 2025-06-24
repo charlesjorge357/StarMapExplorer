@@ -184,11 +184,14 @@ export class SystemGenerator {
       planets.push(planet);
     }
 
+    // Generate asteroid belts
+    const asteroidBelts = this.generateAsteroidBelts(star, planets);
+
     return {
       id: `system-${star.id}`,
       starId: star.id,
-      star,
-      planets
+      planets,
+      asteroidBelts
     };
   }
 

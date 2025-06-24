@@ -382,6 +382,11 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           planetTextures={planetTextures}
         />
       ))}
+
+      {/* Asteroid Belts */}
+      {system.asteroidBelts.map((belt) => (
+        <AsteroidBeltComponent key={belt.id} belt={belt} />
+      ))}
     </group>
   );
 }
