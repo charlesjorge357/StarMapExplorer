@@ -181,7 +181,7 @@ function PlanetMesh({
     if (isSelected) {
       // Stop orbital tracking when deselecting
       if ((window as any).homeToPlanet) {
-        (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
       }
       console.log(`Deselected planet: ${planet.name}`);
       onPlanetClick(null);
@@ -338,7 +338,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       console.log('Deselecting planet');
       // Stop orbital tracking
       if ((window as any).homeToPlanet) {
-        (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
       }
       onPlanetClick(null);
     }
