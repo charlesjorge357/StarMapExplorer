@@ -39,11 +39,20 @@ export function CameraController() {
       return;
     }
     
-    // Disable orbital tracking only - don't move camera
+    // Disable orbital tracking only - reset rotation but keep position
     if (enableOrbitalTracking === false && !planetData) {
       isOrbitalTrackingRef.current = false;
       orbitalTargetRef.current = null;
-      console.log('Stopped orbital tracking - camera stays in current position');
+      
+      // Reset camera rotation to look at star (0,0,0) but keep current position
+      camera.rotation.set(0, 0, 0);
+      camera.rotation.order = 'YXZ';
+      camera.up.set(0, 1, 0);
+      camera.lookAt(0, 0, 0); // Look at the central star
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+      
+      console.log('Stopped orbital tracking - reset rotation to look at star');
       return;
     }
     
