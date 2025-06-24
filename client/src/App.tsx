@@ -362,7 +362,7 @@ function App() {
               fontSize: '14px'
             }}
           >
-            {isSearching ? 'Close Search' : 'Search Planets'}
+            {isSearching ? 'Close Selector' : 'Select Planet'}
           </button>
 
           {isSearching && (
@@ -375,60 +375,93 @@ function App() {
               padding: '15px',
               borderRadius: '8px',
               border: '1px solid #333',
-              minWidth: '300px'
+              minWidth: '300px',
+              maxHeight: '400px',
+              overflowY: 'auto'
             }}>
-              <div style={{ marginBottom: '10px', color: 'white', fontSize: '14px' }}>
-                Find Planet
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
+                Select Planet
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim() && !selectedPlanet) {
-                    const found = searchPlanet(searchQuery.trim());
-                    if (found) {
-                      setIsSearching(false);
-                      setSearchQuery('');
-                      
-                      // Auto-home camera to found planet
-                      setTimeout(() => {
-                        if ((window as any).homeToPlanet) {
-                          // Find planet index in current system for proper offset calculation
-                          const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === found.id) || 0;
-                          const planetDataWithIndex = { ...found, index: planetIndex };
-                          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(found.radius * 0.6, 1), planetDataWithIndex);
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {currentSystem?.planets?.map((planet: any) => {
+                  const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === planet.id);
+                  return (
+                    <button
+                      key={planet.id}
+                      onClick={() => {
+                        setSelectedPlanet(planet);
+                        setIsSearching(false);
+                        
+                        // Auto-home camera to selected planet
+                        setTimeout(() => {
+                          if ((window as any).homeToPlanet) {
+                            const planetDataWithIndex = { ...planet, index: planetIndex };
+                            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(planet.radius * 0.6, 1), planetDataWithIndex);
+                          }
+                        }, 100);
+                      }}
+                      style={{
+                        background: selectedPlanet?.id === planet.id ? '#4CAF50' : '#333',
+                        color: 'white',
+                        border: selectedPlanet?.id === planet.id ? '2px solid #66BB6A' : '1px solid #555',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        fontSize: '13px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedPlanet?.id !== planet.id) {
+                          e.currentTarget.style.background = '#444';
+                          e.currentTarget.style.borderColor = '#777';
                         }
-                      }, 100);
-                    } else {
-                      // Flash red border for not found
-                      e.currentTarget.style.borderColor = 'red';
-                      setTimeout(() => {
-                        e.currentTarget.style.borderColor = '#666';
-                      }, 500);
-                    }
-                  }
-                  if (e.key === 'Escape') {
-                    setIsSearching(false);
-                    setSearchQuery('');
-                  }
-                }}
-                placeholder={selectedPlanet ? "Planet already selected - press Enter to focus" : "Type planet name..."}
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedPlanet?.id !== planet.id) {
+                          e.currentTarget.style.background = '#333';
+                          e.currentTarget.style.borderColor = '#555';
+                        }
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{planet.name}</div>
+                      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
+                        {planet.type.replace('_', ' ').charAt(0).toUpperCase() + planet.type.replace('_', ' ').slice(1)} • 
+                        R: {planet.radius.toFixed(1)} • 
+                        Orbit: {planet.orbitRadius.toFixed(1)}
+                      </div>
+                    </button>
+                  );
+                }) || (
+                  <div style={{ color: '#aaa', textAlign: 'center', padding: '20px' }}>
+                    No planets available
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsSearching(false)}
                 style={{
+                  marginTop: '15px',
                   width: '100%',
                   padding: '8px',
-                  background: '#222',
-                  color: 'white',
-                  border: '1px solid #666',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #555',
                   borderRadius: '4px',
-                  outline: 'none',
-                  marginBottom: '10px'
+                  cursor: 'pointer',
+                  fontSize: '12px'
                 }}
-                autoFocus
-              />
-              <div style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.4' }}>
-                Available: {currentSystem?.planets?.map((p: any) => p.name).join(', ') || 'No planets'}
-              </div>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+              >
+                Cancel
+              </button>
             </div>
           )}
         </>
