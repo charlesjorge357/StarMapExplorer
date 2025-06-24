@@ -326,13 +326,13 @@ function App() {
       if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
         
-        // Call camera homing function with planet data - let it calculate position internally with offset
+        // Enable orbital tracking for selected planet
         if ((window as any).homeToPlanet) {
           // Find planet index in current system for proper offset calculation
           const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
           const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
-          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex);
-          console.log(`Homing camera to ${selectedPlanet.name} with index ${planetIndex}`);
+          (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
+          console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
         }
       }
     };
@@ -392,11 +392,11 @@ function App() {
                         setSelectedPlanet(planet);
                         setIsSearching(false);
                         
-                        // Auto-home camera to selected planet
+                        // Auto-start orbital tracking for selected planet
                         setTimeout(() => {
                           if ((window as any).homeToPlanet) {
                             const planetDataWithIndex = { ...planet, index: planetIndex };
-                            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(planet.radius * 0.6, 1), planetDataWithIndex);
+                            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(planet.radius * 0.6, 1), planetDataWithIndex, true);
                           }
                         }, 100);
                       }}
