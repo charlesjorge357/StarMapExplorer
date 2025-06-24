@@ -331,7 +331,7 @@ function App() {
         const angle = time * selectedPlanet.orbitSpeed;
         const x = Math.cos(angle) * selectedPlanet.orbitRadius * 2;
         const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
-        const planetPosition = new THREE.Vector3(x, 0, z);
+        const planetPosition = new Vector3(x, 0, z);
         
         // Call camera homing function
         if ((window as any).homeToPlanet) {

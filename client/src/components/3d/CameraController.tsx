@@ -25,6 +25,35 @@ export function CameraController() {
   const lastBoostStateRef = useRef(false);
   const lastPositionRef = useRef(new Vector3());
 
+  // Camera homing functionality
+  const homeToPlanet = (planetPosition: Vector3, planetRadius: number) => {
+    if (!camera) return;
+    
+    const distance = planetRadius * 25; // Position camera at 25x planet radius distance
+    const direction = new Vector3().subVectors(camera.position, planetPosition).normalize();
+    
+    // If camera is too close, use a default direction
+    if (direction.length() < 0.1) {
+      direction.set(1, 0.5, 1).normalize();
+    }
+    
+    const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
+    
+    // Move camera to target position and look at planet
+    camera.position.copy(targetPosition);
+    camera.lookAt(planetPosition);
+    
+    console.log(`Camera homed to planet at position (${planetPosition.x}, ${planetPosition.y}, ${planetPosition.z}) from distance ${distance}`);
+  };
+
+  // Expose camera homing to window for external access
+  useEffect(() => {
+    (window as any).homeToPlanet = homeToPlanet;
+    return () => {
+      delete (window as any).homeToPlanet;
+    };
+  }, [camera]);
+
   // Mouse-only camera control with right-click drag
   useEffect(() => {
     const canvas = gl.domElement;
