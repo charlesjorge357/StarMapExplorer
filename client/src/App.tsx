@@ -337,6 +337,8 @@ function App() {
           }
 
           setCurrentView('galactic');
+          setLastVisitedStar(selectedStar);
+          
           setCurrentSystem(null);
           setSelectedPlanet(null);
           (window as any).systemStarSelected = false;
