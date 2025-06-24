@@ -140,13 +140,35 @@ export function CameraController() {
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, []);
 
+  // Set camera to look at specific star with offset
+  const setCameraLookingAtStar = (star: any) => {
+    if (!camera) return;
+    
+    // Calculate offset position - place camera at distance with slight offset
+    const starPos = new Vector3(star.position[0], star.position[1], star.position[2]);
+    const distance = 150; // Distance from star
+    const offsetDirection = new Vector3(1, 0.5, 1).normalize(); // Slight upward and side offset
+    
+    const cameraPosition = starPos.clone().add(offsetDirection.multiplyScalar(distance));
+    
+    // Set camera position and look at the star
+    camera.position.copy(cameraPosition);
+    camera.lookAt(starPos);
+    camera.updateMatrix();
+    camera.updateMatrixWorld(true);
+    
+    console.log(`Camera positioned at ${cameraPosition.toArray().map(n => n.toFixed(1))} looking at ${star.name}`);
+  };
+
   // Expose camera functions to window for external access
   useEffect(() => {
     (window as any).homeToPlanet = homeToPlanet;
     (window as any).resetToStar = resetToStar;
+    (window as any).setCameraLookingAtStar = setCameraLookingAtStar;
     return () => {
       delete (window as any).homeToPlanet;
       delete (window as any).resetToStar;
+      delete (window as any).setCameraLookingAtStar;
     };
   }, [camera]);
 

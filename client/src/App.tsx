@@ -161,6 +161,7 @@ function App() {
   // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system' | 'planetary'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
+  const [lastVisitedStar, setLastVisitedStar] = useState<SimpleStar | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
