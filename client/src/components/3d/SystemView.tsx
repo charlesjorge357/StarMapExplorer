@@ -7,26 +7,27 @@ import { useThree } from '@react-three/fiber';
 
 function MoonMesh({ 
   moon, 
-  planetPosition, 
-  planetRadius 
+  planetRef,
+  planetRadius,
+  moonIndex 
 }: { 
   moon: any; 
-  planetPosition: [number, number, number];
+  planetRef: React.RefObject<any>;
   planetRadius: number;
+  moonIndex: number;
 }) {
   const moonRef = useRef<THREE.Mesh>(null);
 
   useFrame(() => {
-    if (moonRef.current) {
+    if (moonRef.current && planetRef.current) {
       // Use same time calculation as planets for consistency
       const time = Date.now() * 0.0001;
-      const moonIndex = parseInt(moon.id.split('-moon-')[1]) || 0;
       const angle = time * moon.orbitSpeed * 10 + moonIndex * (Math.PI * 2 / 8); // Apply planetary offset pattern
       
-      // Moon orbit relative to planet with much tighter radius
-      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2;
-      const moonZ = planetPosition[2] + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.2;
-      const moonY = planetPosition[1];
+      // Moon orbit relative to planet's current position
+      const moonX = planetRef.current.position.x + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2;
+      const moonZ = planetRef.current.position.z + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.2;
+      const moonY = planetRef.current.position.y;
 
       moonRef.current.position.set(moonX, moonY, moonZ);
     }
@@ -297,17 +298,14 @@ function PlanetMesh({
         </mesh>
       )}
 
-      {/* Render moons orbiting this planet - use real-time planet position */}
-      {planet.moons && planet.moons.length > 0 && planetRef.current && planet.moons.map((moon: any, moonIndex: number) => (
+      {/* Render moons orbiting this planet - pass planet ref directly */}
+      {planet.moons && planet.moons.length > 0 && planet.moons.map((moon: any, moonIndex: number) => (
         <MoonMesh 
           key={`${planet.id}-moon-${moonIndex}`}
           moon={moon}
-          planetPosition={[
-            planetRef.current.position.x,
-            planetRef.current.position.y,
-            planetRef.current.position.z
-          ]}
+          planetRef={planetRef}
           planetRadius={planet.radius * 0.6}
+          moonIndex={moonIndex}
         />
       ))}
     </>
