@@ -25,11 +25,6 @@ export function CameraController() {
   const lastBoostStateRef = useRef(false);
   const lastPositionRef = useRef(new Vector3());
 
-  // Camera following state
-  const isFollowingPlanet = useRef(false);
-  const followingPlanetData = useRef<any>(null);
-  const followingDistance = useRef(15);
-
   // Camera homing functionality with frame-synced positioning
   const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any) => {
     if (!camera) return;
@@ -86,18 +81,7 @@ export function CameraController() {
     // Execute immediately
     trackingFunction();
     
-    // Enable following mode
-    if (planetData) {
-      isFollowingPlanet.current = !isFollowingPlanet.current; // Toggle following
-      if (isFollowingPlanet.current) {
-        followingPlanetData.current = planetData;
-        followingDistance.current = distance;
-        console.log(`Camera now following planet ${planetData.name}`);
-      } else {
-        followingPlanetData.current = null;
-        console.log(`Camera stopped following planet`);
-      }
-    }
+    console.log(`Camera homed to planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
   };
 
   // Expose camera homing to window for external access

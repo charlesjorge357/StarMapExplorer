@@ -332,7 +332,7 @@ function App() {
           const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
           const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
           (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex);
-          console.log(`Toggling camera following for ${selectedPlanet.name} with index ${planetIndex}`);
+          console.log(`Homing camera to ${selectedPlanet.name} with index ${planetIndex}`);
         }
       }
     };
