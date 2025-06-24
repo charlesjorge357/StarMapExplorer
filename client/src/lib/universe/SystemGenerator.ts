@@ -184,11 +184,13 @@ export class SystemGenerator {
     for (let i = 0; i < planetCount; i++) {
       let orbitRadius: number;
       if (i === 0) {
-        orbitRadius = 0.3 + this.seededRandom(systemSeed + i) * 0.7;
+        // First planet starts well outside the star
+        orbitRadius = Math.max(star.radius * 3, 15) + this.seededRandom(systemSeed + i) * 20;
       } else {
+        // Subsequent planets use additive spacing
         const previousRadius = planets[i - 1].orbitRadius;
-        const spacing = 1.4 + this.seededRandom(systemSeed + i + 100) * 0.6;
-        orbitRadius = previousRadius * spacing;
+        const spacing = 20 + this.seededRandom(systemSeed + i + 100) * 30;
+        orbitRadius = previousRadius + spacing;
       }
       const planet = this.generatePlanet(star.name, star.temperature || 5778, i, orbitRadius, systemSeed);
       console.log(`Planet ${i}: ${planet.name} at orbit radius ${orbitRadius.toFixed(1)} (star radius: ${star.radius.toFixed(1)})`);

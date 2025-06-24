@@ -167,8 +167,8 @@ function PlanetMesh({
     if (planetRef.current) {
       const time = state.clock.getElapsedTime() * 0.1;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
-      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
+      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
+      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
     }
   });
 
