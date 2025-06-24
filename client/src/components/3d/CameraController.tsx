@@ -29,12 +29,21 @@ export function CameraController() {
   const homeToPlanet = (planetPosition: Vector3, planetRadius: number) => {
     if (!camera) return;
     
-    const distance = Math.max(planetRadius * 25, 10); // Minimum distance of 10 units
-    const direction = new Vector3().subVectors(camera.position, planetPosition).normalize();
+    const distance = Math.max(planetRadius * 25, 15); // Increased minimum distance
     
-    // If camera is too close or direction is invalid, use a good default viewing angle
-    if (direction.length() < 0.1 || isNaN(direction.x)) {
-      direction.set(1, 0.3, 1).normalize();
+    // Calculate optimal viewing direction based on planet's orbital position
+    // Use a consistent approach that works regardless of current camera position
+    const orbitalRadius = Math.sqrt(planetPosition.x * planetPosition.x + planetPosition.z * planetPosition.z);
+    
+    let direction: Vector3;
+    
+    if (orbitalRadius > 0.1) {
+      // For orbiting planets, position camera slightly outside and above the orbital plane
+      const orbitalNormal = new Vector3(planetPosition.x, 0, planetPosition.z).normalize();
+      direction = orbitalNormal.clone().multiplyScalar(0.8).add(new Vector3(0, 0.4, 0)).normalize();
+    } else {
+      // For central objects or edge cases, use a default diagonal view
+      direction = new Vector3(1, 0.4, 1).normalize();
     }
     
     const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
@@ -42,17 +51,19 @@ export function CameraController() {
     // Move camera to target position
     camera.position.copy(targetPosition);
     
-    // Reset rotation to ensure clean lookAt
+    // Reset rotation completely to ensure clean lookAt
     camera.rotation.set(0, 0, 0);
     camera.rotation.order = 'YXZ';
+    camera.up.set(0, 1, 0); // Ensure up vector is correct
     
-    // Look at planet
+    // Look at planet with proper orientation
     camera.lookAt(planetPosition);
     
-    // Store the current rotation for consistency
+    // Force matrix update
     camera.updateMatrix();
+    camera.updateMatrixWorld(true);
     
-    console.log(`Camera homed to planet at (${planetPosition.x.toFixed(1)}, ${planetPosition.y.toFixed(1)}, ${planetPosition.z.toFixed(1)}) from distance ${distance.toFixed(1)}`);
+    console.log(`Camera homed to planet at orbital radius ${orbitalRadius.toFixed(1)} from distance ${distance.toFixed(1)}`);
   };
 
   // Expose camera homing to window for external access
