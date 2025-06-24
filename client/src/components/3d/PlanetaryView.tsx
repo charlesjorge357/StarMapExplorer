@@ -172,16 +172,23 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
             color="#ffffff"
             roughness={0.8}
             metalness={0.1}
+            transparent={false}
+            opacity={1.0}
           />
         ) : (
-          <meshStandardMaterial color="#666666" roughness={0.9} />
+          <meshStandardMaterial 
+            color="#666666" 
+            roughness={0.9}
+            transparent={false}
+            opacity={1.0}
+          />
         )}
       </mesh>
 
-      {/* Atmospheric glow for applicable planets */}
+      {/* Subtle atmospheric glow for applicable planets - minimal opacity to preserve texture colors */}
       {(planet.type === 'gas_giant' || planet.type === 'frost_giant' || planet.type === 'verdant_world') && (
         <mesh>
-          <sphereGeometry args={[planetRadius * 1.02, 64, 32]} />
+          <sphereGeometry args={[planetRadius * 1.005, 64, 32]} />
           <meshBasicMaterial 
             color={
               planet.type === 'gas_giant' ? '#ffa500' : 
@@ -189,7 +196,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
               '#87ceeb'
             }
             transparent 
-            opacity={0.1} 
+            opacity={0.03} 
             side={THREE.BackSide}
           />
         </mesh>
