@@ -1,27 +1,34 @@
-import React, { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { SurfaceFeature } from '../../../shared/schema';
 
-interface SurfaceFeatureMesh {
+interface PlanetaryViewProps {
+  planet: any;
+  selectedFeature: SurfaceFeature | null;
+  onFeatureClick: (feature: SurfaceFeature | null) => void;
+}
+
+interface SurfaceFeatureMeshProps {
   feature: SurfaceFeature;
   planetRadius: number;
+  isSelected: boolean;
   onClick: (feature: SurfaceFeature) => void;
 }
 
-function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMesh) {
+function SurfaceFeatureMesh({ feature, planetRadius, isSelected, onClick }: SurfaceFeatureMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   
   // Convert lat/lon to 3D position on sphere
   const position = useMemo(() => {
     const [lat, lon] = feature.position;
-    const latRad = (lat * Math.PI) / 180;
-    const lonRad = (lon * Math.PI) / 180;
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
     
-    const x = planetRadius * Math.cos(latRad) * Math.cos(lonRad);
-    const y = planetRadius * Math.sin(latRad);
-    const z = planetRadius * Math.cos(latRad) * Math.sin(lonRad);
+    const x = planetRadius * 1.02 * Math.sin(phi) * Math.cos(theta);
+    const y = planetRadius * 1.02 * Math.cos(phi);
+    const z = planetRadius * 1.02 * Math.sin(phi) * Math.sin(theta);
     
     return [x, y, z] as [number, number, number];
   }, [feature.position, planetRadius]);
@@ -36,13 +43,20 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
     }
   };
 
+  // Get feature size based on type and size
+  const getFeatureSize = () => {
+    const baseSize = feature.type === 'city' ? 0.3 : feature.type === 'fort' ? 0.2 : 0.15;
+    const sizeMultiplier = feature.size === 'large' ? 1.5 : feature.size === 'medium' ? 1.2 : 1.0;
+    return baseSize * sizeMultiplier;
+  };
+
   // Get light intensity based on size and population
   const getLightIntensity = () => {
     const baseIntensity = feature.type === 'city' ? 1.0 : 0.5;
     const sizeMultiplier = feature.size === 'large' ? 2.0 : feature.size === 'medium' ? 1.5 : 1.0;
     const popMultiplier = feature.population ? Math.log10(feature.population) / 6 : 1.0;
     
-    return baseIntensity * sizeMultiplier * popMultiplier;
+    return Math.min(baseIntensity * sizeMultiplier * popMultiplier, 3.0);
   };
 
   // Flickering animation for city lights
@@ -50,7 +64,8 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
     if (meshRef.current && feature.type === 'city') {
       const time = state.clock.getElapsedTime();
       const flicker = 0.8 + Math.sin(time * 10 + feature.position[0]) * 0.1 + Math.sin(time * 7 + feature.position[1]) * 0.1;
-      (meshRef.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0.3, flicker * getLightIntensity());
+      const material = meshRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = Math.max(0.3, flicker * 0.8);
     }
   });
 
@@ -61,7 +76,7 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
 
   return (
     <group position={position}>
-      {/* Surface feature light */}
+      {/* Main feature marker */}
       <mesh
         ref={meshRef}
         onClick={handleClick}
@@ -73,15 +88,23 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[0.2, 8, 8]} />
+        <sphereGeometry args={[getFeatureSize(), 8, 8]} />
         <meshBasicMaterial 
           color={getLightColor()}
           transparent
-          opacity={getLightIntensity()}
+          opacity={0.8}
           emissive={getLightColor()}
-          emissiveIntensity={getLightIntensity() * 0.5}
+          emissiveIntensity={0.5}
         />
       </mesh>
+
+      {/* Selection ring for selected feature */}
+      {isSelected && (
+        <mesh>
+          <torusGeometry args={[getFeatureSize() * 1.5, getFeatureSize() * 0.1, 8, 16]} />
+          <meshBasicMaterial color="#00ff00" transparent opacity={0.8} />
+        </mesh>
+      )}
 
       {/* Light cluster for larger cities */}
       {feature.type === 'city' && feature.size !== 'small' && (
@@ -98,9 +121,9 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
                 <meshBasicMaterial 
                   color={getLightColor()}
                   transparent
-                  opacity={getLightIntensity() * 0.6}
+                  opacity={0.6}
                   emissive={getLightColor()}
-                  emissiveIntensity={getLightIntensity() * 0.3}
+                  emissiveIntensity={0.3}
                 />
               </mesh>
             );
@@ -111,22 +134,124 @@ function SurfaceFeatureMesh({ feature, planetRadius, onClick }: SurfaceFeatureMe
       {/* Point light for illumination */}
       <pointLight
         color={getLightColor()}
-        intensity={getLightIntensity() * 2}
-        distance={10}
+        intensity={getLightIntensity()}
+        distance={planetRadius}
         decay={2}
       />
     </group>
   );
 }
 
-export function PlanetaryView() {
-  // This will be implemented when we add planetary surface exploration
-  // For now, it's a placeholder for the city lighting system
-  
+export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
+
+  const { camera } = useThree();
+  const planetRef = useRef<THREE.Mesh>(null);
+  const planetRadius = planet?.radius ? planet.radius * 10 : 5;
+
+  // Load textures for different planet types
+  const getTextureForPlanet = (planetType: string, textureIndex: number = 0) => {
+    const texturePaths: Record<string, string[]> = {
+      'gas_giant': ['/attached_assets/2k_jupiter_1750720210242.jpg'],
+      'frost_giant': ['/attached_assets/2k_uranus_1750633974238.jpg', '/attached_assets/2k_neptune_1750633977824.jpg'],
+      'arid_world': ['/attached_assets/2k_mars_1750720210242.jpg', '/attached_assets/2k_venus_surface_1750720210241.jpg'],
+      'verdant_world': ['/attached_assets/2k_terrestrial1_1750721706116.jpg', '/attached_assets/2k_terrestrial2_1750721704007.jpg', '/attached_assets/2k_terrestrial3_1750721701962.png'],
+      'acidic_world': ['/attached_assets/2k_venus_atmosphere_1750720210240.jpg'],
+      'nuclear_world': ['/attached_assets/2k_ceres_fictional_1750720210241.jpg'],
+      'ocean_world': ['/attached_assets/2k_ocean_planet_1750721323369.jpg'],
+      'dead_world': ['/attached_assets/2k_mercury_1750720210243.jpg', '/attached_assets/2k_moon_1750720210243.jpg', '/attached_assets/2k_eris_fictional_1750720210241.jpg']
+    };
+    
+    const paths = texturePaths[planetType] || texturePaths['dead_world'];
+    return paths[textureIndex % paths.length];
+  };
+
+  let texture;
+  try {
+    texture = planet ? useTexture(getTextureForPlanet(planet.type, planet.textureIndex || 0)) : null;
+  } catch (error) {
+    console.warn(`Failed to load texture for ${planet?.type}:`, error);
+    texture = null;
+  }
+
+  // Position camera for planetary view on component mount
+  useEffect(() => {
+    if (planet && camera) {
+      console.log(`Setting camera for planetary view of ${planet.name}`);
+      camera.position.set(0, 0, planetRadius * 2.5);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+    }
+  }, [camera, planet, planetRadius]);
+
+  if (!planet) {
+    console.warn('PlanetaryView: No planet data provided');
+    return null;
+  }
+
+  // Handle background clicks to deselect features
+  const handleBackgroundClick = (event: any) => {
+    // Only deselect if clicking the planet surface, not features
+    if (event.object === planetRef.current && selectedFeature) {
+      onFeatureClick(null);
+    }
+  };
+
   return (
     <group>
-      {/* Planetary surface will be rendered here */}
-      {/* Surface features with city lights will be rendered here */}
+      {/* Main planet */}
+      <mesh
+        ref={planetRef}
+        onClick={handleBackgroundClick}
+      >
+        <sphereGeometry args={[planetRadius, 64, 32]} />
+        {texture ? (
+          <meshStandardMaterial 
+            map={texture}
+            color={planet.type === 'verdant_world' ? '#ffffff' : undefined}
+          />
+        ) : (
+          <meshStandardMaterial color="#666666" />
+        )}
+      </mesh>
+
+      {/* Atmospheric glow for gas planets */}
+      {(planet.type === 'gas_giant' || planet.type === 'frost_giant') && (
+        <mesh>
+          <sphereGeometry args={[planetRadius * 1.05, 32, 16]} />
+          <meshBasicMaterial 
+            color={planet.type === 'gas_giant' ? '#ffa500' : '#87ceeb'} 
+            transparent 
+            opacity={0.1} 
+          />
+        </mesh>
+      )}
+
+      {/* Surface features with city lighting */}
+      {planet.surfaceFeatures?.map((feature: SurfaceFeature) => (
+        <SurfaceFeatureMesh
+          key={feature.id}
+          feature={feature}
+          planetRadius={planetRadius}
+          isSelected={selectedFeature?.id === feature.id}
+          onClick={onFeatureClick}
+        />
+      ))}
+
+      {/* Enhanced lighting setup for planetary view */}
+      <ambientLight intensity={0.4} />
+      <directionalLight 
+        position={[planetRadius * 2, planetRadius, planetRadius * 2]} 
+        intensity={0.8} 
+        castShadow
+      />
+      
+      {/* Secondary lighting for better surface visibility */}
+      <directionalLight 
+        position={[-planetRadius, -planetRadius, planetRadius]} 
+        intensity={0.3} 
+        color="#6495ed"
+      />
     </group>
   );
 }

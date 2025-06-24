@@ -327,6 +327,11 @@ function App() {
             console.log(`Entering planetary view for ${selectedPlanet.name}`);
             setCurrentView('planetary');
             
+            // Stop any orbital tracking when entering planetary view
+            if ((window as any).homeToPlanet) {
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+            }
+            
             // Reset camera for planetary view
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), selectedPlanet.radius * 20, null, false);
