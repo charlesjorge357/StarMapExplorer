@@ -384,7 +384,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       ))}
 
       {/* Asteroid Belts */}
-      {system.asteroidBelts.map((belt) => (
+      {system.asteroidBelts && system.asteroidBelts.map((belt) => (
         <AsteroidBeltComponent key={belt.id} belt={belt} />
       ))}
     </group>

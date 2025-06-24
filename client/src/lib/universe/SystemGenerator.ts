@@ -225,9 +225,12 @@ export class SystemGenerator {
     }
   }
 
-  private generateAsteroidBelts(star: Star, planets: Planet[]): AsteroidBelt[] {
-    const belts: AsteroidBelt[] = [];
-    const rng = this.createSeededRandom(star.name + 'asteroids');
+  private generateAsteroidBelts(star: Star, planets: Planet[]): any[] {
+    const belts: any[] = [];
+    
+    // Create seeded random function
+    const seed = star.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const rng = () => SystemGenerator.seededRandom(seed + belts.length * 1000);
     
     // Only generate asteroid belts for certain stellar types and configurations
     const shouldHaveAsteroids = star.spectralClass.startsWith('G') || 
@@ -270,7 +273,7 @@ export class SystemGenerator {
             innerRadius: beltInnerRadius,
             outerRadius: beltOuterRadius,
             density: density,
-            asteroidCount: Math.max(50, asteroidCount)
+            asteroidCount: Math.max(50, Math.min(500, asteroidCount))
           });
         }
       }
