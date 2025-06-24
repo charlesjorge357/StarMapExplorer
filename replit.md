@@ -140,6 +140,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 23, 2025: Implemented comprehensive color variation system in SystemView using seeded HSL generation. Replaced static planet colors with dynamic variation based on planet IDs, matching SystemGenerator's sophisticated color system. Added debug logging to investigate missing planet IDs issue.
 - June 23, 2025: Reduced planet visual scaling from 0.8x to 0.6x radius to prevent gas giants from appearing larger than smaller stars. Implemented dynamic starfield scaling based on maximum orbital radius to ensure background stars extend beyond planetary orbits for proper visual depth.
 - June 24, 2025: Added asteroid belt generation to SystemGenerator with 1-4 belts per system spawning in orbital gaps. Implemented exponential asteroid density scaling based on belt radius with grey coloring and varied asteroid sizes. Fixed system generation conflicts by consolidating planet generation into single SystemGenerator method.
+- June 24, 2025: Implemented comprehensive planetary view system with surface exploration capabilities. Features include: clickable surface features (cities, forts, landmarks), proper texture mapping based on planet type, atmospheric effects for applicable worlds, city lighting systems based on population and technology level, and seamless navigation between galactic/system/planetary views. Enhanced navigation with Enter key transitions and Backspace hierarchical navigation.
 
 ## User Preferences
 

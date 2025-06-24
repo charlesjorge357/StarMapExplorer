@@ -288,21 +288,31 @@ function App() {
           // Only unselect planets in system view, not the central star
           console.log(`Unselected planet: ${selectedPlanet.name}`);
           setSelectedPlanet(null);
+        } else if (currentView === 'planetary' && selectedFeature) {
+          // Unselect surface features in planetary view
+          console.log(`Unselected feature: ${selectedFeature.name}`);
+          setSelectedFeature(null);
         }
       }
 
-      if (event.key === 'Backspace' && currentView === 'system') {
-        console.log('Returning to galactic view...');
-        
-        // Stop orbital tracking when leaving system view
-        if ((window as any).homeToPlanet) {
-          (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+      if (event.key === 'Backspace') {
+        if (currentView === 'planetary') {
+          console.log('Returning to system view...');
+          setCurrentView('system');
+          setSelectedFeature(null);
+        } else if (currentView === 'system') {
+          console.log('Returning to galactic view...');
+          
+          // Stop orbital tracking when leaving system view
+          if ((window as any).homeToPlanet) {
+            (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+          }
+          
+          setCurrentView('galactic');
+          setCurrentSystem(null);
+          setSelectedPlanet(null);
+          (window as any).systemStarSelected = false;
         }
-        
-        setCurrentView('galactic');
-        setCurrentSystem(null);
-        setSelectedPlanet(null);
-        (window as any).systemStarSelected = false;
       }
 
       // Remove duplicate backspace handler
@@ -497,9 +507,15 @@ function App() {
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}
                     onPlanetClick={setSelectedPlanet}
-
                   />
                 </>
+              )}
+              {currentView === 'planetary' && selectedPlanet && (
+                <PlanetaryView 
+                  planet={selectedPlanet}
+                  selectedFeature={selectedFeature}
+                  onFeatureClick={setSelectedFeature}
+                />
               )}
 
               {/* Post-processing effects for bloom */}
@@ -532,12 +548,22 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : `System View • ${currentSystem?.starId || 'Unknown'}`} • Left-click objects, Right-click+drag camera
+          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : 
+               currentView === 'system' ? `System View • ${currentSystem?.starId || 'Unknown'}` :
+               `Planetary View • ${selectedPlanet?.name || 'Unknown'}`} • Left-click objects, Right-click+drag camera
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedPlanet 
-                ? `Selected: ${selectedPlanet.name} • Escape: look at star • Click background: deselect • Backspace: galactic view`
+                ? `Selected: ${selectedPlanet.name} • Enter: ${selectedPlanet.surfaceFeatures?.length ? 'planetary view' : 'orbital track'} • Escape: look at star • Backspace: galactic view`
                 : 'Press Backspace to return to galactic view'
+              }
+            </div>
+          )}
+          {currentView === 'planetary' && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
+              {selectedFeature 
+                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Click background: deselect • Backspace: system view`
+                : `${selectedPlanet?.surfaceFeatures?.length || 0} surface features • Backspace: system view`
               }
             </div>
           )}
