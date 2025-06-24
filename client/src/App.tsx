@@ -11,6 +11,7 @@ import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
+import * as THREE from "three";
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -400,7 +401,7 @@ function App() {
                         const angle = time * found.orbitSpeed;
                         const x = Math.cos(angle) * found.orbitRadius * 2;
                         const z = Math.sin(angle) * found.orbitRadius * 2;
-                        const planetPosition = new THREE.Vector3(x, 0, z);
+                        const planetPosition = new Vector3(x, 0, z);
                         
                         if ((window as any).homeToPlanet) {
                           (window as any).homeToPlanet(planetPosition, found.radius * 0.6);
