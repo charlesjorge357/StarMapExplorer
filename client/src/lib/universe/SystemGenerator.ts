@@ -191,6 +191,7 @@ export class SystemGenerator {
         orbitRadius = previousRadius * spacing;
       }
       const planet = this.generatePlanet(star.name, star.temperature || 5778, i, orbitRadius, systemSeed);
+      console.log(`Planet ${i}: ${planet.name} at orbit radius ${orbitRadius.toFixed(1)} (star radius: ${star.radius.toFixed(1)})`);
       planets.push(planet);
     }
 

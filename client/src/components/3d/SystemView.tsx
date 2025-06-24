@@ -358,9 +358,9 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       </mesh>
 
       {/* Orbital paths (static) */}
-      {planets.map((planet) => (
+      {systemPlanets.map((planet) => (
         <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.orbitRadius * 2 - 0.05, planet.orbitRadius * 2 + 0.05, 128]} />
+          <ringGeometry args={[planet.orbitRadius - 0.2, planet.orbitRadius + 0.2, 128]} />
           <meshBasicMaterial 
             color="#444444" 
             transparent 
