@@ -204,16 +204,19 @@ export function CameraController() {
         Math.sin(angle) * planetData.orbitRadius * 2
       );
       
-      // Camera follows the same orbital path but offset for viewing
-      const distance = 1;
-      const cameraOffsetAngle = angle + Math.PI * 0.1; // Camera offset for perspective
+      // Position camera at fixed distance from planet, not star
+      const cameraDistance = Math.max(planetData.radius * 8, 5);
+      const cameraOffsetAngle = angle + Math.PI * 0.3;
       
-      // Camera position matches planet's orbital movement
-      const cameraPos = new Vector3(
-        Math.cos(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance),
-        planetData.orbitRadius * 0.7, // Elevated for better view
-        Math.sin(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance)
-      );
+      // Calculate direction from planet to camera
+      const cameraDirection = new Vector3(
+        Math.cos(cameraOffsetAngle),
+        0.4, // Elevated angle
+        Math.sin(cameraOffsetAngle)
+      ).normalize();
+      
+      // Position camera relative to planet position
+      const cameraPos = planetPos.clone().add(cameraDirection.multiplyScalar(cameraDistance));
       
       // Direct position copy - no interpolation for instant sync
       camera.position.copy(cameraPos);
