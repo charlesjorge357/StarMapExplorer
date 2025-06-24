@@ -409,7 +409,7 @@ function App() {
               )}
               {currentView === 'system' && currentSystem && (
                 <>
-                  <StarfieldSkybox stars={stars} scale={0.05} />
+                  <StarSkybox count={12000} radius={3000} />
                   <SystemView 
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}
