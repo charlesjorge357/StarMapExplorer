@@ -34,11 +34,21 @@ type PlanetType =
   | 'ocean_world' 
   | 'dead_world';
 
+interface AsteroidBelt {
+  id: string;
+  name: string;
+  innerRadius: number;
+  outerRadius: number;
+  density: number;
+  asteroidCount: number;
+}
+
 interface StarSystem {
   id: string;
   starId: string;
   star?: any;
   planets: Planet[];
+  asteroidBelts: AsteroidBelt[];
 }
 
 export class SystemGenerator {
@@ -229,7 +239,7 @@ export class SystemGenerator {
     }
   }
 
-  private generateAsteroidBelts(star: Star, planets: Planet[]): any[] {
+  static generateAsteroidBelts(star: any, planets: Planet[]): AsteroidBelt[] {
     const belts: any[] = [];
     
     // Create seeded random function
