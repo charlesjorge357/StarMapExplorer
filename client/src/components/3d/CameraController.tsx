@@ -26,44 +26,46 @@ export function CameraController() {
   const lastPositionRef = useRef(new Vector3());
 
   // Camera homing functionality
-  const homeToPlanet = (planetPosition: Vector3, planetRadius: number) => {
+  const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any) => {
     if (!camera) return;
     
-    const distance = Math.max(planetRadius * 25, 15); // Increased minimum distance
+    const distance = Math.max(planetRadius * 25, 15);
     
-    // Calculate optimal viewing direction based on planet's orbital position
-    // Use a consistent approach that works regardless of current camera position
-    const orbitalRadius = Math.sqrt(planetPosition.x * planetPosition.x + planetPosition.z * planetPosition.z);
+    // Get real-time planet position if planet data is available
+    let currentPlanetPos = planetPosition;
+    if (planetData) {
+      const time = performance.now() * 0.0001;
+      const angle = time * planetData.orbitSpeed;
+      const x = Math.cos(angle) * planetData.orbitRadius * 2;
+      const z = Math.sin(angle) * planetData.orbitRadius * 2;
+      currentPlanetPos = new Vector3(x, 0, z);
+    }
+    
+    const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
     
     let direction: Vector3;
     
     if (orbitalRadius > 0.1) {
-      // For orbiting planets, position camera slightly outside and above the orbital plane
-      const orbitalNormal = new Vector3(planetPosition.x, 0, planetPosition.z).normalize();
-      direction = orbitalNormal.clone().multiplyScalar(0.8).add(new Vector3(0, 0.4, 0)).normalize();
+      // Position camera at a good viewing angle: outward from star + elevated
+      const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
+      // Combine radial direction with elevation for optimal viewing
+      direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
     } else {
-      // For central objects or edge cases, use a default diagonal view
       direction = new Vector3(1, 0.4, 1).normalize();
     }
     
-    const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
+    const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
     
-    // Move camera to target position
+    // Move camera and orient toward current planet position
     camera.position.copy(targetPosition);
-    
-    // Reset rotation completely to ensure clean lookAt
     camera.rotation.set(0, 0, 0);
     camera.rotation.order = 'YXZ';
-    camera.up.set(0, 1, 0); // Ensure up vector is correct
-    
-    // Look at planet with proper orientation
-    camera.lookAt(planetPosition);
-    
-    // Force matrix update
+    camera.up.set(0, 1, 0);
+    camera.lookAt(currentPlanetPos);
     camera.updateMatrix();
     camera.updateMatrixWorld(true);
     
-    console.log(`Camera homed to planet at orbital radius ${orbitalRadius.toFixed(1)} from distance ${distance.toFixed(1)}`);
+    console.log(`Camera homed to planet at real-time orbital position (${currentPlanetPos.x.toFixed(1)}, ${currentPlanetPos.z.toFixed(1)})`);
   };
 
   // Expose camera homing to window for external access

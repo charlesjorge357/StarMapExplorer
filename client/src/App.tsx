@@ -333,9 +333,9 @@ function App() {
         const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
         const planetPosition = new Vector3(x, 0, z);
         
-        // Call camera homing function with better radius scaling
+        // Call camera homing function with planet data for real-time positioning
         if ((window as any).homeToPlanet) {
-          (window as any).homeToPlanet(planetPosition, Math.max(selectedPlanet.radius * 0.6, 1));
+          (window as any).homeToPlanet(planetPosition, Math.max(selectedPlanet.radius * 0.6, 1), selectedPlanet);
           console.log(`Homing camera to ${selectedPlanet.name} at orbital position`);
         }
       }
@@ -404,7 +404,7 @@ function App() {
                         const planetPosition = new Vector3(x, 0, z);
                         
                         if ((window as any).homeToPlanet) {
-                          (window as any).homeToPlanet(planetPosition, Math.max(found.radius * 0.6, 1));
+                          (window as any).homeToPlanet(planetPosition, Math.max(found.radius * 0.6, 1), found);
                         }
                       }, 100);
                     } else {
