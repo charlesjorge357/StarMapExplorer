@@ -247,24 +247,9 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
         <meshStandardMaterial 
-          color={
-            // Special handling for verdant worlds with textures
-            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
-              ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
-              : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) 
-                ? '#ffffff'  // White for all textured planets
-                : getPlanetColor(planet.type, planet.id || planet.name)  // Use seeded color variation
-          }
-          emissive={
-            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
-              ? '#000000'  // No emissive glow for verdant worlds with textures
-              : getPlanetGlow(planet.type, planet.id || planet.name)
-          }
-          emissiveIntensity={
-            planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
-              ? 0.0  // No emissive intensity for verdant worlds
-              : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) ? 0.1 : 0.2
-          }
+          color={materialColor}
+          emissive={materialEmissive}
+          emissiveIntensity={materialEmissiveIntensity}
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
