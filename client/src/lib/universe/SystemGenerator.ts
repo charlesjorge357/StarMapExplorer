@@ -457,6 +457,16 @@ export class SystemGenerator {
     }
   }
 
+  static hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  }
+
   static generateAsteroidBelts(planets: Planet[], star: any): AsteroidBelt[] {
     const belts: AsteroidBelt[] = [];
     const beltCount = Math.floor(Math.random() * 4) + 1; // 1-4 belts
