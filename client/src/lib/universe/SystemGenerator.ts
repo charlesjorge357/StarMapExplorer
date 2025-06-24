@@ -66,7 +66,7 @@ export class SystemGenerator {
   static ORBITAL_ZONES = {
     inner: { min: 0.3, max: 1.5 },
     habitable: { min: 0.8, max: 2.0 },
-    outer: { min: 2.5, max: 12.0 }
+    outer: { min: 2.5, max: 8.0 }
   };
 
   static seededRandom(seed: number): number {
@@ -189,20 +189,25 @@ export class SystemGenerator {
       'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
     ];
 
+    // Pre-calculate orbital zones to prevent exponential growth
+    const baseSpacing = 16 + star.radius * 8;
+    const maxOrbitRadius = baseSpacing * 6; // Cap maximum orbit distance
+    const orbitZones: number[] = [];
+    
+    for (let i = 0; i < planetCount; i++) {
+      if (i === 0) {
+        orbitZones.push(baseSpacing);
+      } else {
+        // Use additive spacing instead of multiplicative to prevent exponential growth
+        const additiveSpacing = baseSpacing * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base spacing
+        const newOrbit = orbitZones[i - 1] + additiveSpacing;
+        orbitZones.push(Math.min(newOrbit, maxOrbitRadius)); // Cap at maximum distance
+      }
+    }
+
     for (let i = 0; i < planetCount; i++) {
       const type = planetTypes[Math.floor(Math.random() * planetTypes.length)];
-
-      // Base orbital spacing increases with star size
-      const baseSpacing = 16 + star.radius * 8;
-
-      let orbitRadius: number;
-      if (i === 0) {
-        orbitRadius = baseSpacing;
-      } else {
-        const previousRadius: number = planets[i - 1].orbitRadius;
-        const spacing = 2.0 + Math.random() * 1.0; // 2x–3x farther
-        orbitRadius = previousRadius * spacing;
-      }
+      const orbitRadius = orbitZones[i];
 
       // Earth radii scaling (realistic)
       let radius: number;
@@ -508,7 +513,7 @@ export class SystemGenerator {
     if (planets.length > 0) {
       const lastPlanet = planets[planets.length - 1];
       const innerRadius = lastPlanet.orbitRadius * 1.5;
-      const outerRadius = lastPlanet.orbitRadius * 2.0;
+      const outerRadius = lastPlanet.orbitRadius * 1.8;
       console.log(`Outer belt: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`);
       potentialBelts.push({ innerRadius, outerRadius, position: 'outer' });
     }
