@@ -301,8 +301,104 @@ function App() {
     return () => document.removeEventListener('keydown', handleSystemNavigation);
   }, [selectedStar, currentView, systemCache]);
 
+  // Planet search function for system view
+  const searchPlanet = (planetName: string) => {
+    if (currentView === 'system' && currentSystem?.planets) {
+      const planet = currentSystem.planets.find((p: any) => 
+        p.name.toLowerCase().includes(planetName.toLowerCase())
+      );
+      
+      if (planet) {
+        setSelectedPlanet(planet);
+        console.log(`Found and selected planet: ${planet.name}`);
+        return planet;
+      }
+    }
+    return null;
+  };
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      {/* Planet Search UI for System View */}
+      {currentView === 'system' && (
+        <>
+          <button
+            onClick={() => setIsSearching(!isSearching)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 1000,
+              background: isSearching ? '#4CAF50' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '6px',
+              padding: '10px 15px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {isSearching ? 'Close Search' : 'Search Planets'}
+          </button>
+
+          {isSearching && (
+            <div style={{
+              position: 'fixed',
+              top: '70px',
+              right: '20px',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.9)',
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #333',
+              minWidth: '300px'
+            }}>
+              <div style={{ marginBottom: '10px', color: 'white', fontSize: '14px' }}>
+                Find Planet
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    const found = searchPlanet(searchQuery.trim());
+                    if (found) {
+                      setIsSearching(false);
+                      setSearchQuery('');
+                    } else {
+                      // Flash red border for not found
+                      e.currentTarget.style.borderColor = 'red';
+                      setTimeout(() => {
+                        e.currentTarget.style.borderColor = '#666';
+                      }, 500);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    setIsSearching(false);
+                    setSearchQuery('');
+                  }
+                }}
+                placeholder="Type planet name..."
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: '#222',
+                  color: 'white',
+                  border: '1px solid #666',
+                  borderRadius: '4px',
+                  outline: 'none',
+                  marginBottom: '10px'
+                }}
+                autoFocus
+              />
+              <div style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.4' }}>
+                Available: {currentSystem?.planets?.map((p: any) => p.name).join(', ') || 'No planets'}
+              </div>
+            </div>
+          )}
+        </>
+      )}
       <KeyboardControls map={controls}>
         <Canvas camera={{ position: [0, 0, 5], far: 500000, near: 0.1 }}>
           <color attach="background" args={["#000000"]} />
