@@ -146,6 +146,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 24, 2025: Fixed orbital zone generation that was creating exponentially distant orbits for small stars with many planets. Replaced multiplicative spacing (2-3x previous orbit) with additive spacing and maximum orbit caps to ensure realistic planetary system scales.
 - June 24, 2025: Implemented orbiting moons around planets in system view. Moons now orbit their parent planets with realistic motion, scaled sizing, and proper orbital mechanics. Enhanced moon generation with faster orbital speeds for better visibility in the 3D visualization.
 - June 24, 2025: Refined moon orbital system with tighter orbits, synchronized timing with planetary motion, 50% smaller moon sizes, and applied planetary offset pattern to prevent moon alignment. Moons now properly follow their planets without speed mismatches.
+- June 24, 2025: Rebuilt PlanetaryView component from scratch as Google Earth-like globe view. Features mouse drag rotation, scroll wheel zoom, high-detail planet rendering with proper textures, and atmospheric effects. Simplified to focus on globe navigation without surface features for now.
 
 ## User Preferences
 
