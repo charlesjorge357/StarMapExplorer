@@ -326,6 +326,11 @@ function App() {
           if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
             console.log(`Entering planetary view for ${selectedPlanet.name}`);
             setCurrentView('planetary');
+            
+            // Reset camera for planetary view
+            if ((window as any).homeToPlanet) {
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), selectedPlanet.radius * 20, null, false);
+            }
           } else {
             console.log(`${selectedPlanet.name} has no surface features to explore`);
           }
@@ -350,7 +355,7 @@ function App() {
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar, currentView, systemCache, selectedPlanet, setCurrentView, isSearching, currentSystem, setSelectedFeature]);
+  }, [selectedStar, currentView, systemCache, selectedPlanet, isSearching, currentSystem]);
 
   // Planet search function for system view
   const searchPlanet = (planetName: string) => {
@@ -518,13 +523,6 @@ function App() {
                     onPlanetClick={setSelectedPlanet}
                   />
                 </>
-              )}
-              {currentView === 'planetary' && selectedPlanet && (
-                <PlanetaryView 
-                  planet={selectedPlanet}
-                  selectedFeature={selectedFeature}
-                  onFeatureClick={setSelectedFeature}
-                />
               )}
               {currentView === 'planetary' && selectedPlanet && (
                 <PlanetaryView 
