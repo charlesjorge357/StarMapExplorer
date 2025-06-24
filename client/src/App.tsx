@@ -326,9 +326,12 @@ function App() {
       if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
         
-        // Calculate planet's current orbital position using same timing as SystemView
+        // Find the planet's index in the current system to get the correct orbital offset
+        const planetIndex = currentSystem?.planets?.findIndex(p => p.id === selectedPlanet.id) ?? 0;
+        
+        // Calculate planet's current orbital position using same timing and offset as SystemView
         const time = Date.now() * 0.0001;
-        const angle = time * selectedPlanet.orbitSpeed;
+        const angle = time * selectedPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
         const x = Math.cos(angle) * selectedPlanet.orbitRadius * 2;
         const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
         const planetPosition = new Vector3(x, 0, z);
@@ -336,7 +339,7 @@ function App() {
         // Call camera homing function with planet data for real-time positioning
         if ((window as any).homeToPlanet) {
           (window as any).homeToPlanet(planetPosition, Math.max(selectedPlanet.radius * 0.6, 1), selectedPlanet);
-          console.log(`Homing camera to ${selectedPlanet.name} at orbital position`);
+          console.log(`Homing camera to ${selectedPlanet.name} at orbital position (index: ${planetIndex})`);
         }
       }
     };
