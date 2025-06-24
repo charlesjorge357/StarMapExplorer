@@ -1,8 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import * as THREE from 'three';
 import { useUniverse } from '../../lib/stores/useUniverse';
+import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 
 
@@ -13,10 +13,10 @@ function getPlanetColor(type: string, planetId?: string): string {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
-
+  
   const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
-
+  
   const baseColors: Record<string, [number, number, number]> = {
     gas_giant: [30, 80, 50],
     frost_giant: [220, 60, 60],
@@ -27,7 +27,7 @@ function getPlanetColor(type: string, planetId?: string): string {
     ocean_world: [210, 80, 55],
     dead_world: [0, 0, 40]
   };
-
+  
   let [h, s, l] = baseColors[type] || [0, 0, 50];
   h = (h + variation * 360 + 360) % 360;
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
@@ -71,10 +71,10 @@ function getPlanetGlow(type: string, planetId?: string): string {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
-
+  
   const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 3000) - 0.5) * 0.2; // Less variation for glow
-
+  
   const baseGlows: Record<string, [number, number, number]> = {
     gas_giant: [15, 85, 55],   // Orange-red
     frost_giant: [200, 70, 70], // Blue
@@ -85,10 +85,10 @@ function getPlanetGlow(type: string, planetId?: string): string {
     ocean_world: [210, 85, 60], // Blue
     dead_world: [0, 0, 35]      // Dark gray
   };
-
+  
   let [h, s, l] = baseGlows[type] || [0, 0, 30];
   if (type === 'verdant_world') return '#000000'; // No glow for verdant worlds
-
+  
   h = (h + variation * 60 + 360) % 360;
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
 }
@@ -192,7 +192,7 @@ function PlanetMesh({
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[planet.radius * 10, 32, 32]} />
+        <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
         <meshStandardMaterial 
           color={
             // Special handling for verdant worlds with textures
@@ -249,23 +249,24 @@ function PlanetMesh({
 }
 
 export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
-  console.log('SystemView rendering with system:', system);
-  console.log('Planets have IDs:', system.planets.map(p => ({ name: p.name, id: p.id })));
-  console.log('Asteroid belts:', system.asteroidBelts?.length || 0);
+  const [selectedStar, setSelectedStar] = useState<any>(null);
+  const { selectStar } = useUniverse();
 
-  const { camera } = useThree();
-  const planets = system.planets || [];
-  const asteroidBelts = system.asteroidBelts || [];
-  const star = system.star;
+  const star = system.star || {
+    radius: 1,
+    spectralClass: 'G',
+    temperature: 5778,
+    name: 'Central Star'
+  };
 
   // Load all planetary textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
-
+  
   // Gaseous planet textures
   const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
-
+  
   // Terrestrial planet textures
   const marsTexture = useTexture('/textures/mars.jpg');
   const venusAtmosphereTexture = useTexture('/textures/venus_atmosphere.jpg');
@@ -275,15 +276,15 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
-
+  
   // Verdant world (Earth-like) textures with proper opacity
   const terrestrial1Texture = useTexture('/textures/terrestrial1.jpg');
   const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
   const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
-
+  
 
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
-
+  
   // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
     gas_giant: jupiterTexture, // Jupiter texture for gas giants
@@ -297,13 +298,13 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   };
 
   // Use planets from the cached system
-  const systemPlanets = system.planets || [];
-
+  const planets = system.planets || [];
+  
   // Debug: Log planet data to check IDs
-  if (systemPlanets.length > 0 && !systemPlanets[0].id) {
-    console.warn('Planets missing IDs:', systemPlanets);
-  } else if (systemPlanets.length > 0) {
-    console.log('Planets have IDs:', systemPlanets.map(p => ({ name: p.name, id: p.id })));
+  if (planets.length > 0 && !planets[0].id) {
+    console.warn('Planets missing IDs:', planets);
+  } else if (planets.length > 0) {
+    console.log('Planets have IDs:', planets.map(p => ({ name: p.name, id: p.id })));
   }
 
   // No longer needed - using currentSystem.star directly in UI
@@ -358,7 +359,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       </mesh>
 
       {/* Orbital paths (static) */}
-      {systemPlanets.map((planet) => (
+      {planets.map((planet) => (
         <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[planet.orbitRadius * 2 - 0.05, planet.orbitRadius * 2 + 0.05, 128]} />
           <meshBasicMaterial 
@@ -371,7 +372,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       ))}
 
       {/* Planets with selection functionality */}
-      {systemPlanets.map((planet, index) => (
+      {planets.map((planet, index) => (
         <PlanetMesh 
           key={planet.id} 
           planet={planet} 
@@ -381,90 +382,6 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           planetTextures={planetTextures}
         />
       ))}
-
-      {/* Asteroid Belts */}
-      {system.asteroidBelts && system.asteroidBelts.map((belt) => (
-        <AsteroidBeltComponent key={belt.id} belt={belt} />
-      ))}
-
-
     </group>
-  );
-}
-
-function AsteroidBeltComponent({ belt }: { belt: any }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-
-  useEffect(() => {
-    console.log('Creating asteroid belt:', belt.name, 'with', belt.asteroidCount, 'asteroids');
-    console.log('Belt radius:', belt.innerRadius, 'to', belt.outerRadius);
-
-    if (!meshRef.current) return;
-
-    const matrices = [];
-    const dummy = new THREE.Object3D();
-
-    // Use deterministic random for consistent positioning
-    let seed = belt.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const seededRandom = () => {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    };
-
-    // Generate asteroid positions in a ring
-    for (let i = 0; i < belt.asteroidCount; i++) {
-      // Distribute asteroids evenly around the ring with some randomness
-      const baseAngle = (Math.PI * 2 * i) / belt.asteroidCount;
-      const angleVariation = (seededRandom() - 0.5) * 0.8;
-      const angle = baseAngle + angleVariation;
-
-      const radiusVariation = seededRandom() * (belt.outerRadius - belt.innerRadius);
-      const radius = (belt.innerRadius + radiusVariation) * 2; // Scale to match planet orbits
-
-      // Add some vertical variation
-      const y = (seededRandom() - 0.5) * 3;
-
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-
-      // Varied asteroid sizes
-      const scale = 0.3 + seededRandom() * 0.8;
-      dummy.position.set(x, y, z);
-      dummy.rotation.set(
-        seededRandom() * Math.PI * 2,
-        seededRandom() * Math.PI * 2,
-        seededRandom() * Math.PI * 2
-      );
-      dummy.scale.setScalar(scale);
-      dummy.updateMatrix();
-
-      matrices.push(dummy.matrix.clone());
-    }
-
-    // Apply matrices to instanced mesh
-    for (let i = 0; i < matrices.length; i++) {
-      meshRef.current.setMatrixAt(i, matrices[i]);
-    }
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    meshRef.current.computeBoundingSphere();
-  }, [belt]);
-
-  return (
-    <instancedMesh 
-      ref={meshRef} 
-      args={[undefined, undefined, belt.asteroidCount]}
-      frustumCulled={false}
-    >
-      <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial 
-        color="#999999"
-        roughness={0.9}
-        metalness={0.1}
-        emissive="#222222"
-        emissiveIntensity={0.05}
-        side={THREE.DoubleSide}
-      />
-    </instancedMesh>
   );
 }

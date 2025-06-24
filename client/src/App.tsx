@@ -11,7 +11,6 @@ import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
-import { PlanetType } from "../shared/schema";
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -190,10 +189,83 @@ function App() {
     setShowSelector(false);
   };
 
-  // Use SystemGenerator for consistent system generation
-  const generateSystemForStar = (star: SimpleStar) => {
-    const seed = star.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return SystemGenerator.generateSystem(star, seed);
+  // Function to generate planets for a star (moved from SystemView)
+  const generatePlanetsForStar = (star: SimpleStar) => {
+    const planets = [];
+
+    // Fewer planets for larger stars (they're more disruptive to planet formation)
+    let maxPlanets = 8;
+    if (star.radius > 2) maxPlanets = 4;
+    if (star.radius > 5) maxPlanets = 2;
+
+    const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
+
+    const planetTypes: PlanetType[] = [
+      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
+      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
+    ];
+
+    for (let i = 0; i < planetCount; i++) {
+      const type = planetTypes[Math.floor(Math.random() * planetTypes.length)];
+
+      // Base orbital spacing increases with star size
+      const baseSpacing = 16 + star.radius * 8;
+
+      let orbitRadius: number;
+      if (i === 0) {
+        orbitRadius = baseSpacing;
+      } else {
+        const previousRadius: number = planets[i - 1].orbitRadius;
+        const spacing = 2.0 + Math.random() * 1.0; // 2x–3x farther
+        orbitRadius = previousRadius * spacing;
+      }
+
+      // Earth radii scaling (realistic)
+      let radius: number;
+      switch (type) {
+        case 'gas_giant':
+          radius = 8 + Math.random() * 4; // 8–12 R⊕
+          break;
+        case 'frost_giant':
+          radius = 4 + Math.random() * 3; // 4–7 R⊕
+          break;
+        case 'verdant_world':
+        case 'acidic_world':
+        case 'ocean_world':
+        case 'arid_world':
+          radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
+          break;
+        case 'nuclear_world':
+        case 'dead_world':
+          radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
+          break;
+        default:
+          radius = 1.0;
+      }
+
+      // Mass = radius³ × density factor (gas giants less dense)
+      const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
+      const mass = Math.pow(radius, 3) * densityFactor;
+
+      // Simplified temperature model
+      const temperature = 200 + Math.random() * 600;
+
+      planets.push({
+        id: `planet-${star.id}-${i}`,
+        name: `${star.name} ${String.fromCharCode(945 + i)}`,
+        type,
+        radius,
+        mass,
+        orbitRadius,
+        orbitSpeed: 0.05 + Math.random() * 0.15,
+        rotationSpeed: 0.01 + Math.random() * 0.05,
+        temperature,
+        atmosphere: generateAtmosphere(type),
+        position: [orbitRadius, 0, 0] as [number, number, number]
+      });
+    }
+
+    return planets;
   };
 
 
@@ -252,11 +324,14 @@ function App() {
         // Check if system already exists in cache
         let system = systemCache.get(selectedStar.id);
         if (!system) {
-          // Generate new system using SystemGenerator
-          system = generateSystemForStar(selectedStar);
-          system.star = selectedStar; // Add star reference
+          // Generate new system and cache it
+          system = {
+            starId: selectedStar.id,
+            star: selectedStar,
+            planets: generatePlanetsForStar(selectedStar)
+          };
           setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
-          console.log(`Generated new system for ${selectedStar.name} with ${system.planets.length} planets and ${system.asteroidBelts.length} asteroid belts`);
+          console.log(`Generated new system for ${selectedStar.name}`);
         } else {
           console.log(`Using cached system for ${selectedStar.name}`);
         }
