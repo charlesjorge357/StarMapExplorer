@@ -21,9 +21,9 @@ function MoonMesh({
       const time = Date.now() * 0.001;
       const angle = time * moon.orbitSpeed;
       
-      // Moon orbit relative to planet
-      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 3;
-      const moonZ = planetPosition[2] + Math.sin(angle) * moon.orbitRadius * planetRadius * 3;
+      // Moon orbit relative to planet with much tighter radius
+      const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2; // Reduced from 3 to 1.2
+      const moonZ = planetPosition[2] + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.2;
       const moonY = planetPosition[1];
 
       moonRef.current.position.set(moonX, moonY, moonZ);
@@ -295,15 +295,15 @@ function PlanetMesh({
         </mesh>
       )}
 
-      {/* Render moons orbiting this planet */}
-      {planet.moons && planet.moons.length > 0 && planet.moons.map((moon: any, moonIndex: number) => (
+      {/* Render moons orbiting this planet - use real-time planet position */}
+      {planet.moons && planet.moons.length > 0 && planetRef.current && planet.moons.map((moon: any, moonIndex: number) => (
         <MoonMesh 
           key={`${planet.id}-moon-${moonIndex}`}
           moon={moon}
           planetPosition={[
-            planetRef.current?.position.x || 0,
-            planetRef.current?.position.y || 0,
-            planetRef.current?.position.z || 0
+            planetRef.current.position.x,
+            planetRef.current.position.y,
+            planetRef.current.position.z
           ]}
           planetRadius={planet.radius * 0.6}
         />

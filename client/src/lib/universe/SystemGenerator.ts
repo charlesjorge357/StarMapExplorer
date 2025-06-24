@@ -391,8 +391,8 @@ export class SystemGenerator {
         id: `${planetName}-moon-${j}`,
         name: moonName,
         radius: 0.1 + this.seededRandom(seed + j + 10) * 0.4, // Small moons
-        orbitRadius: 2 + j * 1.5, // Spread out moons
-        orbitSpeed: 0.8 + this.seededRandom(seed + j + 20) * 0.4 // Faster orbit for visibility
+        orbitRadius: 1.5 + j * 0.8, // Much tighter orbits
+        orbitSpeed: 1.2 + this.seededRandom(seed + j + 20) * 0.8 // Faster orbit for visibility
       });
     }
     
