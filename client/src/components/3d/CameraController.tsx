@@ -24,64 +24,72 @@ export function CameraController() {
   const boostStartTimeRef = useRef<number | null>(null);
   const lastBoostStateRef = useRef(false);
   const lastPositionRef = useRef(new Vector3());
+  const isOrbitalTrackingRef = useRef(false);
+  const orbitalTargetRef = useRef<any>(null);
 
-  // Camera homing functionality with frame-synced positioning
-  const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any) => {
+  // Camera homing functionality with orbital tracking option
+  const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any, enableOrbitalTracking = false) => {
     if (!camera) return;
+    
+    if (enableOrbitalTracking && planetData) {
+      // Enable continuous orbital tracking
+      isOrbitalTrackingRef.current = true;
+      orbitalTargetRef.current = planetData;
+      console.log(`Starting orbital tracking for ${planetData.name}`);
+      return;
+    }
+    
+    // Disable orbital tracking
+    isOrbitalTrackingRef.current = false;
+    orbitalTargetRef.current = null;
     
     const distance = Math.max(planetRadius * 25, 15);
     
-    // Create a continuous tracking function that updates with the frame
-    const trackingFunction = () => {
-      if (!planetData) {
-        // Simple positioning for non-orbiting objects
-        const direction = new Vector3(1, 0.4, 1).normalize();
-        const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
-        camera.position.copy(targetPosition);
-        camera.rotation.set(0, 0, 0);
-        camera.rotation.order = 'YXZ';
-        camera.up.set(0, 1, 0);
-        camera.lookAt(planetPosition);
-        camera.updateMatrix();
-        camera.updateMatrixWorld(true);
-        return;
-      }
-      
-      // Use the same timing and offset as SystemView planet animation
-      const time = Date.now() * 0.0001;
-      const planetIndex = planetData.index || 0; // Get planet index for offset
-      const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8); // Include index offset
-      const currentPlanetPos = new Vector3(
-        Math.cos(angle) * planetData.orbitRadius * 2,
-        0,
-        Math.sin(angle) * planetData.orbitRadius * 2
-      );
-      
-      const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
-      
-      let direction: Vector3;
-      if (orbitalRadius > 0.1) {
-        const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
-        direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
-      } else {
-        direction = new Vector3(1, 0.4, 1).normalize();
-      }
-      
-      const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
-      
+    if (!planetData) {
+      // Simple positioning for non-orbiting objects
+      const direction = new Vector3(1, 0.4, 1).normalize();
+      const targetPosition = new Vector3().addVectors(planetPosition, direction.multiplyScalar(distance));
       camera.position.copy(targetPosition);
       camera.rotation.set(0, 0, 0);
       camera.rotation.order = 'YXZ';
       camera.up.set(0, 1, 0);
-      camera.lookAt(currentPlanetPos);
+      camera.lookAt(planetPosition);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
-    };
+      return;
+    }
     
-    // Execute immediately
-    trackingFunction();
+    // One-time positioning with offset
+    const time = Date.now() * 0.0001;
+    const planetIndex = planetData.index || 0;
+    const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+    const currentPlanetPos = new Vector3(
+      Math.cos(angle) * planetData.orbitRadius * 2,
+      0,
+      Math.sin(angle) * planetData.orbitRadius * 2
+    );
     
-    console.log(`Camera homed to planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
+    const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
+    
+    let direction: Vector3;
+    if (orbitalRadius > 0.1) {
+      const radialDirection = new Vector3(currentPlanetPos.x, 0, currentPlanetPos.z).normalize();
+      direction = radialDirection.clone().multiplyScalar(1.2).add(new Vector3(0, 0.6, 0)).normalize();
+    } else {
+      direction = new Vector3(1, 0.4, 1).normalize();
+    }
+    
+    const targetPosition = new Vector3().addVectors(currentPlanetPos, direction.multiplyScalar(distance));
+    
+    camera.position.copy(targetPosition);
+    camera.rotation.set(0, 0, 0);
+    camera.rotation.order = 'YXZ';
+    camera.up.set(0, 1, 0);
+    camera.lookAt(currentPlanetPos);
+    camera.updateMatrix();
+    camera.updateMatrixWorld(true);
+    
+    console.log(`Camera positioned at planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
   };
 
   // Expose camera homing to window for external access
@@ -180,6 +188,42 @@ export function CameraController() {
       camera.position.lerp(position, delta * 2);
       camera.lookAt(target);
       return;
+    }
+
+    // Handle orbital tracking first - direct planet movement copying
+    if (isOrbitalTrackingRef.current && orbitalTargetRef.current) {
+      const planetData = orbitalTargetRef.current;
+      const time = Date.now() * 0.0001;
+      const planetIndex = planetData.index || 0;
+      const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+      
+      // Calculate exact planet position (same as SystemView)
+      const planetPos = new Vector3(
+        Math.cos(angle) * planetData.orbitRadius * 2,
+        0,
+        Math.sin(angle) * planetData.orbitRadius * 2
+      );
+      
+      // Position camera to follow planet but offset for viewing
+      const distance = Math.max(planetData.radius * 25, 20);
+      const cameraOffsetAngle = angle + Math.PI * 0.25; // Camera leads slightly
+      
+      // Calculate camera position following the orbital path
+      const cameraPos = new Vector3(
+        Math.cos(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance),
+        planetData.orbitRadius * 0.6, // Elevated view
+        Math.sin(cameraOffsetAngle) * (planetData.orbitRadius * 2 + distance)
+      );
+      
+      // Directly copy the calculated position (no lerp for immediate tracking)
+      camera.position.copy(cameraPos);
+      
+      // Always look at the planet
+      camera.lookAt(planetPos);
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+      
+      return; // Skip manual controls during tracking
     }
 
     const controls = get();
