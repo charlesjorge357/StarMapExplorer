@@ -199,7 +199,7 @@ export class SystemGenerator {
         orbitZones.push(baseSpacing);
       } else {
         // Use additive spacing instead of multiplicative to prevent exponential growth
-        const additiveSpacing = baseSpacing * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base spacing
+        const additiveSpacing = baseSpacing * (0.8 + Math.random() * 0.8); // 0.8x to 1.4x base spacing
         const newOrbit = orbitZones[i - 1] + additiveSpacing;
         orbitZones.push(Math.min(newOrbit, maxOrbitRadius)); // Cap at maximum distance
       }
