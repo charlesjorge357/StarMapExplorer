@@ -7,18 +7,30 @@ import { useThree } from '@react-three/fiber';
 
 
 // Helper functions for planet materials
-function getPlanetColor(type: string): string {
-  const colors = {
-    gas_giant: '#FF7043',
-    frost_giant: '#5DADE2', 
-    arid_world: '#D4A574',
-    verdant_world: '#ffffff', // White for pure texture colors
-    acidic_world: '#FFC107',
-    nuclear_world: '#F44336',
-    ocean_world: '#2196F3',
-    dead_world: '#616161'
+function getPlanetColor(type: string, planetId: string): string {
+  // Use the same color variation system as SystemGenerator
+  const seededRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
   };
-  return colors[type as keyof typeof colors] || '#888888';
+  
+  const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
+  
+  const baseColors: Record<string, [number, number, number]> = {
+    gas_giant: [30, 80, 50],
+    frost_giant: [220, 60, 60],
+    arid_world: [30, 50, 45],
+    verdant_world: [125, 70, 45],
+    acidic_world: [55, 90, 60],
+    nuclear_world: [10, 90, 50],
+    ocean_world: [210, 80, 55],
+    dead_world: [0, 0, 40]
+  };
+  
+  let [h, s, l] = baseColors[type] || [0, 0, 50];
+  h = (h + variation * 360 + 360) % 360;
+  return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
 }
 
 function getPlanetTexture(type: string, planetTextures: any, textureIndex: number): any {
@@ -51,35 +63,34 @@ function getPlanetTextureForMaterial(planetType: string, planetTextures: any, pl
   return textures;
 }
 
-function getPlanetGlow(type: string): string {
-  const glows = {
-    gas_giant: '#FF5722',
-    frost_giant: '#5DADE2', 
-    arid_world: '#D4AF37',
-    verdant_world: '#ffffff', // No colored glow for pure texture display
-    acidic_world: '#FF9800',
-    nuclear_world: '#D32F2F',
-    ocean_world: '#1976D2',
-    dead_world: '#424242'
-  };
-  return glows[type as keyof typeof glows] || '#444444';
-}
 
-function getMaterialSettings(planetType: string): { color: string; transparent: boolean; opacity: number } {
-  switch (planetType) {
-    case 'verdant_world':
-      return { color: '#ffffff', transparent: false, opacity: 1.0 }; // Pure white to show texture colors
-    case 'arid_world':
-    case 'ocean_world':
-    case 'dead_world':
-    case 'nuclear_world':
-    case 'gas_giant':
-    case 'frost_giant':
-    case 'acidic_world':
-      return { color: getPlanetColor(planetType), transparent: false, opacity: 1.0 }; // Colored tint with texture
-    default:
-      return { color: getPlanetColor(planetType), transparent: false, opacity: 1.0 };
-  }
+
+function getPlanetGlow(type: string, planetId: string): string {
+  // Generate varied glow colors based on planet type and ID
+  const seededRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const variation = (seededRandom(seed + 3000) - 0.5) * 0.2; // Less variation for glow
+  
+  const baseGlows: Record<string, [number, number, number]> = {
+    gas_giant: [15, 85, 55],   // Orange-red
+    frost_giant: [200, 70, 70], // Blue
+    arid_world: [45, 75, 50],   // Gold
+    verdant_world: [0, 0, 0],   // No glow for textured verdant worlds
+    acidic_world: [35, 90, 55], // Orange
+    nuclear_world: [0, 90, 45], // Red
+    ocean_world: [210, 85, 60], // Blue
+    dead_world: [0, 0, 35]      // Dark gray
+  };
+  
+  let [h, s, l] = baseGlows[type] || [0, 0, 30];
+  if (type === 'verdant_world') return '#000000'; // No glow for verdant worlds
+  
+  h = (h + variation * 60 + 360) % 360;
+  return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
 }
 
 
@@ -189,12 +200,12 @@ function PlanetMesh({
               ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
               : getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) 
                 ? '#ffffff'  // White for all textured planets
-                : getPlanetColor(planet.type)  // Fallback color for non-textured planets
+                : getPlanetColor(planet.type, planet.id)  // Use seeded color variation
           }
           emissive={
             planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
               ? '#000000'  // No emissive glow for verdant worlds with textures
-              : getPlanetGlow(planet.type)
+              : getPlanetGlow(planet.type, planet.id)
           }
           emissiveIntensity={
             planet.type === 'verdant_world' && getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)
