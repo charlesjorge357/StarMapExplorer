@@ -299,6 +299,14 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // Use planets from the cached system
   const planets = system.planets || [];
+  const asteroidBelts = system.asteroidBelts || [];
+  
+  // Debug: Log system data
+  console.log('System data:', {
+    planets: planets.length,
+    asteroidBelts: asteroidBelts.length,
+    belts: asteroidBelts
+  });
   
   // Debug: Log planet data to check IDs
   if (planets.length > 0 && !planets[0].id) {
@@ -381,6 +389,44 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           onPlanetClick={onPlanetClick}
           planetTextures={planetTextures}
         />
+      ))}
+
+      {/* Asteroid belts */}
+      {asteroidBelts.map((belt) => (
+        <group key={belt.id}>
+          {/* Belt ring visualization */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry 
+              args={[
+                belt.innerRadius * 2, 
+                belt.outerRadius * 2, 
+                64
+              ]} 
+            />
+            <meshBasicMaterial 
+              color="#8B4513" 
+              transparent 
+              opacity={0.3}
+              side={2}
+            />
+          </mesh>
+          
+          {/* Individual asteroids (simplified as small dots) */}
+          {Array.from({ length: Math.min(belt.asteroidCount / 10, 100) }, (_, i) => {
+            const angle = (i / (belt.asteroidCount / 10)) * Math.PI * 2;
+            const radius = belt.innerRadius + Math.random() * (belt.outerRadius - belt.innerRadius);
+            const x = Math.cos(angle) * radius * 2;
+            const z = Math.sin(angle) * radius * 2;
+            const y = (Math.random() - 0.5) * 2;
+            
+            return (
+              <mesh key={i} position={[x, y, z]}>
+                <sphereGeometry args={[0.2, 4, 4]} />
+                <meshBasicMaterial color="#666666" />
+              </mesh>
+            );
+          })}
+        </group>
       ))}
     </group>
   );

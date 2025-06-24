@@ -290,6 +290,7 @@ export class SystemGenerator {
 
     // Generate asteroid belts in orbital gaps
     const asteroidBelts = this.generateAsteroidBelts(planets, star);
+    console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
 
     return {
       id: `system-${star.id}`,
@@ -320,6 +321,7 @@ export class SystemGenerator {
   static generateAsteroidBelts(planets: Planet[], star: any): AsteroidBelt[] {
     const belts: AsteroidBelt[] = [];
     const beltCount = Math.floor(Math.random() * 4) + 1; // 1-4 belts
+    console.log(`Attempting to generate ${beltCount} belts for ${star.name} with ${planets.length} planets`);
 
     // Find potential belt locations in orbital gaps
     const potentialBelts = [];
@@ -330,7 +332,10 @@ export class SystemGenerator {
       const innerRadius = firstPlanet.orbitRadius * 0.5;
       const outerRadius = firstPlanet.orbitRadius * 0.8;
       if (innerRadius > 8) { // Only if there's enough space
+        console.log(`Inner belt possible: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`);
         potentialBelts.push({ innerRadius, outerRadius, position: 'inner' });
+      } else {
+        console.log(`Inner belt too close: ${innerRadius.toFixed(1)} < 8`);
       }
     }
 
@@ -343,7 +348,10 @@ export class SystemGenerator {
       if (gap > 20) { // Large enough gap for asteroid belt
         const innerRadius = currentPlanet.orbitRadius + gap * 0.3;
         const outerRadius = currentPlanet.orbitRadius + gap * 0.7;
+        console.log(`Gap ${i}: ${gap.toFixed(1)} units between ${currentPlanet.name} and ${nextPlanet.name}`);
         potentialBelts.push({ innerRadius, outerRadius, position: `gap-${i}` });
+      } else {
+        console.log(`Gap ${i}: ${gap.toFixed(1)} units too small for belt between ${currentPlanet.name} and ${nextPlanet.name}`);
       }
     }
 
@@ -352,13 +360,18 @@ export class SystemGenerator {
       const lastPlanet = planets[planets.length - 1];
       const innerRadius = lastPlanet.orbitRadius * 1.5;
       const outerRadius = lastPlanet.orbitRadius * 2.0;
+      console.log(`Outer belt: ${innerRadius.toFixed(1)} - ${outerRadius.toFixed(1)}`);
       potentialBelts.push({ innerRadius, outerRadius, position: 'outer' });
     }
 
+    console.log(`Found ${potentialBelts.length} potential belt locations:`, potentialBelts);
+    
     // Select random belts from potential locations
     const selectedBelts = potentialBelts
       .sort(() => Math.random() - 0.5)
       .slice(0, Math.min(beltCount, potentialBelts.length));
+    
+    console.log(`Selected ${selectedBelts.length} belts to generate`);
 
     selectedBelts.forEach((belt, index) => {
       const density = 0.3 + Math.random() * 0.7; // 0.3-1.0 density
