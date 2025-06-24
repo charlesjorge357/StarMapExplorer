@@ -392,7 +392,7 @@ export class SystemGenerator {
         name: moonName,
         radius: 0.1 + this.seededRandom(seed + j + 10) * 0.4, // Small moons
         orbitRadius: 1.5 + j * 0.8, // Much tighter orbits
-        orbitSpeed: 0.3 + this.seededRandom(seed + j + 20) * 0.4 // Moon speed relative to planet timing
+        orbitSpeed: 0.3 + this.seededRandom(seed + j + 20) * 0.35 // Moon speed relative to planet timing
       });
     }
     

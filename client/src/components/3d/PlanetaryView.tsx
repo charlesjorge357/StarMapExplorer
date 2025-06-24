@@ -185,11 +185,13 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
   // Position camera for planetary view on component mount
   useEffect(() => {
     if (planet && camera) {
-      console.log(`Setting camera for planetary view of ${planet.name}`);
-      camera.position.set(0, 0, planetRadius * 2.5);
+      console.log(`Setting camera for planetary view of ${planet.name}, radius: ${planetRadius}`);
+      const cameraDistance = planetRadius * 2.5;
+      camera.position.set(0, 0, cameraDistance);
       camera.lookAt(0, 0, 0);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
+      console.log(`Camera positioned at distance ${cameraDistance} from planet`);
     }
   }, [camera, planet, planetRadius]);
 

@@ -367,11 +367,13 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const planets = system.planets || [];
   const asteroidBelts = system.asteroidBelts || [];
   
-  // Debug moon data
-  console.log('SystemView planets with moons:', planets.map(p => ({ 
+  // Debug planet data including surface features
+  console.log('SystemView planets data:', planets.map(p => ({ 
     name: p.name, 
-    moonCount: p.moons?.length || 0, 
-    moons: p.moons 
+    type: p.type,
+    moonCount: p.moons?.length || 0,
+    surfaceFeatureCount: p.surfaceFeatures?.length || 0,
+    surfaceFeatures: p.surfaceFeatures?.map(f => f.name) || []
   })));
   
   // Debug: Log system data
