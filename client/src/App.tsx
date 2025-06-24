@@ -163,6 +163,7 @@ function App() {
   const [currentSystem, setCurrentSystem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
@@ -188,10 +189,34 @@ function App() {
     return () => clearInterval(interval);
   }, [currentView]);
 
+  // Cleanup audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+  }, [audio]);
+
 
 
   const handleStart = () => {
     setShowSelector(false);
+    
+    // Start background music
+    const backgroundMusic = new Audio('/audio/galactic-theme.mp3');
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0.3; // Set to 30% volume
+    
+    // Attempt to play music (modern browsers may require user interaction)
+    backgroundMusic.play().catch(error => {
+      console.log('Audio autoplay prevented by browser:', error);
+      // Store audio reference for later manual play if needed
+    });
+    
+    setAudio(backgroundMusic);
+    console.log('Started galactic background music');
   };
 
   // Use SystemGenerator for consistent planet generation
