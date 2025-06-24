@@ -300,10 +300,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const systemPlanets = system.planets || [];
 
   // Debug: Log planet data to check IDs
-  if (planets.length > 0 && !planets[0].id) {
-    console.warn('Planets missing IDs:', planets);
-  } else if (planets.length > 0) {
-    console.log('Planets have IDs:', planets.map(p => ({ name: p.name, id: p.id })));
+  if (systemPlanets.length > 0 && !systemPlanets[0].id) {
+    console.warn('Planets missing IDs:', systemPlanets);
+  } else if (systemPlanets.length > 0) {
+    console.log('Planets have IDs:', systemPlanets.map(p => ({ name: p.name, id: p.id })));
   }
 
   // No longer needed - using currentSystem.star directly in UI
