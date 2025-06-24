@@ -341,8 +341,11 @@ function App() {
   // Add keyboard handler for Enter key planet homing
   useEffect(() => {
     const handlePlanetHoming = (event: KeyboardEvent) => {
+      console.log(`Key pressed: ${event.key}, currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}`);
+      
       if (event.key === 'f' && currentView === 'system' && selectedPlanet) {
         event.preventDefault();
+        console.log(`F key detected with planet ${selectedPlanet.name}, features: ${selectedPlanet.surfaceFeatures?.length}`);
         
         // Check if planet has surface features for planetary view
         if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
