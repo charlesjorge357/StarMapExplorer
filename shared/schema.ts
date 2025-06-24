@@ -93,6 +93,7 @@ export interface StarSystem {
   starId: string;
   planets: Planet[];
   asteroidBelts: AsteroidBelt[];
+  star?: any;
 }
 
 export interface AsteroidBelt {

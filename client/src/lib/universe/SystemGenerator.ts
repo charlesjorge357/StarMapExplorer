@@ -34,11 +34,21 @@ type PlanetType =
   | 'ocean_world' 
   | 'dead_world';
 
+interface AsteroidBelt {
+  id: string;
+  name: string;
+  innerRadius: number;
+  outerRadius: number;
+  density: number;
+  asteroidCount: number;
+}
+
 interface StarSystem {
   id: string;
   starId: string;
   star?: any;
   planets: Planet[];
+  asteroidBelts: AsteroidBelt[];
 }
 
 export class SystemGenerator {
@@ -278,11 +288,15 @@ export class SystemGenerator {
       });
     }
 
+    // Generate asteroid belts in orbital gaps
+    const asteroidBelts = this.generateAsteroidBelts(planets, star);
+
     return {
       id: `system-${star.id}`,
       starId: star.id,
       star,
-      planets
+      planets,
+      asteroidBelts
     };
   }
 
@@ -301,6 +315,66 @@ export class SystemGenerator {
     let [h, s, l] = baseColors[type];
     h = (h + variation * 360 + 360) % 360;
     return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
+  }
+
+  static generateAsteroidBelts(planets: Planet[], star: any): AsteroidBelt[] {
+    const belts: AsteroidBelt[] = [];
+    const beltCount = Math.floor(Math.random() * 4) + 1; // 1-4 belts
+
+    // Find potential belt locations in orbital gaps
+    const potentialBelts = [];
+    
+    // Belt before first planet
+    if (planets.length > 0) {
+      const firstPlanet = planets[0];
+      const innerRadius = firstPlanet.orbitRadius * 0.5;
+      const outerRadius = firstPlanet.orbitRadius * 0.8;
+      if (innerRadius > 8) { // Only if there's enough space
+        potentialBelts.push({ innerRadius, outerRadius, position: 'inner' });
+      }
+    }
+
+    // Belts between planets
+    for (let i = 0; i < planets.length - 1; i++) {
+      const currentPlanet = planets[i];
+      const nextPlanet = planets[i + 1];
+      const gap = nextPlanet.orbitRadius - currentPlanet.orbitRadius;
+      
+      if (gap > 20) { // Large enough gap for asteroid belt
+        const innerRadius = currentPlanet.orbitRadius + gap * 0.3;
+        const outerRadius = currentPlanet.orbitRadius + gap * 0.7;
+        potentialBelts.push({ innerRadius, outerRadius, position: `gap-${i}` });
+      }
+    }
+
+    // Belt after last planet
+    if (planets.length > 0) {
+      const lastPlanet = planets[planets.length - 1];
+      const innerRadius = lastPlanet.orbitRadius * 1.5;
+      const outerRadius = lastPlanet.orbitRadius * 2.0;
+      potentialBelts.push({ innerRadius, outerRadius, position: 'outer' });
+    }
+
+    // Select random belts from potential locations
+    const selectedBelts = potentialBelts
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(beltCount, potentialBelts.length));
+
+    selectedBelts.forEach((belt, index) => {
+      const density = 0.3 + Math.random() * 0.7; // 0.3-1.0 density
+      const asteroidCount = Math.floor(density * 500 + Math.random() * 1000); // 150-1500 asteroids
+      
+      belts.push({
+        id: `belt-${star.id}-${index}`,
+        name: `${star.name} Asteroid Belt ${String.fromCharCode(65 + index)}`, // A, B, C, D
+        innerRadius: belt.innerRadius,
+        outerRadius: belt.outerRadius,
+        density,
+        asteroidCount
+      });
+    });
+
+    return belts;
   }
 
   static getStarColor(spectralClass: string): string {
