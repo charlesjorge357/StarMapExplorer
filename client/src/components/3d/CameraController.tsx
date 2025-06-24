@@ -146,7 +146,7 @@ export function CameraController() {
     
     // Calculate offset position - place camera at distance with slight offset
     const starPos = new Vector3(star.position[0], star.position[1], star.position[2]);
-    const distance = 150; // Distance from star
+    const distance = 50; // Closer distance from star
     const offsetDirection = new Vector3(1, 0.5, 1).normalize(); // Slight upward and side offset
     
     const cameraPosition = starPos.clone().add(offsetDirection.multiplyScalar(distance));

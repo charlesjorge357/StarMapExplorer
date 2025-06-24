@@ -342,11 +342,12 @@ function App() {
           setSelectedPlanet(null);
           (window as any).systemStarSelected = false;
           
-          // Position camera with offset from last visited star
+          // Position camera with offset from last visited star and select it
           setTimeout(() => {
             if (lastVisitedStar && (window as any).setCameraLookingAtStar) {
               console.log(`Positioning camera to look at ${lastVisitedStar.name}`);
               (window as any).setCameraLookingAtStar(lastVisitedStar);
+              setSelectedStar(lastVisitedStar); // Keep the star selected
             }
           }, 100); // Small delay to ensure view change is processed
         }
