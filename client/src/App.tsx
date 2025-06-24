@@ -330,9 +330,21 @@ function App() {
 
       if (event.key === 'Backspace') {
         if (currentView === 'planetary') {
-          console.log('Returning to system view...');
+          console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
           setCurrentView('system');
           setSelectedFeature(null);
+          
+          // Keep planet selected and focus camera on it
+          if (selectedPlanet && (window as any).homeToPlanet) {
+            setTimeout(() => {
+              const planetPosition = new Vector3(
+                selectedPlanet.position[0],
+                selectedPlanet.position[1], 
+                selectedPlanet.position[2]
+              );
+              (window as any).homeToPlanet(planetPosition, selectedPlanet.radius * 30, selectedPlanet, true);
+            }, 100);
+          }
         } else if (currentView === 'system') {
           console.log('Returning to galactic view...');
 
