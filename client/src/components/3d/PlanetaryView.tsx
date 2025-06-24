@@ -143,6 +143,13 @@ function SurfaceFeatureMesh({ feature, planetRadius, isSelected, onClick }: Surf
 }
 
 export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
+  console.log('PlanetaryView render:', {
+    planet: planet?.name,
+    planetType: planet?.type,
+    surfaceFeatures: planet?.surfaceFeatures?.length,
+    selectedFeature: selectedFeature?.name,
+    planetRadius: planet?.radius
+  });
 
   const { camera } = useThree();
   const planetRef = useRef<THREE.Mesh>(null);
@@ -167,9 +174,11 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
   let texture;
   try {
-    texture = planet ? useTexture(getTextureForPlanet(planet.type, planet.textureIndex || 0)) : null;
+    const texturePath = getTextureForPlanet(planet.type, planet.textureIndex || 0);
+    console.log(`Loading texture for ${planet.name}: ${texturePath}`);
+    texture = useTexture(texturePath);
   } catch (error) {
-    console.warn(`Failed to load texture for ${planet?.type}:`, error);
+    console.error(`Failed to load texture for ${planet?.type}:`, error);
     texture = null;
   }
 
@@ -185,9 +194,36 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
   }, [camera, planet, planetRadius]);
 
   if (!planet) {
-    console.warn('PlanetaryView: No planet data provided');
+    console.error('PlanetaryView: No planet data provided');
     return null;
   }
+
+  if (!planet.surfaceFeatures || planet.surfaceFeatures.length === 0) {
+    console.warn(`PlanetaryView: Planet ${planet.name} has no surface features`);
+    return (
+      <group>
+        <mesh ref={planetRef}>
+          <sphereGeometry args={[planetRadius, 64, 64]} />
+          <meshStandardMaterial 
+            map={texture}
+            color="#ffffff"
+            roughness={0.8}
+          />
+        </mesh>
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[5, 5, 5]} intensity={0.8} />
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshBasicMaterial color="red" />
+        </mesh>
+      </group>
+    );
+  }
+
+  console.log(`PlanetaryView: Rendering ${planet.name} with ${planet.surfaceFeatures.length} features`);
+  planet.surfaceFeatures.forEach((feature, i) => {
+    console.log(`Feature ${i}: ${feature.name} at [${feature.position[0]}, ${feature.position[1]}] type: ${feature.type}`);
+  });
 
   // Handle background clicks to deselect features
   const handleBackgroundClick = (event: any) => {

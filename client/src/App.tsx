@@ -364,8 +364,15 @@ function App() {
         if (currentView === 'system' && selectedPlanet) {
           event.preventDefault();
 
+          console.log(`Planet data for F key:`, {
+            name: selectedPlanet.name,
+            type: selectedPlanet.type,
+            surfaceFeatures: selectedPlanet.surfaceFeatures,
+            featureCount: selectedPlanet.surfaceFeatures?.length
+          });
+
           if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
-            console.log(`Entering planetary view for ${selectedPlanet.name}`);
+            console.log(`Entering planetary view for ${selectedPlanet.name} with ${selectedPlanet.surfaceFeatures.length} features`);
             setCurrentView('planetary');
 
             // Stop any orbital tracking when entering planetary view
@@ -571,11 +578,18 @@ function App() {
                 </>
               )}
               {currentView === 'planetary' && selectedPlanet && (
-                <PlanetaryView 
-                  planet={selectedPlanet}
-                  selectedFeature={selectedFeature}
-                  onFeatureClick={setSelectedFeature}
-                />
+                <>
+                  {console.log('Rendering PlanetaryView with:', { 
+                    selectedPlanet: selectedPlanet.name, 
+                    surfaceFeatures: selectedPlanet.surfaceFeatures?.length,
+                    features: selectedPlanet.surfaceFeatures
+                  })}
+                  <PlanetaryView 
+                    planet={selectedPlanet}
+                    selectedFeature={selectedFeature}
+                    onFeatureClick={setSelectedFeature}
+                  />
+                </>
               )}
 
               {/* Post-processing effects for bloom */}
