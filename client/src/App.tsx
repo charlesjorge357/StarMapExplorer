@@ -271,9 +271,14 @@ function App() {
         event.preventDefault();
         event.stopPropagation();
         
-        // Always stop orbital tracking first
+        // Stop orbital tracking and reset camera to center star
         if ((window as any).homeToPlanet) {
           (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+        }
+        
+        // Reset camera to center star position if in system view
+        if (currentView === 'system' && (window as any).resetToStar) {
+          (window as any).resetToStar();
         }
         
         if (currentView === 'galactic' && selectedStar) {

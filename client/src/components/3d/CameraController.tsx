@@ -92,11 +92,44 @@ export function CameraController() {
     console.log(`Camera positioned at planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
   };
 
-  // Expose camera homing to window for external access
+  // Reset camera to center star
+  const resetToStar = () => {
+    if (!camera) return;
+    
+    // Stop orbital tracking
+    isOrbitalTrackingRef.current = false;
+    orbitalTargetRef.current = null;
+    
+    // Position camera at a good viewing distance from star
+    camera.position.set(0, 20, 200);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrix();
+    camera.updateMatrixWorld(true);
+    
+    console.log('Camera reset to center star position');
+  };
+
+  // Handle escape key to break orbital tracking
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOrbitalTrackingRef.current) {
+        console.log('Escape pressed - stopping orbital tracking');
+        isOrbitalTrackingRef.current = false;
+        orbitalTargetRef.current = null;
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, []);
+
+  // Expose camera functions to window for external access
   useEffect(() => {
     (window as any).homeToPlanet = homeToPlanet;
+    (window as any).resetToStar = resetToStar;
     return () => {
       delete (window as any).homeToPlanet;
+      delete (window as any).resetToStar;
     };
   }, [camera]);
 
@@ -219,7 +252,9 @@ export function CameraController() {
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
       
-      return; // Skip all other controls during tracking
+      // Don't return here - allow other controls to be processed for escape key handling
+      // But skip movement controls
+      return;
     }
 
     const controls = get();
