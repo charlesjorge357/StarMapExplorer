@@ -204,18 +204,18 @@ function App() {
 
   const handleStart = () => {
     setShowSelector(false);
-    
+
     // Start background music
     const backgroundMusic = new Audio('/audio/galactic-theme.mp3');
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.3; // Set to 30% volume
-    
+
     // Attempt to play music (modern browsers may require user interaction)
     backgroundMusic.play().catch(error => {
       console.log('Audio autoplay prevented by browser:', error);
       // Store audio reference for later manual play if needed
     });
-    
+
     setAudio(backgroundMusic);
     console.log('Started galactic background music');
   };
@@ -333,16 +333,17 @@ function App() {
           console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
           setCurrentView('system');
           setSelectedFeature(null);
-          
-          // Keep planet selected and focus camera on it
+
+          // Re-establish orbital tracking for the selected planet since it continued rotating
           if (selectedPlanet && (window as any).homeToPlanet) {
             setTimeout(() => {
-              const planetPosition = new Vector3(
-                selectedPlanet.position[0],
-                selectedPlanet.position[1], 
-                selectedPlanet.position[2]
-              );
-              (window as any).homeToPlanet(planetPosition, selectedPlanet.radius * 30, selectedPlanet, true);
+              // Find the planet's index for orbital tracking
+              const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
+              const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
+
+              // Re-establish orbital lock to track current position
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
+              console.log(`Re-established orbital tracking for ${selectedPlanet.name} after returning from planetary view`);
             }, 100);
           }
         } else if (currentView === 'system') {
@@ -357,7 +358,7 @@ function App() {
           setCurrentSystem(null);
           setSelectedPlanet(null);
           (window as any).systemStarSelected = false;
-          
+
           // Position camera with offset from last visited star and select it
           setTimeout(() => {
             if (lastVisitedStar && (window as any).setCameraLookingAtStar) {
@@ -753,7 +754,7 @@ function App() {
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
-                {selectedPlanet.atmosphere.length > 0 && (
+                {selectedPlanet.atmosphere.length >0 && (
                   <div>
                     <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
                     <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
