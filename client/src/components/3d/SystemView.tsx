@@ -20,7 +20,8 @@ function MoonMesh({
     if (moonRef.current) {
       // Use same time calculation as planets for consistency
       const time = Date.now() * 0.0001;
-      const angle = time * moon.orbitSpeed * 10; // Scale moon speed to be visible
+      const moonIndex = parseInt(moon.id.split('-moon-')[1]) || 0;
+      const angle = time * moon.orbitSpeed * 10 + moonIndex * (Math.PI * 2 / 8); // Apply planetary offset pattern
       
       // Moon orbit relative to planet with much tighter radius
       const moonX = planetPosition[0] + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.2;
@@ -33,7 +34,7 @@ function MoonMesh({
 
   return (
     <mesh ref={moonRef}>
-      <sphereGeometry args={[moon.radius * planetRadius * 0.3, 8, 8]} />
+      <sphereGeometry args={[moon.radius * planetRadius * 0.15, 8, 8]} />
       <meshStandardMaterial 
         color="#888888" 
         emissive="#222222"
