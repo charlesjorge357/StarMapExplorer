@@ -334,7 +334,7 @@ export class SystemGenerator {
     const featureSeed = baseSeed + 1000;
     const seededRandom = () => this.seededRandom(featureSeed + features.length);
     
-    // Number of features based on planet type
+    // Number of features based on planet type - ensure all planets have at least 1 feature for exploration
     let featureCount = 0;
     switch (planetType) {
       case 'verdant_world':
@@ -343,16 +343,16 @@ export class SystemGenerator {
         break;
       case 'arid_world':
       case 'acidic_world':
-        featureCount = 1 + Math.floor(seededRandom() * 3); // 1-3 features
+        featureCount = 2 + Math.floor(seededRandom() * 3); // 2-4 features
         break;
       case 'nuclear_world':
-        featureCount = Math.floor(seededRandom() * 2); // 0-1 features
+        featureCount = 1 + Math.floor(seededRandom() * 2); // 1-2 features
         break;
       case 'dead_world':
-        featureCount = Math.floor(seededRandom() * 2); // 0-1 features
+        featureCount = 1 + Math.floor(seededRandom() * 2); // 1-2 features
         break;
       default:
-        featureCount = 1;
+        featureCount = 2; // Default minimum features
     }
 
     for (let i = 0; i < featureCount; i++) {

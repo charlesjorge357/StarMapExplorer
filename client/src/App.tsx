@@ -383,21 +383,17 @@ function App() {
             featureCount: selectedPlanet.surfaceFeatures?.length
           });
 
-          if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
-            console.log(`Entering planetary view for ${selectedPlanet.name} with ${selectedPlanet.surfaceFeatures.length} features`);
+          // Allow planetary view for all terrestrial planets (non-gas giants)
+          if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
+            console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
             setCurrentView('planetary');
 
             // Stop any orbital tracking when entering planetary view
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
             }
-
-            // Reset camera for planetary view
-            if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), selectedPlanet.radius * 20, null, false);
-            }
           } else {
-            console.log(`${selectedPlanet.name} has no surface features to explore`);
+            console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
           }
         }
       }
