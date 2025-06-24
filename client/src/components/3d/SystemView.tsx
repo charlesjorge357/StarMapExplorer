@@ -79,7 +79,7 @@ function getPlanetGlow(type: string, planetId?: string): string {
     gas_giant: [15, 85, 55],   // Orange-red
     frost_giant: [200, 70, 70], // Blue
     arid_world: [45, 75, 50],   // Gold
-    verdant_world: [0, 0, 0],   // No glow for textured verdant worlds
+    verdant_world: [200, 70, 70],   // No glow for textured verdant worlds
     acidic_world: [35, 90, 55], // Orange
     nuclear_world: [0, 90, 45], // Red
     ocean_world: [210, 85, 60], // Blue
@@ -344,7 +344,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         const radius = belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius);
         const size = 0.1 + (seed3 * 0.3); // Random size variation
         const yOffset = (seed1 - 0.5) * 3; // Random y offset
-        const orbitSpeed = 0.01 + (radius * 0.0005); // Slower for outer asteroids
+        const orbitSpeed = 0.01 + (radius * 0.00005); // Slower for outer asteroids
         
         asteroids.push({
           id: i,
@@ -389,6 +389,60 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   }
 
   return (
+    <>
+      {/* Search Interface */}
+      {isSearching && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          background: 'rgba(0, 0, 0, 0.8)',
+          padding: '15px',
+          borderRadius: '8px',
+          border: '1px solid #333'
+        }}>
+          <div style={{ marginBottom: '10px', color: 'white', fontSize: '14px' }}>
+            Search Planet (ESC to close)
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                const found = searchPlanet(searchQuery.trim());
+                if (found) {
+                  setIsSearching(false);
+                  setSearchQuery('');
+                } else {
+                  // Flash red border for not found
+                  e.currentTarget.style.borderColor = 'red';
+                  setTimeout(() => {
+                    e.currentTarget.style.borderColor = '#666';
+                  }, 500);
+                }
+              }
+            }}
+            placeholder="Type planet name..."
+            style={{
+              width: '300px',
+              padding: '8px',
+              background: '#222',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '4px',
+              outline: 'none'
+            }}
+            autoFocus
+          />
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#aaa' }}>
+            Planets: {system.planets.map((p: any) => p.name).join(', ')}
+          </div>
+        </div>
+      )}
+
     <group>
       {/* Background plane for deselection clicks */}
       <mesh 
@@ -479,5 +533,6 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         </group>
       ))}
     </group>
+    </>
   );
 }
