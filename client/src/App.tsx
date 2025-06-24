@@ -259,7 +259,7 @@ function App() {
         setCurrentView('system');
         setCurrentSystem(system);
         setSelectedStar(null);
-        
+
         // Ensure star info is available immediately in system view
         setTimeout(() => {
           if (system.star) {
@@ -272,17 +272,17 @@ function App() {
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
-        
+
         // Stop orbital tracking and reset camera to center star
         if ((window as any).homeToPlanet) {
           (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
         }
-        
+
         // Reset camera to center star position if in system view
         if (currentView === 'system' && (window as any).resetToStar) {
           (window as any).resetToStar();
         }
-        
+
         if (currentView === 'galactic' && selectedStar) {
           console.log(`Unselected star: ${selectedStar.name}`);
           setSelectedStar(null);
@@ -304,12 +304,12 @@ function App() {
           setSelectedFeature(null);
         } else if (currentView === 'system') {
           console.log('Returning to galactic view...');
-          
+
           // Stop orbital tracking when leaving system view
           if ((window as any).homeToPlanet) {
             (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
           }
-          
+
           setCurrentView('galactic');
           setCurrentSystem(null);
           setSelectedPlanet(null);
@@ -320,19 +320,19 @@ function App() {
       // Handle F key for planetary exploration
       if (event.key === 'f' || event.key === 'F') {
         console.log(`F key detected - currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}, features: ${selectedPlanet?.surfaceFeatures?.length}`);
-        
+
         if (currentView === 'system' && selectedPlanet) {
           event.preventDefault();
-          
+
           if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
             console.log(`Entering planetary view for ${selectedPlanet.name}`);
             setCurrentView('planetary');
-            
+
             // Stop any orbital tracking when entering planetary view
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
             }
-            
+
             // Reset camera for planetary view
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), selectedPlanet.radius * 20, null, false);
@@ -347,7 +347,7 @@ function App() {
       if (event.key === 'Enter') {
         if (currentView === 'system' && selectedPlanet && !isSearching) {
           event.preventDefault();
-          
+
           // Enable orbital tracking for selected planet
           if ((window as any).homeToPlanet) {
             const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
@@ -369,7 +369,7 @@ function App() {
       const planet = currentSystem.planets.find((p: any) => 
         p.name.toLowerCase().includes(planetName.toLowerCase())
       );
-      
+
       if (planet) {
         setSelectedPlanet(planet);
         console.log(`Found and selected planet: ${planet.name}`);
@@ -429,7 +429,7 @@ function App() {
                       onClick={() => {
                         setSelectedPlanet(planet);
                         setIsSearching(false);
-                        
+
                         // Auto-start orbital tracking for selected planet
                         setTimeout(() => {
                           if ((window as any).homeToPlanet) {
@@ -579,7 +579,7 @@ function App() {
               }
             </div>
           )}
-          
+
           {currentView === 'planetary' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedFeature 
