@@ -319,6 +319,31 @@ function App() {
     return null;
   };
 
+  // Add keyboard handler for Enter key planet homing
+  useEffect(() => {
+    const handlePlanetHoming = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && currentView === 'system' && selectedPlanet) {
+        event.preventDefault();
+        
+        // Calculate planet's current orbital position
+        const time = performance.now() * 0.0001;
+        const angle = time * selectedPlanet.orbitSpeed;
+        const x = Math.cos(angle) * selectedPlanet.orbitRadius * 2;
+        const z = Math.sin(angle) * selectedPlanet.orbitRadius * 2;
+        const planetPosition = new THREE.Vector3(x, 0, z);
+        
+        // Call camera homing function
+        if ((window as any).homeToPlanet) {
+          (window as any).homeToPlanet(planetPosition, selectedPlanet.radius * 0.6);
+          console.log(`Homing camera to ${selectedPlanet.name}`);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handlePlanetHoming);
+    return () => document.removeEventListener('keydown', handlePlanetHoming);
+  }, [currentView, selectedPlanet]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       {/* Planet Search UI for System View */}
@@ -368,6 +393,19 @@ function App() {
                     if (found) {
                       setIsSearching(false);
                       setSearchQuery('');
+                      
+                      // Auto-home camera to found planet
+                      setTimeout(() => {
+                        const time = performance.now() * 0.0001;
+                        const angle = time * found.orbitSpeed;
+                        const x = Math.cos(angle) * found.orbitRadius * 2;
+                        const z = Math.sin(angle) * found.orbitRadius * 2;
+                        const planetPosition = new THREE.Vector3(x, 0, z);
+                        
+                        if ((window as any).homeToPlanet) {
+                          (window as any).homeToPlanet(planetPosition, found.radius * 0.6);
+                        }
+                      }, 100);
                     } else {
                       // Flash red border for not found
                       e.currentTarget.style.borderColor = 'red';
