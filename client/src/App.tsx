@@ -158,6 +158,8 @@ function App() {
   // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
