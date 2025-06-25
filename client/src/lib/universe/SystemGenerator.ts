@@ -191,7 +191,7 @@ export class SystemGenerator {
 
     // Calculate orbital zones with proper spacing to prevent overlaps
     const baseSpacing = 20 + star.radius * 6; // Increased base spacing
-    const maxOrbitRadius = baseSpacing * 8; // Increased max orbit
+    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
     for (let i = 0; i < planetCount; i++) {
@@ -205,8 +205,13 @@ export class SystemGenerator {
         const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
         const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
         
-        const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
-        orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
+        //const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        //orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
+        let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
+          maxOrbitRadius= newOrbit + 20;
+        }
+        orbitZones.push(newOrbit);
       }
     }
 
@@ -221,7 +226,7 @@ export class SystemGenerator {
           radius = 8 + Math.random() * 4; // 8–12 R⊕
           break;
         case 'frost_giant':
-          radius = 4 + Math.random() * 3; // 4–7 R⊕
+          radius = 4 + Math.random() * 4; // 4–8 R⊕
           break;
         case 'verdant_world':
         case 'acidic_world':
@@ -264,7 +269,7 @@ export class SystemGenerator {
           atmosphere = ['Carbon Dioxide', 'Sulfuric Acid', 'Nitrogen'];
           break;
         case 'nuclear_world':
-          atmosphere = ['Radioactive Gases', 'Noble Gases'];
+          atmosphere = ['Helium-3', 'Argon', 'Tritium'];
           break;
         case 'dead_world':
           atmosphere = [];
