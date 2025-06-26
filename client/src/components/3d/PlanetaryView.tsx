@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -10,6 +10,7 @@ interface PlanetaryViewProps {
 }
 
 export function PlanetaryView({ planet }: PlanetaryViewProps) {
+  const [isHeld, setIsHeld] = useState(false);
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -155,7 +156,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
 
   // Planet rotation animation
   useFrame((state) => {
-    if (planetRef.current) {
+    if (planetRef.current && !isHeld) {
       // Slow automatic rotation
       planetRef.current.rotation.y += 0.001;
     }
@@ -171,9 +172,14 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
   return (
     <group ref={groupRef}>
       {/* Planet sphere with high detail */}
-      <mesh ref={planetRef}>
+      <mesh ref={planetRef}
+        ref ={planetRef}
+        onPointerDown={() => setIsHeld(true)}
+        onPointerUp={() => setIsHeld(false)}
+        onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
+        >
         <sphereGeometry args={[planetRadius, 128, 64]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color={
             // Use computed values from SystemView if available, otherwise fallback
             planet.computedColor || (texture ? '#ffffff' : '#666666')
