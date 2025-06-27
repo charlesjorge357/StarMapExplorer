@@ -4,7 +4,7 @@ import { KeyboardControls, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
-import { PlanetaryView } from "./components/3d/PlanetaryView";
+import { PlanetaryView, PlanetaryViewUI } from "./components/3d/PlanetaryView";
 import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { ObjectPanel } from "./components/ui/ObjectPanel";
@@ -614,6 +614,17 @@ function App() {
           )}
         </Canvas>
       </KeyboardControls>
+
+      {/* Planetary View UI - rendered outside Canvas */}
+      {currentView === 'planetary' && selectedPlanet && (
+        <PlanetaryViewUI
+          planet={selectedPlanet}
+          selectedFeature={selectedFeature}
+          onFeatureClick={setSelectedFeature}
+          selectedFeatureType={null}
+          setSelectedFeatureType={() => {}}
+        />
+      )}
 
       {/* Current Scope Indicator */}
       {!showSelector && (

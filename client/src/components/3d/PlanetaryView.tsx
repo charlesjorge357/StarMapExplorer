@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 
 interface PlanetaryViewProps {
@@ -303,22 +302,8 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, selecte
     }
   });
 
-  // Create portal for UI elements outside Canvas
-  const uiPortal = createPortal(
-    <PlanetaryViewUI
-      planet={planet}
-      selectedFeature={selectedFeature}
-      onFeatureClick={onFeatureClick}
-      selectedFeatureType={currentSelectedFeatureType}
-      setSelectedFeatureType={setSelectedFeatureType}
-    />,
-    document.body
-  );
-
   return (
-    <>
-      {uiPortal}
-      <group ref={groupRef}>
+    <group ref={groupRef}>
         {/* Planet sphere with high detail */}
         <mesh ref={planetRef} onClick={handleSurfaceClick}>
           <sphereGeometry args={[planetRadius, 128, 64]} />
