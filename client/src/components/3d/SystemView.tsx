@@ -4,7 +4,6 @@ import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { PlanetaryView, PlanetaryViewUI } from './PlanetaryView';
 
 function MoonMesh({ 
   moon, 
@@ -310,17 +309,6 @@ function PlanetMesh({
 }
 
 export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
-  
-  const [featureClickData, setFeatureClickData] = useState<{
-    planet: any;
-    lat: number;
-    lon: number;
-  } | null>(null);
-
-  const handleFeatureClick = (feature: any) => {
-    console.log('Feature clicked:', feature);
-  }
-  
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -501,15 +489,6 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <group>
-      {/* Render PlanetaryView only for selectedPlanet */}
-      {selectedPlanet && (
-        <PlanetaryView
-          planet={selectedPlanet}
-          selectedFeature={null}
-          onFeatureClick={(feature) => console.log('Feature clicked:', feature)}
-        />
-      )}
-
       {/* Background plane for deselection clicks */}
       <mesh 
         position={[0, 0, -5000]} 
