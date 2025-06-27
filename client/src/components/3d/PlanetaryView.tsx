@@ -5,8 +5,8 @@ import * as THREE from 'three';
 
 interface PlanetaryViewProps {
   planet: any;
-  selectedFeatureType: 'city' | 'fort' | 'landmark' | null;
-  onFeaturePlaced: (feature: any) => void;
+  selectedFeature: any;
+  onFeatureClick: (feature: any) => void;
 }
 
 function sphericalToCartesian(radius: number, lat: number, lon: number): [number, number, number] {
@@ -207,6 +207,7 @@ export function PlanetaryView({ planet, selectedFeatureType, onFeaturePlaced }: 
         intensity={0.7}
         castShadow
       />
-    </group>
+      </group>
+    </>
   );
 }

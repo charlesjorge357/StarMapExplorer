@@ -500,6 +500,15 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <group>
+      {/* Render PlanetaryView only for selectedPlanet */}
+      {selectedPlanet && (
+        <PlanetaryView
+          planet={selectedPlanet}
+          selectedFeature={null}
+          onFeatureClick={(feature) => console.log('Feature clicked:', feature)}
+        />
+      )}
+
       {/* Background plane for deselection clicks */}
       <mesh 
         position={[0, 0, -5000]} 
