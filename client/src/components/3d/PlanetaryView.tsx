@@ -1,12 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 
 interface PlanetaryViewProps {
   planet: any;
   selectedFeature: any;
   onFeatureClick: (feature: any) => void;
+  selectedFeatureType?: 'city' | 'fort' | 'landmark' | null;
+  onFeatureTypeChange?: (type: 'city' | 'fort' | 'landmark' | null) => void;
 }
 
 function sphericalToCartesian(radius: number, lat: number, lon: number): [number, number, number] {
@@ -18,7 +21,124 @@ function sphericalToCartesian(radius: number, lat: number, lon: number): [number
   return [x, y, z];
 }
 
-export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
+// UI Component to be rendered outside Canvas
+export function PlanetaryViewUI({ 
+  planet, 
+  selectedFeature, 
+  onFeatureClick, 
+  selectedFeatureType, 
+  setSelectedFeatureType 
+}: {
+  planet: any;
+  selectedFeature: any;
+  onFeatureClick: (feature: any) => void;
+  selectedFeatureType: 'city' | 'fort' | 'landmark' | null;
+  setSelectedFeatureType: (type: 'city' | 'fort' | 'landmark' | null) => void;
+}) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      background: 'rgba(0, 0, 0, 0.8)',
+      color: 'white',
+      padding: '20px',
+      borderRadius: '8px',
+      border: '1px solid #444',
+      zIndex: 1000,
+      minWidth: '200px'
+    }}>
+      <h3 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>
+        {planet.name} Surface
+      </h3>
+      
+      {/* Feature type selection buttons */}
+      <div style={{ marginBottom: '15px' }}>
+        <p style={{ margin: '0 0 8px 0', fontSize: '12px', opacity: 0.8 }}>
+          Place Features:
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <button
+            onClick={() => setSelectedFeatureType(selectedFeatureType === 'city' ? null : 'city')}
+            style={{
+              padding: '8px 12px',
+              background: selectedFeatureType === 'city' ? '#4CAF50' : '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            🏙️ City {selectedFeatureType === 'city' ? '(Active)' : ''}
+          </button>
+          <button
+            onClick={() => setSelectedFeatureType(selectedFeatureType === 'fort' ? null : 'fort')}
+            style={{
+              padding: '8px 12px',
+              background: selectedFeatureType === 'fort' ? '#4CAF50' : '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            🏰 Fort {selectedFeatureType === 'fort' ? '(Active)' : ''}
+          </button>
+          <button
+            onClick={() => setSelectedFeatureType(selectedFeatureType === 'landmark' ? null : 'landmark')}
+            style={{
+              padding: '8px 12px',
+              background: selectedFeatureType === 'landmark' ? '#4CAF50' : '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            🗿 Landmark {selectedFeatureType === 'landmark' ? '(Active)' : ''}
+          </button>
+        </div>
+      </div>
+
+      {/* Existing surface features list */}
+      {planet.surfaceFeatures && planet.surfaceFeatures.length > 0 && (
+        <div>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', opacity: 0.8 }}>
+            Surface Features ({planet.surfaceFeatures.length}):
+          </p>
+          <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+            {planet.surfaceFeatures.map((feature: any, index: number) => (
+              <div key={index} style={{
+                fontSize: '11px',
+                padding: '4px 8px',
+                margin: '2px 0',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              onClick={() => onFeatureClick(feature)}
+              >
+                {feature.type === 'city' ? '🏙️' : feature.type === 'fort' ? '🏰' : '🗿'} {feature.name}
+                {feature.population && ` (Pop: ${feature.population.toLocaleString()})`}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedFeatureType && (
+        <p style={{ margin: '10px 0 0 0', fontSize: '11px', opacity: 0.7 }}>
+          Click on planet surface to place {selectedFeatureType}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function PlanetaryView({ planet, selectedFeature, onFeatureClick, selectedFeatureType = null, onFeatureTypeChange }: PlanetaryViewProps) {
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -26,8 +146,10 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
     computedEmissiveIntensity: planet?.computedEmissiveIntensity
   });
 
-  // State for feature placement system
-  const [selectedFeatureType, setSelectedFeatureType] = React.useState<'city' | 'fort' | 'landmark' | null>(null);
+  // Use local state if no external state management provided
+  const [localSelectedFeatureType, setLocalSelectedFeatureType] = React.useState<'city' | 'fort' | 'landmark' | null>(null);
+  const currentSelectedFeatureType = selectedFeatureType !== undefined ? selectedFeatureType : localSelectedFeatureType;
+  const setSelectedFeatureType = onFeatureTypeChange || setLocalSelectedFeatureType;
 
   // Handle feature placement on planet surface
   const handleFeaturePlaced = (feature: any) => {
@@ -80,7 +202,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
   // Handle surface clicks for feature placement
   const handleSurfaceClick = (event: any) => {
-    if (!selectedFeatureType) return;
+    if (!currentSelectedFeatureType) return;
     
     event.stopPropagation();
     
@@ -99,26 +221,26 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         landmark: ['Mystic Falls', 'Crystal Peaks', 'Titan Ridge', 'Ancient Ruins', 'Monument Valley']
       };
       
-      const names = featureNames[selectedFeatureType];
+      const names = featureNames[currentSelectedFeatureType];
       const randomName = names[Math.floor(Math.random() * names.length)];
       
       // Create new feature
       const newFeature = {
         id: `feature-${Date.now()}`,
-        type: selectedFeatureType,
+        type: currentSelectedFeatureType,
         name: randomName,
         position: [lat, lon],
-        description: `A ${selectedFeatureType} on ${planet.name}`,
-        ...(selectedFeatureType === 'city' && {
+        description: `A ${currentSelectedFeatureType} on ${planet.name}`,
+        ...(currentSelectedFeatureType === 'city' && {
           population: Math.floor(Math.random() * 2000000) + 50000,
           size: Math.random() < 0.3 ? 'large' : Math.random() < 0.6 ? 'medium' : 'small',
           technology: Math.random() < 0.2 ? 'advanced' : Math.random() < 0.6 ? 'industrial' : 'primitive'
         }),
-        ...(selectedFeatureType === 'fort' && {
+        ...(currentSelectedFeatureType === 'fort' && {
           size: Math.random() < 0.4 ? 'large' : Math.random() < 0.7 ? 'medium' : 'small',
           technology: Math.random() < 0.3 ? 'advanced' : Math.random() < 0.7 ? 'industrial' : 'primitive'
         }),
-        ...(selectedFeatureType === 'landmark' && {
+        ...(currentSelectedFeatureType === 'landmark' && {
           size: Math.random() < 0.3 ? 'large' : Math.random() < 0.6 ? 'medium' : 'small'
         })
       };
@@ -181,109 +303,21 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
     }
   });
 
+  // Create portal for UI elements outside Canvas
+  const uiPortal = createPortal(
+    <PlanetaryViewUI
+      planet={planet}
+      selectedFeature={selectedFeature}
+      onFeatureClick={onFeatureClick}
+      selectedFeatureType={currentSelectedFeatureType}
+      setSelectedFeatureType={setSelectedFeatureType}
+    />,
+    document.body
+  );
+
   return (
     <>
-      {/* Feature Selection Menu */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        background: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        border: '1px solid #444',
-        zIndex: 1000,
-        minWidth: '200px'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>
-          {planet.name} Surface
-        </h3>
-        
-        {/* Feature type selection buttons */}
-        <div style={{ marginBottom: '15px' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '12px', opacity: 0.8 }}>
-            Place Features:
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <button
-              onClick={() => setSelectedFeatureType(selectedFeatureType === 'city' ? null : 'city')}
-              style={{
-                padding: '8px 12px',
-                background: selectedFeatureType === 'city' ? '#4CAF50' : '#333',
-                color: 'white',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              🏙️ City {selectedFeatureType === 'city' ? '(Active)' : ''}
-            </button>
-            <button
-              onClick={() => setSelectedFeatureType(selectedFeatureType === 'fort' ? null : 'fort')}
-              style={{
-                padding: '8px 12px',
-                background: selectedFeatureType === 'fort' ? '#4CAF50' : '#333',
-                color: 'white',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              🏰 Fort {selectedFeatureType === 'fort' ? '(Active)' : ''}
-            </button>
-            <button
-              onClick={() => setSelectedFeatureType(selectedFeatureType === 'landmark' ? null : 'landmark')}
-              style={{
-                padding: '8px 12px',
-                background: selectedFeatureType === 'landmark' ? '#4CAF50' : '#333',
-                color: 'white',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              🗿 Landmark {selectedFeatureType === 'landmark' ? '(Active)' : ''}
-            </button>
-          </div>
-        </div>
-
-        {/* Existing surface features list */}
-        {planet.surfaceFeatures && planet.surfaceFeatures.length > 0 && (
-          <div>
-            <p style={{ margin: '0 0 8px 0', fontSize: '12px', opacity: 0.8 }}>
-              Surface Features ({planet.surfaceFeatures.length}):
-            </p>
-            <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-              {planet.surfaceFeatures.map((feature: any, index: number) => (
-                <div key={index} style={{
-                  fontSize: '11px',
-                  padding: '4px 8px',
-                  margin: '2px 0',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => onFeatureClick(feature)}
-                >
-                  {feature.type === 'city' ? '🏙️' : feature.type === 'fort' ? '🏰' : '🗿'} {feature.name}
-                  {feature.population && ` (Pop: ${feature.population.toLocaleString()})`}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {selectedFeatureType && (
-          <p style={{ margin: '10px 0 0 0', fontSize: '11px', opacity: 0.7 }}>
-            Click on planet surface to place {selectedFeatureType}
-          </p>
-        )}
-      </div>
-
+      {uiPortal}
       <group ref={groupRef}>
         {/* Planet sphere with high detail */}
         <mesh ref={planetRef} onClick={handleSurfaceClick}>

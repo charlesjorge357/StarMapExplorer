@@ -4,7 +4,7 @@ import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { PlanetaryView } from './PlanetaryView';
+import { PlanetaryView, PlanetaryViewUI } from './PlanetaryView';
 
 function MoonMesh({ 
   moon, 
