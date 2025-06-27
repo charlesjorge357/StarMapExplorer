@@ -5,27 +5,46 @@ import * as THREE from 'three';
 
 interface PlanetaryViewProps {
   planet: any;
-  selectedFeature: any;
-  onFeatureClick: (feature: any) => void;
+  selectedFeatureType: 'city' | 'fort' | 'landmark' | null;
+  onFeaturePlaced: (feature: any) => void;
 }
 
-export function PlanetaryView({ planet }: PlanetaryViewProps) {
+function sphericalToCartesian(radius: number, lat: number, lon: number): [number, number, number] {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  const x = radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.cos(phi);
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  return [x, y, z];
+}
+
+export function PlanetaryView({ planet, selectedFeatureType, onFeaturePlaced }: PlanetaryViewProps) {
   const [isHeld, setIsHeld] = useState(false);
-  console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
-  console.log('Planet computed properties:', {
-    computedColor: planet?.computedColor,
-    computedGlow: planet?.computedGlow,
-    computedEmissiveIntensity: planet?.computedEmissiveIntensity
-  });
-  
   const { camera, gl } = useThree();
   const planetRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
-  
-  // Planet radius for close-up view
   const planetRadius = planet?.radius ? planet.radius * 15 : 10;
 
-  // Get texture path for planet type
+  const handlePlanetClick = (event: THREE.Event) => {
+    if (!selectedFeatureType || !planetRef.current) return;
+
+    const point = event.point;
+    const local = new THREE.Vector3();
+    planetRef.current.worldToLocal(local.copy(point));
+
+    const lat = 90 - (Math.acos(local.y / planetRadius) * 180 / Math.PI);
+    const lon = Math.atan2(local.z, local.x) * 180 / Math.PI;
+
+    const newFeature = {
+      type: selectedFeatureType,
+      lat,
+      lon,
+      name: `${selectedFeatureType} ${planet.features?.length + 1 || 1}`
+    };
+
+    onFeaturePlaced(newFeature);
+  };
+
   const getTextureForPlanet = (planetType: string, textureIndex: number = 0) => {
     const texturePaths: Record<string, string[]> = {
       'gas_giant': ['/textures/jupiter.jpg'],
@@ -37,25 +56,19 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
       'ocean_world': ['/textures/ocean.jpg'],
       'dead_world': ['/textures/mercury.jpg', '/textures/moon.jpg', '/textures/eris.jpg']
     };
-    
     const paths = texturePaths[planetType] || texturePaths['dead_world'];
     return paths[textureIndex % paths.length];
   };
 
-
-
-  // Load planet texture
   let texture;
   try {
     const texturePath = getTextureForPlanet(planet.type, planet.textureIndex || 0);
-    console.log(`Loading texture for ${planet.name}: ${texturePath}`);
     texture = useTexture(texturePath);
   } catch (error) {
     console.error(`Failed to load texture for ${planet?.type}:`, error);
     texture = null;
   }
 
-  // Mouse interaction state
   const mouseState = useRef({
     isDown: false,
     lastX: 0,
@@ -64,25 +77,18 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     rotationY: 0
   });
 
-  // Set up camera for close planetary view
   useEffect(() => {
     if (camera && planet) {
-      console.log(`Setting up Google Earth camera for ${planet.name}`);
-      
-      // Position camera close to planet surface
       const distance = planetRadius * 1.8;
       camera.position.set(0, 0, distance);
       camera.lookAt(0, 0, 0);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
-      
-      // Reset rotation state
       mouseState.current.rotationX = 0;
       mouseState.current.rotationY = 0;
     }
   }, [camera, planet, planetRadius]);
 
-  // Mouse controls for globe rotation
   useEffect(() => {
     const canvas = gl.domElement;
 
@@ -99,14 +105,10 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
       const deltaX = event.clientX - mouseState.current.lastX;
       const deltaY = event.clientY - mouseState.current.lastY;
 
-      // Rotate globe based on mouse movement
       mouseState.current.rotationY += deltaX * 0.005;
       mouseState.current.rotationX += deltaY * 0.005;
-
-      // Clamp vertical rotation to prevent flipping
       mouseState.current.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseState.current.rotationX));
 
-      // Apply rotations to planet group
       groupRef.current.rotation.y = mouseState.current.rotationY;
       groupRef.current.rotation.x = mouseState.current.rotationX;
 
@@ -121,28 +123,22 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
-      
-      // Zoom in/out by moving camera
       const zoomSpeed = 0.1;
       const direction = event.deltaY > 0 ? 1 : -1;
       const currentDistance = camera.position.length();
       const minDistance = planetRadius * 1.2;
       const maxDistance = planetRadius * 5;
-      
+
       const newDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance + direction * zoomSpeed * planetRadius));
-      
       camera.position.normalize().multiplyScalar(newDistance);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
     };
 
-    // Add event listeners
     canvas.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
-    
-    // Set initial cursor
     canvas.style.cursor = 'grab';
 
     return () => {
@@ -154,57 +150,60 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     };
   }, [gl, camera, planetRadius]);
 
-  // Planet rotation animation
-  useFrame((state) => {
+  useFrame(() => {
     if (planetRef.current && !isHeld) {
-      // Slow automatic rotation
       planetRef.current.rotation.y += 0.001;
     }
   });
 
-  if (!planet) {
-    console.error('PlanetaryView: No planet data provided');
-    return null;
-  }
-
-  console.log(`Rendering Google Earth view for ${planet.name} with radius ${planetRadius}`);
+  if (!planet) return null;
 
   return (
     <group ref={groupRef}>
-      {/* Planet sphere with high detail */}
-      <mesh ref={planetRef}
-        ref ={planetRef}
+      <mesh
+        ref={planetRef}
+        onClick={handlePlanetClick}
         onPointerDown={() => setIsHeld(true)}
         onPointerUp={() => setIsHeld(false)}
-        onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
-        >
+        onPointerLeave={() => setIsHeld(false)}
+      >
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial
-          color={
-            // Use computed values from SystemView if available, otherwise fallback
-            planet.computedColor || (texture ? '#ffffff' : '#666666')
-          }
-          emissive={
-            // Use computed glow from SystemView if available, otherwise fallback
-            planet.computedGlow || '#000000'
-          }
+          color={planet.computedColor || (texture ? '#ffffff' : '#666666')}
+          emissive={planet.computedGlow || '#000000'}
           emissiveIntensity={
-            planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : (texture ? 0.1 : 0.2)
+            planet.computedEmissiveIntensity !== undefined
+              ? planet.computedEmissiveIntensity
+              : texture
+              ? 0.1
+              : 0.2
           }
           map={texture}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
-          transparent={false}
-          opacity={1.0}
         />
+        {planet.features?.map((feature: any, index: number) => {
+          const position = sphericalToCartesian(planetRadius + 0.5, feature.lat, feature.lon);
+          return (
+            <mesh key={index} position={position}>
+              <boxGeometry args={[0.3, 0.3, 0.3]} />
+              <meshStandardMaterial
+                color={
+                  feature.type === 'city'
+                    ? 'blue'
+                    : feature.type === 'fort'
+                    ? 'red'
+                    : 'green'
+                }
+              />
+            </mesh>
+          );
+        })}
       </mesh>
 
-      
-
-      {/* Lighting */}
       <ambientLight intensity={0.3} />
-      <directionalLight 
-        position={[planetRadius * 2, planetRadius * 2, planetRadius * 2]} 
+      <directionalLight
+        position={[planetRadius * 2, planetRadius * 2, planetRadius * 2]}
         intensity={0.7}
         castShadow
       />

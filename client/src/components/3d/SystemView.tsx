@@ -309,6 +309,17 @@ function PlanetMesh({
 }
 
 export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
+  
+  const [featureClickData, setFeatureClickData] = useState<{
+    planet: any;
+    lat: number;
+    lon: number;
+  } | null>(null);
+
+  const handleFeatureClick = (feature: any) => {
+    console.log('Feature clicked:', feature);
+  }
+  
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
