@@ -58,7 +58,7 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
           const skyboxPosition = direction.multiplyScalar(skyboxDistance);
 
           // Scale based on original nebula size but make it much larger to be visible from far away
-          const scale = Math.max(nebula.radius * 2.5, 80); // Much larger minimum scale
+          const scale = Math.max(nebula.radius * 3.5, 120); // Even larger scale for better visibility
 
           return (
             <sprite
