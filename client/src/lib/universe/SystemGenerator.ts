@@ -1,5 +1,3 @@
-import { PlanetGenerator } from './PlanetGenerator';
-
 interface Planet {
   id: string;
   name: string;
