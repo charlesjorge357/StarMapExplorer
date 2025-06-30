@@ -1,5 +1,6 @@
 import { PlanetGenerator } from './PlanetGenerator';
 import { SurfaceFeature } from '../../../../shared/schema';
+import React, { useRef, useMemo } from 'react';
 
 interface Planet {
   id: string;

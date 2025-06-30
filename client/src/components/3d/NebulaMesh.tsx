@@ -62,7 +62,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
   // Generate particle positions within the elliptical nebula volume
   const particles = useMemo(() => {
-    const particleCount = 120; // Fixed count to prevent LOD popping
+    const particleCount = 130; // Fixed count to prevent LOD popping
     const data = [];
     
     for (let i = 0; i < particleCount; i++) {
