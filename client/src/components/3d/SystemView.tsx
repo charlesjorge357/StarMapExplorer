@@ -4,6 +4,9 @@ import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
+import { StarGenerator } from '../../lib/universe/StarGenerator';
+import { NebulaScreenTint } from './NebulaScreenTint';
+import { SystemNebulaSkybox } from './SystemNebulaSkybox';
 
 function MoonMesh({ 
   moon, 
@@ -313,6 +316,27 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { selectStar } = useUniverse();
+  
+  // Generate nebulas for this system view
+  const nebulas = useMemo(() => StarGenerator.generateNebulas(35), []);
+  
+  // Check if current star is inside any nebula for screen tinting
+  const starInNebula = useMemo(() => {
+    if (!system.star || !system.star.position) return null;
+    
+    const starPos = new THREE.Vector3(...(system.star.position || [0, 0, 0]));
+    
+    for (const nebula of nebulas) {
+      const nebulaPos = new THREE.Vector3(...nebula.position);
+      const distance = starPos.distanceTo(nebulaPos);
+      const scaledRadius = nebula.radius * 3.2; // Match nebula scaling
+      
+      if (distance < scaledRadius) {
+        return nebula;
+      }
+    }
+    return null;
+  }, [system.star, nebulas]);
 
   const star = system.star || {
     radius: 1,
@@ -489,6 +513,12 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <group>
+      {/* Nebula screen tint - only if star is inside a nebula */}
+      {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />}
+      
+      {/* Distant nebula skybox */}
+      <SystemNebulaSkybox nebulas={nebulas} excludeNebula={starInNebula} />
+      
       {/* Background plane for deselection clicks */}
       <mesh 
         position={[0, 0, -5000]} 

@@ -1,7 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Note: PlanetaryView deliberately does not include NebulaScreenTint
 
 interface PlanetaryViewProps {
   planet: any;
