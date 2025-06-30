@@ -62,8 +62,9 @@ export class StarGenerator {
       const thisNebulaStarCount = starsPerNebula + (nebulaIndex < extraStars ? 1 : 0);
       
       for (let j = 0; j < thisNebulaStarCount; j++) {
-        // Generate position inside nebula volume
-        const distance = random() * nebula.radius; // Random distance from nebula center
+        // Generate position within expanded nebula influence area (2x radius for more spread)
+        const expansionFactor = 2.5; // Expand star distribution area
+        const distance = random() * nebula.radius * expansionFactor;
         const theta = random() * Math.PI * 2;
         const phi = Math.acos(2 * random() - 1);
         
@@ -189,15 +190,39 @@ export class StarGenerator {
     let clusterCenters: [number, number, number][] = [];
     
     if (!stars) {
-      // Generate cluster centers for star formation regions
+      // Generate well-spaced cluster centers for star formation regions
       for (let i = 0; i < Math.min(count, 15); i++) {
-        const distance = 1000 + random() * 4000; // Spread across galaxy
-        const theta = random() * Math.PI * 2;
-        const phi = Math.acos(2 * random() - 1);
+        let attempts = 0;
+        let validPosition = false;
+        let x: number, y: number, z: number;
         
-        const x = distance * Math.sin(phi) * Math.cos(theta);
-        const y = distance * Math.sin(phi) * Math.sin(theta);
-        const z = distance * Math.cos(phi);
+        do {
+          const distance = 1500 + random() * 6000; // Increased spread (1500-7500 vs 1000-5000)
+          const theta = random() * Math.PI * 2;
+          const phi = Math.acos(2 * random() - 1);
+          
+          x = distance * Math.sin(phi) * Math.cos(theta);
+          y = distance * Math.sin(phi) * Math.sin(theta);
+          z = distance * Math.cos(phi);
+          
+          // Check minimum distance from existing cluster centers
+          validPosition = true;
+          const minDistance = 800; // Minimum 800 units between cluster centers
+          
+          for (const existingCenter of clusterCenters) {
+            const dx = x - existingCenter[0];
+            const dy = y - existingCenter[1];
+            const dz = z - existingCenter[2];
+            const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            
+            if (distance < minDistance) {
+              validPosition = false;
+              break;
+            }
+          }
+          
+          attempts++;
+        } while (!validPosition && attempts < 50); // Limit attempts to prevent infinite loop
         
         clusterCenters.push([x, y, z]);
       }
