@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-
+import SurfaceFeaturesList from '../ui/SurfaceFeaturesList';
 
 
 // Note: PlanetaryView deliberately does not include NebulaScreenTint

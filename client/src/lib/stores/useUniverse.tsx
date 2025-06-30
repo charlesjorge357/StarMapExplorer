@@ -134,7 +134,7 @@ export const useUniverse = create<UniverseState>()(
 
       try {
         const actualSeed = seed || Math.floor(Math.random() * 1000000);
-        const stars = StarGenerator.generateStars(actualSeed, 3000);
+        const stars = StarGenerator.generateStars(actualSeed, 4000);
 
         const universeData: UniverseData = {
           mode: 'sandbox',

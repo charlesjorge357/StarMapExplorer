@@ -170,7 +170,7 @@ export function GalacticView() {
       </points>
 
       {/* Main stars */}
-      {stars.slice(0, 300).map((star) => (
+      {stars.slice(0, 400).map((star) => (
         <StarMesh
           key={star.id}
           star={star}
