@@ -171,6 +171,8 @@ export class SystemGenerator {
       textureIndex: this.generateTextureIndex(type, index, starName),
       surfaceFeatures: []
     };
+
+    
   }
 
   static generateSystem(star: any, seed: number): StarSystem {
@@ -209,7 +211,7 @@ export class SystemGenerator {
         //orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
         let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
         if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
-          maxOrbitRadius = newOrbit + 20;
+          maxOrbitRadius= newOrbit + 20;
         }
         orbitZones.push(newOrbit);
       }

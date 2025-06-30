@@ -54,7 +54,7 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
           const direction = new THREE.Vector3(...nebula.position).normalize();
 
           // Place nebula sprites at the same distance as the starfield skybox (2000 units)
-          const skyboxDistance = 2000; // Match the starfield skybox distance
+          const skyboxDistance = 20000; // Match the starfield skybox distance
           const skyboxPosition = direction.multiplyScalar(skyboxDistance);
 
           // Scale based on original nebula size but make it much larger to be visible from far away
@@ -70,7 +70,7 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
                 map={texture}
                 color={nebula.color}
                 transparent
-                opacity={0.4}
+                opacity={0.15}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />

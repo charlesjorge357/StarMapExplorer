@@ -53,7 +53,7 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       const distance = cameraPos.distanceTo(nebulaPos);
       
       // Check if camera is inside the nebula (using scaled radius to match visual size)
-      const scaledRadius = nebula.radius * 3.2; // Match the nebula mesh scaling
+      const scaledRadius = nebula.radius * 3.5; // Match the nebula mesh scaling
       if (distance < scaledRadius) {
         const penetration = 1 - (distance / scaledRadius);
         const intensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
