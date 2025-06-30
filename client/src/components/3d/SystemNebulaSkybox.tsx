@@ -65,7 +65,7 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
                 map={texture}
                 color={nebula.color}
                 transparent
-                opacity={0.1}
+                opacity={0.05}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />

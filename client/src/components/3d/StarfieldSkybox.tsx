@@ -26,7 +26,7 @@ export function StarfieldSkybox({ stars, scale = 0.1 }: StarfieldSkyboxProps) {
       );
       
       // Push to distance for skybox effect
-      const distance = 5000;
+      const distance = 11000;
       scaledPos.normalize().multiplyScalar(distance);
       
       positions.push(scaledPos);
@@ -86,7 +86,7 @@ export function StarfieldSkybox({ stars, scale = 0.1 }: StarfieldSkyboxProps) {
       <sphereGeometry args={[1, 6, 6]} />
       <meshStandardMaterial
         transparent
-        opacity={0.7}
+        opacity={0.8}
         depthWrite={false}
         emissive="#ffffff"
         emissiveIntensity={0.5}
