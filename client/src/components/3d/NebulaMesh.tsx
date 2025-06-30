@@ -18,6 +18,9 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   const [screenTintIntensity, setScreenTintIntensity] = useState(0);
   const { camera } = useThree();
   
+  // Detect if we're in system view by checking if camera is very close (system view uses close camera positions)
+  const isInSystemView = camera.position.length() < 100;
+  
   // Create a simple circular texture procedurally
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -107,16 +110,18 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   }, [nebula.radius, nebula.id, nebulaShape]);
 
   useFrame((state, delta) => {
-    // Calculate screen tint intensity for this nebula
-    const cameraPos = camera.position;
-    const nebulaPos = new THREE.Vector3(...nebula.position);
-    const distance = cameraPos.distanceTo(nebulaPos);
-    const scaledRadius = nebula.radius * 3.5; // Match the scaled radius used in screen tint
-    
+    // Only calculate screen tint intensity in galactic view, not system view
     let tintIntensity = 0;
-    if (distance < scaledRadius) {
-      const penetration = 1 - (distance / scaledRadius);
-      tintIntensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
+    if (!isInSystemView) {
+      const cameraPos = camera.position;
+      const nebulaPos = new THREE.Vector3(...nebula.position);
+      const distance = cameraPos.distanceTo(nebulaPos);
+      const scaledRadius = nebula.radius * 3.5; // Match the scaled radius used in screen tint
+      
+      if (distance < scaledRadius) {
+        const penetration = 1 - (distance / scaledRadius);
+        tintIntensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
+      }
     }
     
     setScreenTintIntensity(tintIntensity);
