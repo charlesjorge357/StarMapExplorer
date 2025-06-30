@@ -43,6 +43,7 @@ export class StarGenerator {
   static generateStars(seed: number, count: number): Star[] {
     const random = this.seededRandom(seed);
     const stars: Star[] = [];
+    console.log(`Generating ${count} stars...`);
 
     for (let i = 0; i < count; i++) {
       // Generate position in a much larger sphere to prevent overlapping (6000 unit radius)
@@ -145,8 +146,8 @@ export class StarGenerator {
     ];
 
     for (let i = 0; i < count; i++) {
-      // Allow nebulas to overlap with stars completely
-      const distance = 500 + random() * 8947; // Full range from 53-6000 to allow complete overlap
+      // Allow nebulas to overlap with stars completely  
+      const distance = 800 + random() * 8647; // Increased minimum distance by 3 (500->800), adjusted range to maintain max at ~9500
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
       
