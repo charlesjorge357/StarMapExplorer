@@ -94,8 +94,15 @@ function StarField({
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
 
   const onNebulaClick = (nebula: any) => {
-    console.log(`Nebula selected: ${nebula.name}`);
-    setSelectedNebula(nebula);
+    if (selectedNebula?.id === nebula.id) {
+      // Deselect if clicking the same nebula
+      console.log(`Deselected nebula: ${nebula.name}`);
+      setSelectedNebula(null);
+    } else {
+      // Select new nebula
+      console.log(`Nebula selected: ${nebula.name}`);
+      setSelectedNebula(nebula);
+    }
   };
 
   const handleBackgroundClick = () => {
@@ -168,10 +175,12 @@ function StarField({
               e.stopPropagation();
               onNebulaClick(nebula);
             }}
-            onPointerOver={() => {
+            onPointerOver={(e) => {
+              e.stopPropagation();
               document.body.style.cursor = 'pointer';
             }}
-            onPointerOut={() => {
+            onPointerOut={(e) => {
+              e.stopPropagation();
               document.body.style.cursor = 'auto';
             }}
           >

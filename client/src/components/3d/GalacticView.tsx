@@ -89,6 +89,13 @@ export function GalacticView() {
   const { transitionTo } = useCamera();
   const stars = universeData?.stars || [];
 
+  const handleBackgroundClick = () => {
+    if (selectedStar || selectedNebula) {
+      setSelectedNebula(null);
+      console.log('Cleared nebula selection in GalacticView');
+    }
+  };
+
   const handleStarClick = (star: Star) => {
     console.log('Star clicked:', star.name);
     selectStar(star);
@@ -105,8 +112,15 @@ export function GalacticView() {
   );
   const [selectedNebula, setSelectedNebula] = useState<Nebula | null>(null);
   const onNebulaClick = (nebula: Nebula) => {
-    console.log(`Nebula selected: ${nebula.name}`);
-    setSelectedNebula(nebula);
+    if (selectedNebula?.id === nebula.id) {
+      // Deselect if clicking the same nebula
+      console.log(`Deselected nebula: ${nebula.name}`);
+      setSelectedNebula(null);
+    } else {
+      // Select new nebula
+      console.log(`Nebula selected: ${nebula.name}`);
+      setSelectedNebula(nebula);
+    }
   };
 
   // starfield background
@@ -144,7 +158,7 @@ export function GalacticView() {
   }
 
   return (
-    <group>
+    <group onClick={handleBackgroundClick}>
       {/* Background starfield */}
       <points geometry={starfield}>
         <pointsMaterial size={0.5} vertexColors transparent opacity={0.6} />
