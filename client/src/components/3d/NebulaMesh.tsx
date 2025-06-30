@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { Nebula } from '../../../shared/schema';
+import { Nebula } from 'shared/schema';
 
 interface NebulaMeshProps {
   nebula: Nebula;
@@ -42,14 +42,14 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   const nebulaShape = useMemo(() => {
     const aspectRatio1 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
     const aspectRatio2 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
-    const sizeMultiplier = 1.2; // Make nebulas 20% larger on average
+    const sizeMultiplier = 3.2; // Make nebulas 80% larger on average
     
     const radiusX = nebula.radius * aspectRatio1 * sizeMultiplier;
     const radiusY = nebula.radius * sizeMultiplier;
     const radiusZ = nebula.radius * aspectRatio2 * sizeMultiplier;
     
     // Calculate max XYZ for central glow sizing
-    const maxRadius = Math.max(radiusX, radiusY, radiusZ);
+    const maxRadius = (Math.max(radiusX, radiusY, radiusZ) * 1.5);
     
     return {
       radiusX,
@@ -73,7 +73,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       const phi = Math.acos(2 * v - 1);
       
       // Base spherical coordinates
-      const r = Math.pow(Math.random(), 0.3); // Bias towards center
+      const r = 1 - Math.pow(Math.random(), 0.3); // Bias towards center
       let x = r * Math.sin(phi) * Math.cos(theta);
       let y = r * Math.sin(phi) * Math.sin(theta);
       let z = r * Math.cos(phi);
