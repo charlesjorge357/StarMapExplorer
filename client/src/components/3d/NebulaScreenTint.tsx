@@ -58,6 +58,12 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       
       // Check if camera is inside the nebula (using scaled radius to match visual size)
       const scaledRadius = nebula.radius * 4.5; // Match the larger nebula mesh scaling
+      
+      // Debug every nebula check
+      if (distance < scaledRadius * 1.5) { // Debug nearby nebulas
+        console.log(`Nebula ${nebula.name}: distance=${distance.toFixed(1)}, scaledRadius=${scaledRadius.toFixed(1)}, inside=${distance < scaledRadius}`);
+      }
+      
       if (distance < scaledRadius) {
         const penetration = 1 - (distance / scaledRadius);
         const intensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
@@ -68,16 +74,22 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
         }
         
         // Debug logging for system view
-        console.log(`Camera in nebula ${nebula.name} - distance: ${distance.toFixed(1)}, intensity: ${intensity.toFixed(3)}`);
+        console.log(`Camera in nebula ${nebula.name} - distance: ${distance.toFixed(1)}, intensity: ${intensity.toFixed(3)}, tintIntensity: ${tintIntensity.toFixed(3)}`);
       }
     }
 
     // Apply tint effect
     if (closestNebula && tintIntensity > 0) {
       const color = closestNebula.color;
-      overlayRef.current.style.backgroundColor = `${color}${Math.floor(tintIntensity * 255).toString(16).padStart(2, '0')}`;
+      const alpha = Math.floor(tintIntensity * 255).toString(16).padStart(2, '0');
+      const backgroundColor = `${color}${alpha}`;
+      overlayRef.current.style.backgroundColor = backgroundColor;
+      console.log(`Applying tint: ${backgroundColor} for nebula ${closestNebula.name}`);
     } else {
       overlayRef.current.style.backgroundColor = 'transparent';
+      if (nebulas.length > 0) {
+        console.log('No tint applied - not inside any nebula');
+      }
     }
   });
 
