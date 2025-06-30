@@ -55,7 +55,7 @@ export const useUniverse = create<UniverseState>()(
       console.log("Initializing Universe Mapper");
       const state = get();
       if (!state.universeData) {
-        state.generateSandbox();
+        state.generateSandbox(); // This will generate a new random seed each time
       }
     },
 
@@ -129,11 +129,12 @@ export const useUniverse = create<UniverseState>()(
     },
 
     generateSandbox: (seed) => {
-      console.log("Generating sandbox universe with seed:", seed);
+      // Generate a new random seed each time if no seed is provided
+      const actualSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
+      console.log("Generating sandbox universe with seed:", actualSeed);
       set({ isLoading: true, error: null });
 
       try {
-        const actualSeed = seed || Math.floor(Math.random() * 1000000);
         const stars = StarGenerator.generateStars(actualSeed, 4000);
 
         const universeData: UniverseData = {
