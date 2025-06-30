@@ -317,12 +317,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const [isSearching, setIsSearching] = useState(false);
   const { selectStar } = useUniverse();
 
-  // Generate nebulas for this system view using the same seed as the universe
-  const { universeData } = useUniverse();
-  const nebulas = useMemo(() => {
-    const seed = universeData?.metadata?.seed || 54321;
-    return StarGenerator.generateNebulas(35, undefined, seed);
-  }, [universeData?.metadata?.seed]);
+  // Generate nebulas for this system view
+  const nebulas = useMemo(() => StarGenerator.generateNebulas(35), []);
 
   // Check if current star is inside any nebula (using scaled radius to match visual representation)
   const starInNebula = useMemo(() => {
@@ -333,14 +329,12 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     for (const nebula of nebulas) {
       const nebulaPos = new THREE.Vector3(...nebula.position);
       const distance = starPos.distanceTo(nebulaPos);
-      const scaledRadius = nebula.radius * 4.5; // Match the larger nebula scaling from NebulaMesh
+      const scaledRadius = nebula.radius * 3.5; // Match nebula scaling
 
       if (distance < scaledRadius) {
-        console.log(`Star ${system.star.name} is inside ${nebula.name} - distance: ${distance.toFixed(1)}, radius: ${scaledRadius.toFixed(1)}`);
         return nebula;
       }
     }
-    console.log(`Star ${system.star.name} is not in any nebula`);
     return null;
   }, [system.star, nebulas]);
 

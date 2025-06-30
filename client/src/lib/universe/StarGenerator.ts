@@ -25,7 +25,7 @@ export class StarGenerator {
       'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi',
       'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega'
     ];
-
+    
     const suffixes = [
       'Centauri', 'Draconis', 'Lyrae', 'Cygni', 'Orionis', 'Ursae',
       'Andromedae', 'Cassiopeiae', 'Persei', 'Aquilae', 'Bootis',
@@ -33,10 +33,10 @@ export class StarGenerator {
     ];
 
     if (index === 0) return "Sol"; // Our sun
-
+    
     const prefixIndex = Math.floor(index / suffixes.length) % prefixes.length;
     const suffixIndex = index % suffixes.length;
-
+    
     return `${prefixes[prefixIndex]} ${suffixes[suffixIndex]}`;
   }
 
@@ -46,62 +46,44 @@ export class StarGenerator {
     console.log(`Generating ${count} stars with seed ${seed}...`);
 
     // First generate nebulas to place stars inside them
-    const nebulas = this.generateNebulas(35, undefined, seed); // Use the same seed for consistent generation
-
+    const nebulas = this.generateNebulas(35); // Generate 35 nebulas first
+    
     // Calculate how many stars should be in nebulas vs scattered
     const starsInNebulas = Math.floor(count * 0.4); // 40% of stars in nebulas
     const scatteredStars = count - starsInNebulas;
-
+    
     let starIndex = 0;
-
-    // Place stars inside nebulas in proper clusters
+    
+    // Place stars inside nebulas
     const starsPerNebula = Math.floor(starsInNebulas / nebulas.length);
     const extraStars = starsInNebulas % nebulas.length;
-
+    
     nebulas.forEach((nebula, nebulaIndex) => {
       const thisNebulaStarCount = starsPerNebula + (nebulaIndex < extraStars ? 1 : 0);
-
-      // Create multiple sub-clusters within each nebula
-      const subClusters = Math.max(1, Math.floor(thisNebulaStarCount / 15)); // 15 stars per sub-cluster
-      const starsPerSubCluster = Math.floor(thisNebulaStarCount / subClusters);
-      const extraSubClusterStars = thisNebulaStarCount % subClusters;
-
-      for (let cluster = 0; cluster < subClusters; cluster++) {
-        const clusterStarCount = starsPerSubCluster + (cluster < extraSubClusterStars ? 1 : 0);
+      
+      for (let j = 0; j < thisNebulaStarCount; j++) {
+        // Generate position within expanded nebula influence area (2x radius for more spread)
+        const expansionFactor = 2.5; // Expand star distribution area
+        const distance = random() * nebula.radius * expansionFactor;
+        const theta = random() * Math.PI * 2;
+        const phi = Math.acos(2 * random() - 1);
         
-        // Generate sub-cluster center within nebula (tighter distribution)
-        const clusterDistance = random() * nebula.radius * 0.8; // Keep clusters within 80% of nebula radius
-        const clusterTheta = random() * Math.PI * 2;
-        const clusterPhi = Math.acos(2 * random() - 1);
+        const x = nebula.position[0] + distance * Math.sin(phi) * Math.cos(theta);
+        const y = nebula.position[1] + distance * Math.sin(phi) * Math.sin(theta);
+        const z = nebula.position[2] + distance * Math.cos(phi);
 
-        const clusterCenterX = nebula.position[0] + clusterDistance * Math.sin(clusterPhi) * Math.cos(clusterTheta);
-        const clusterCenterY = nebula.position[1] + clusterDistance * Math.sin(clusterPhi) * Math.sin(clusterTheta);
-        const clusterCenterZ = nebula.position[2] + clusterDistance * Math.cos(clusterPhi);
-
-        // Place stars in tight cluster around this center
-        for (let j = 0; j < clusterStarCount; j++) {
-          // Much tighter clustering - stars within 30-80 units of cluster center
-          const starDistance = 30 + random() * 50;
-          const starTheta = random() * Math.PI * 2;
-          const starPhi = Math.acos(2 * random() - 1);
-
-          const x = clusterCenterX + starDistance * Math.sin(starPhi) * Math.cos(starTheta);
-          const y = clusterCenterY + starDistance * Math.sin(starPhi) * Math.sin(starTheta);
-          const z = clusterCenterZ + starDistance * Math.cos(starPhi);
-
-          stars.push(this.createStar(starIndex, [x, y, z], random));
-          starIndex++;
-        }
+        stars.push(this.createStar(starIndex, [x, y, z], random));
+        starIndex++;
       }
     });
-
+    
     // Place remaining stars scattered throughout space
     for (let i = starIndex; i < count; i++) {
       // Generate position in a much larger sphere to prevent overlapping (6000 unit radius)
       const distance = 150 + random() * 5850; // Minimum distance of 150 units from center
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
-
+      
       const x = distance * Math.sin(phi) * Math.cos(theta);
       const y = distance * Math.sin(phi) * Math.sin(theta);
       const z = distance * Math.cos(phi);
@@ -109,7 +91,7 @@ export class StarGenerator {
       stars.push(this.createStar(i, [x, y, z], random));
     }
 
-    console.log(`Generated ${stars.length} stars (${starsInNebulas} in ${nebulas.length} nebula clusters, ${scatteredStars} scattered)`);
+    console.log(`Generated ${stars.length} stars (${starsInNebulas} in nebulas, ${scatteredStars} scattered)`);
     return { stars, nebulas };
   }
 
@@ -126,7 +108,7 @@ export class StarGenerator {
     const massRand = random();
     let mass: number;
     let temperature: number;
-
+    
     // Mass distribution (most stars are M-class)
     if (massRand < 0.7) {
       mass = 0.1 + random() * 0.4; // M-class: 0.1-0.5 solar masses
@@ -185,9 +167,9 @@ export class StarGenerator {
       default: return '#ffffff';
     }
   }
-  static generateNebulas(count: number, stars?: Star[], seed: number): Nebula[] {
+  static generateNebulas(count: number, stars?: Star[]): Nebula[] {
     const nebulas: Nebula[] = [];
-    const random = this.seededRandom(seed); // Use provided seed for consistency
+    const random = this.seededRandom(54321); // Use seeded random for consistency
 
     const nebulaNames = [
       'Orion', 'Eagle', 'Horsehead', 'Cat\'s Eye', 'Rosette', 'Helix',
@@ -206,55 +188,49 @@ export class StarGenerator {
 
     // Generate nebula cluster centers first (where stars will be placed)
     let clusterCenters: [number, number, number][] = [];
-
+    
     if (!stars) {
       // Generate well-spaced cluster centers for star formation regions
       for (let i = 0; i < Math.min(count, 15); i++) {
         let attempts = 0;
         let validPosition = false;
         let x: number, y: number, z: number;
-
+        
         do {
           const distance = 1500 + random() * 6000; // Increased spread (1500-7500 vs 1000-5000)
           const theta = random() * Math.PI * 2;
           const phi = Math.acos(2 * random() - 1);
-
+          
           x = distance * Math.sin(phi) * Math.cos(theta);
           y = distance * Math.sin(phi) * Math.sin(theta);
           z = distance * Math.cos(phi);
-
-          // Check minimum distance from existing cluster centers (but allow fallback)
+          
+          // Check minimum distance from existing cluster centers
           validPosition = true;
           const minDistance = 800; // Minimum 800 units between cluster centers
-
+          
           for (const existingCenter of clusterCenters) {
             const dx = x - existingCenter[0];
             const dy = y - existingCenter[1];
             const dz = z - existingCenter[2];
             const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
+            
             if (distance < minDistance) {
               validPosition = false;
               break;
             }
           }
-
+          
           attempts++;
-          // Force accept position after many attempts to prevent infinite loops
-          if (attempts >= 45) {
-            validPosition = true;
-          }
-        } while (!validPosition && attempts < 50);
-
+        } while (!validPosition && attempts < 50); // Limit attempts to prevent infinite loop
+        
         clusterCenters.push([x, y, z]);
       }
     }
 
-    console.log(`Generating ${count} nebulas with ${clusterCenters.length} cluster centers...`);
-
     for (let i = 0; i < count; i++) {
       let x: number, y: number, z: number;
-
+      
       // If we have cluster centers, place nebulas over them first
       if (clusterCenters.length > 0 && i < clusterCenters.length) {
         const center = clusterCenters[i];
@@ -262,7 +238,7 @@ export class StarGenerator {
         const offsetDistance = 20 + random() * 80; // Very small offset to center over cluster
         const theta = random() * Math.PI * 2;
         const phi = Math.acos(2 * random() - 1);
-
+        
         x = center[0] + offsetDistance * Math.sin(phi) * Math.cos(theta);
         y = center[1] + offsetDistance * Math.sin(phi) * Math.sin(theta);
         z = center[2] + offsetDistance * Math.cos(phi);
@@ -271,7 +247,7 @@ export class StarGenerator {
         const distance = 800 + random() * 8647;
         const theta = random() * Math.PI * 2;
         const phi = Math.acos(2 * random() - 1);
-
+        
         x = distance * Math.sin(phi) * Math.cos(theta);
         y = distance * Math.sin(phi) * Math.sin(theta);
         z = distance * Math.cos(phi);
@@ -312,9 +288,8 @@ export class StarGenerator {
       nebulas.push(nebula);
     }
 
-    console.log(`Generated ${nebulas.length} nebulas`);
     return nebulas;
   }
-
-
+  
+  
 }
