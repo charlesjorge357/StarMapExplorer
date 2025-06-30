@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -178,7 +178,7 @@ export function GalacticView() {
       </points>
 
       {/* Main stars */}
-      {stars.slice(0, 400).map((star) => (
+      {displayedStars.map((star) => (
         <StarMesh
           key={star.id}
           star={star}
