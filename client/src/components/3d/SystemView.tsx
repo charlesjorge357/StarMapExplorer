@@ -554,7 +554,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         <meshBasicMaterial 
           color={getStarColor(star.spectralClass)}
           transparent
-          opacity={0.3}
+          opacity={0.1}
         />
       </mesh>
 
