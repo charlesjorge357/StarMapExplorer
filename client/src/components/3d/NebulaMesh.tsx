@@ -219,7 +219,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
       {/* Selection indicator - spherical wireframe */}
       {isSelected && (
-        <mesh>
+        <mesh renderOrder={1001}>
           <sphereGeometry args={[selectionRadius * 0.9, 32, 16]} />
           <meshBasicMaterial
             color={nebula.color}
@@ -227,6 +227,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
             opacity={0.15}
             wireframe
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
       )}
