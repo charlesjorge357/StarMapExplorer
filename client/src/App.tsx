@@ -91,6 +91,7 @@ function StarField({
       console.log("Unselected star by clicking background");
       setSelectedStar(null);
     }
+
   };
 
   return (
