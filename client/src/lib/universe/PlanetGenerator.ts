@@ -39,19 +39,19 @@ export class PlanetGenerator {
 
   static generateSurfaceFeatures(planet: Planet, count: number = 5): SurfaceFeature[] {
     const features: SurfaceFeature[] = [];
-    
+
     // Only generate surface features for rocky planets
     if (planet.type === 'gas_giant' || planet.type === 'frost_giant') {
       return features;
     }
 
     const featureTypes: Array<'city' | 'fort' | 'landmark'> = ['city', 'fort', 'landmark'];
-    
+
     for (let i = 0; i < count; i++) {
       const lat = (Math.random() - 0.5) * 180; // -90 to 90
       const lon = (Math.random() - 0.5) * 360; // -180 to 180
       const type = featureTypes[Math.floor(Math.random() * featureTypes.length)];
-      
+
       const feature: SurfaceFeature = {
         id: `feature-${i}`,
         type,
@@ -59,10 +59,10 @@ export class PlanetGenerator {
         position: [lat, lon],
         description: this.generateFeatureDescription(type)
       };
-      
+
       features.push(feature);
     }
-    
+
     return features;
   }
 
@@ -70,7 +70,7 @@ export class PlanetGenerator {
     const cityNames = ['New Terra', 'Alpha Station', 'Beta Colony', 'Gamma Outpost', 'Delta City'];
     const fortNames = ['Fort Alpha', 'Beta Garrison', 'Gamma Stronghold', 'Delta Fortress', 'Epsilon Base'];
     const landmarkNames = ['Crystal Peaks', 'Azure Falls', 'Crimson Canyon', 'Emerald Valley', 'Silver Plateau'];
-    
+
     switch (type) {
       case 'city':
         return cityNames[index % cityNames.length];
@@ -78,17 +78,21 @@ export class PlanetGenerator {
         return fortNames[index % fortNames.length];
       case 'landmark':
         return landmarkNames[index % landmarkNames.length];
+      default:
+        return 'Unknown Feature';
     }
   }
 
   private static generateFeatureDescription(type: 'city' | 'fort' | 'landmark'): string {
     switch (type) {
       case 'city':
-        return 'A major population center with industrial and commercial facilities.';
+        return 'A bustling urban center with diverse populations.';
       case 'fort':
-        return 'A military installation providing defense and security.';
+        return 'A stronghold providing safety and defense.';
       case 'landmark':
-        return 'A notable geographical or cultural feature.';
+        return 'A prominent natural or historical site.';
+      default:
+        return 'An interesting location.';
     }
   }
 }

@@ -132,7 +132,7 @@ export class StarGenerator {
     const nebulaNames = [
       'Orion', 'Eagle', 'Horsehead', 'Cat\'s Eye', 'Rosette', 'Helix',
       'Ring', 'Crab', 'Veil', 'Swan', 'Lagoon', 'Trifid', 'Flame',
-      'Witch Head', 'Heart', 'Soul', 'North America', 'Pelican'
+      'Witch Head', 'Heart', 'Soul', 'North', 'Pelican'
     ];
 
     const compositions = [
