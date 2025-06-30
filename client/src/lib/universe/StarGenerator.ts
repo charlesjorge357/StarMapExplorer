@@ -124,7 +124,7 @@ export class StarGenerator {
       default: return '#ffffff';
     }
   }
-  static generateNebulas(count: number): Nebula[] {
+  static generateNebulas(count: number, stars?: Star[]): Nebula[] {
     const nebulas: Nebula[] = [];
     const random = this.seededRandom(54321); // Use seeded random for consistency
 
@@ -143,15 +143,86 @@ export class StarGenerator {
       'Molecular Hydrogen'
     ];
 
-    for (let i = 0; i < count; i++) {
-      // Allow nebulas to overlap with stars completely  
-      const distance = 800 + random() * 8647; // Increased minimum distance by 3 (500->800), adjusted range to maintain max at ~9500
-      const theta = random() * Math.PI * 2;
-      const phi = Math.acos(2 * random() - 1);
+    // If stars are provided, calculate density-based placement
+    let densityHotspots: { position: [number, number, number], weight: number }[] = [];
+    
+    if (stars && stars.length > 0) {
+      // Create a 3D grid to calculate star density
+      const gridSize = 1000; // Grid cell size
+      const densityMap = new Map<string, { count: number, totalMass: number, center: [number, number, number] }>();
       
-      const x = distance * Math.sin(phi) * Math.cos(theta);
-      const y = distance * Math.sin(phi) * Math.sin(theta);
-      const z = distance * Math.cos(phi);
+      // Calculate density for each grid cell
+      stars.forEach(star => {
+        const gridX = Math.floor(star.position[0] / gridSize);
+        const gridY = Math.floor(star.position[1] / gridSize);
+        const gridZ = Math.floor(star.position[2] / gridSize);
+        const key = `${gridX},${gridY},${gridZ}`;
+        
+        if (!densityMap.has(key)) {
+          densityMap.set(key, {
+            count: 0,
+            totalMass: 0,
+            center: [gridX * gridSize, gridY * gridSize, gridZ * gridSize]
+          });
+        }
+        
+        const cell = densityMap.get(key)!;
+        cell.count++;
+        cell.totalMass += star.mass || 1;
+      });
+      
+      // Convert high-density cells to hotspots
+      densityMap.forEach(cell => {
+        if (cell.count >= 8) { // Only consider cells with 8+ stars as hotspots
+          const weight = Math.log(cell.count) * cell.totalMass; // Weight by count and total mass
+          densityHotspots.push({
+            position: cell.center,
+            weight: weight
+          });
+        }
+      });
+      
+      // Sort by weight and keep top hotspots
+      densityHotspots.sort((a, b) => b.weight - a.weight);
+      densityHotspots = densityHotspots.slice(0, Math.max(10, count * 0.4)); // Keep up to 40% of nebula count as hotspots
+    }
+
+    for (let i = 0; i < count; i++) {
+      let x: number, y: number, z: number;
+      
+      // 70% chance to place near density hotspots if they exist, 30% random distribution
+      if (densityHotspots.length > 0 && random() < 0.7) {
+        // Choose a random hotspot weighted by density
+        const totalWeight = densityHotspots.reduce((sum, hotspot) => sum + hotspot.weight, 0);
+        let randomWeight = random() * totalWeight;
+        let selectedHotspot = densityHotspots[0];
+        
+        for (const hotspot of densityHotspots) {
+          randomWeight -= hotspot.weight;
+          if (randomWeight <= 0) {
+            selectedHotspot = hotspot;
+            break;
+          }
+        }
+        
+        // Place nebula near the selected hotspot with some random offset
+        const offsetDistance = 200 + random() * 800; // 200-1000 unit offset from hotspot center
+        const theta = random() * Math.PI * 2;
+        const phi = Math.acos(2 * random() - 1);
+        
+        x = selectedHotspot.position[0] + offsetDistance * Math.sin(phi) * Math.cos(theta);
+        y = selectedHotspot.position[1] + offsetDistance * Math.sin(phi) * Math.sin(theta);
+        z = selectedHotspot.position[2] + offsetDistance * Math.cos(phi);
+      } else {
+        // Random placement for distribution variety
+        const distance = 800 + random() * 8647;
+        const theta = random() * Math.PI * 2;
+        const phi = Math.acos(2 * random() - 1);
+        
+        x = distance * Math.sin(phi) * Math.cos(theta);
+        y = distance * Math.sin(phi) * Math.sin(theta);
+        z = distance * Math.cos(phi);
+      }
 
       // Determine nebula type and properties
       const typeRand = random();

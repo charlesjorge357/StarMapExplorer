@@ -110,10 +110,10 @@ export function GalacticView() {
     setTimeout(() => setScope('system'), 2000);
   };
 
-  // generate 35 random nebulas once
+  // generate 35 nebulas based on star density
   const nebulas = useMemo<Nebula[]>(
-    () => StarGenerator.generateNebulas(35),
-    []
+    () => StarGenerator.generateNebulas(35, stars),
+    [stars]
   );
   const [selectedNebula, setSelectedNebula] = useState<Nebula | null>(null);
   const onNebulaClick = (nebula: Nebula) => {
