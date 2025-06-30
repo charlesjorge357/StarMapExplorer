@@ -16,47 +16,76 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   
-  // Try to load smoke texture, fallback to a simple circle if not available
-  let texture;
-  try {
-    texture = useTexture('/textures/smoke.png');
-  } catch {
-    // Create a simple circular texture as fallback
+  // Create a simple circular texture procedurally
+  const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d')!;
+    
+    // Create a smooth circular gradient
     const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+    gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+    gradient.addColorStop(0.7, 'rgba(255,255,255,0.3)');
     gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 64, 64);
-    texture = new THREE.CanvasTexture(canvas);
-  }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
-  // Generate particle positions within the nebula volume
+  // Generate elliptical nebula dimensions
+  const nebulaShape = useMemo(() => {
+    const aspectRatio1 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
+    const aspectRatio2 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
+    
+    return {
+      radiusX: nebula.radius * aspectRatio1,
+      radiusY: nebula.radius,
+      radiusZ: nebula.radius * aspectRatio2,
+      rotation: Math.random() * Math.PI * 2
+    };
+  }, [nebula.radius, nebula.id]);
+
+  // Generate particle positions within the elliptical nebula volume
   const particles = useMemo(() => {
-    const particleCount = Math.min(200, Math.max(50, Math.floor(nebula.radius * 2)));
+    const particleCount = Math.min(150, Math.max(40, Math.floor(nebula.radius * 1.5)));
     const data = [];
     
     for (let i = 0; i < particleCount; i++) {
-      // Create a more realistic cloud distribution
-      const r = nebula.radius * (0.2 + Math.pow(Math.random(), 0.5) * 0.8);
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.acos(2 * Math.random() - 1);
+      // Create elliptical distribution
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
       
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi);
+      // Base spherical coordinates
+      const r = Math.pow(Math.random(), 0.3); // Bias towards center
+      let x = r * Math.sin(phi) * Math.cos(theta);
+      let y = r * Math.sin(phi) * Math.sin(theta);
+      let z = r * Math.cos(phi);
       
-      // Add some randomness to particle sizes and opacity
-      const scale = 2 + Math.random() * 8;
-      const opacity = 0.1 + Math.random() * 0.3;
-      const rotationSpeed = (Math.random() - 0.5) * 0.01;
+      // Apply elliptical scaling
+      x *= nebulaShape.radiusX;
+      y *= nebulaShape.radiusY;
+      z *= nebulaShape.radiusZ;
+      
+      // Apply rotation
+      const cosRot = Math.cos(nebulaShape.rotation);
+      const sinRot = Math.sin(nebulaShape.rotation);
+      const rotatedX = x * cosRot - z * sinRot;
+      const rotatedZ = x * sinRot + z * cosRot;
+      
+      const scale = 1.5 + Math.random() * 4;
+      const opacity = 0.08 + Math.random() * 0.25;
+      const rotationSpeed = (Math.random() - 0.5) * 0.008;
       
       data.push({
-        position: [x, y, z] as [number, number, number],
+        position: [rotatedX, y, rotatedZ] as [number, number, number],
         scale,
         opacity,
         rotationSpeed,
@@ -64,13 +93,13 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       });
     }
     return data;
-  }, [nebula.radius, nebula.id]);
+  }, [nebula.radius, nebula.id, nebulaShape]);
 
   useFrame((state, delta) => {
     if (groupRef.current) {
       // Gentle overall rotation
-      groupRef.current.rotation.y += delta * 0.005;
-      groupRef.current.rotation.x += delta * 0.002;
+      groupRef.current.rotation.y += delta * 0.003;
+      groupRef.current.rotation.x += delta * 0.001;
       
       // Individual particle animation
       groupRef.current.children.forEach((child, index) => {
@@ -80,41 +109,51 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
           
           // Gentle floating motion
           const time = state.clock.elapsedTime;
-          child.position.y += Math.sin(time * 0.5 + index) * 0.01;
+          child.position.x += Math.sin(time * 0.3 + index * 0.1) * 0.005;
+          child.position.y += Math.cos(time * 0.4 + index * 0.15) * 0.008;
         }
       });
     }
   });
 
+  // Calculate the maximum radius for the hitbox (elliptical bounding sphere)
+  const hitboxRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusY, nebulaShape.radiusZ);
+
   return (
     <group ref={groupRef} position={nebula.position}>
+      {/* Invisible sphere for hitbox */}
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          onNebulaClick(nebula);
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setHovered(false);
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <sphereGeometry args={[hitboxRadius, 16, 12]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Particle cloud */}
       {particles.map((particle, i) => (
         <sprite
           key={i}
           position={particle.position}
           scale={[particle.scale, particle.scale, 1]}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.nativeEvent.stopImmediatePropagation();
-            onNebulaClick(nebula);
-          }}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            setHovered(true);
-            document.body.style.cursor = 'pointer';
-          }}
-          onPointerOut={(e) => {
-            e.stopPropagation();
-            setHovered(false);
-            document.body.style.cursor = 'auto';
-          }}
         >
           <spriteMaterial
             map={texture}
             color={nebula.color}
             transparent
-            opacity={particle.opacity * (isSelected ? 1.5 : 1) * (hovered ? 1.2 : 1)}
+            opacity={particle.opacity * (isSelected ? 1.8 : 1)}
             depthWrite={false}
             depthTest={true}
             blending={THREE.AdditiveBlending}
@@ -125,35 +164,36 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
       {/* Central glow for emission nebulas */}
       {nebula.type === 'emission' && (
-        <sprite scale={[nebula.radius * 0.8, nebula.radius * 0.8, 1]}>
+        <sprite scale={[nebulaShape.radiusX * 0.6, nebulaShape.radiusY * 0.6, 1]}>
           <spriteMaterial
+            map={texture}
             color={nebula.color}
             transparent
-            opacity={0.05}
+            opacity={0.04}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
         </sprite>
       )}
 
-      {/* Selection indicator */}
+      {/* Selection indicator - elliptical wireframe */}
       {isSelected && (
-        <mesh>
+        <mesh scale={[nebulaShape.radiusX / nebula.radius, nebulaShape.radiusY / nebula.radius, nebulaShape.radiusZ / nebula.radius]}>
           <sphereGeometry args={[nebula.radius * 1.1, 32, 16]} />
           <meshBasicMaterial
             color={nebula.color}
             transparent
-            opacity={0.1}
+            opacity={0.15}
             wireframe
             depthWrite={false}
           />
         </mesh>
       )}
 
-      {/* Labels */}
-      {(hovered || isSelected) && (
+      {/* Labels - only when selected */}
+      {isSelected && (
         <Text
-          position={[0, nebula.radius + 5, 0]}
+          position={[0, hitboxRadius + 5, 0]}
           fontSize={2}
           color={nebula.color}
           anchorX="center"
@@ -164,9 +204,9 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
         </Text>
       )}
 
-      {(hovered || isSelected) && (
+      {isSelected && (
         <Text
-          position={[0, nebula.radius + 2, 0]}
+          position={[0, hitboxRadius + 2, 0]}
           fontSize={1}
           color={nebula.color}
           anchorX="center"
