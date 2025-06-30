@@ -38,22 +38,23 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
     return texture;
   }, []);
 
-  // Generate elliptical nebula dimensions
+  // Generate elliptical nebula dimensions (1.2x larger on average)
   const nebulaShape = useMemo(() => {
     const aspectRatio1 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
     const aspectRatio2 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
+    const sizeMultiplier = 1.2; // Make nebulas 20% larger on average
     
     return {
-      radiusX: nebula.radius * aspectRatio1,
-      radiusY: nebula.radius,
-      radiusZ: nebula.radius * aspectRatio2,
+      radiusX: nebula.radius * aspectRatio1 * sizeMultiplier,
+      radiusY: nebula.radius * sizeMultiplier,
+      radiusZ: nebula.radius * aspectRatio2 * sizeMultiplier,
       rotation: Math.random() * Math.PI * 2
     };
   }, [nebula.radius, nebula.id]);
 
   // Generate particle positions within the elliptical nebula volume
   const particles = useMemo(() => {
-    const particleCount = Math.min(150, Math.max(40, Math.floor(nebula.radius * 1.5)));
+    const particleCount = 120; // Fixed count to prevent LOD popping
     const data = [];
     
     for (let i = 0; i < particleCount; i++) {
@@ -116,8 +117,8 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
     }
   });
 
-  // Calculate the maximum radius for the hitbox (elliptical bounding sphere)
-  const hitboxRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusY, nebulaShape.radiusZ);
+  // Calculate the maximum radius for the hitbox and selection ring (elliptical bounding sphere)
+  const selectionRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusZ); // Use X or Z, whichever is longer
 
   return (
     <group ref={groupRef} position={nebula.position}>
@@ -138,7 +139,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[hitboxRadius, 16, 12]} />
+        <sphereGeometry args={[selectionRadius, 16, 12]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -176,10 +177,10 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
         </sprite>
       )}
 
-      {/* Selection indicator - elliptical wireframe */}
+      {/* Selection indicator - spherical wireframe */}
       {isSelected && (
-        <mesh scale={[nebulaShape.radiusX / nebula.radius, nebulaShape.radiusY / nebula.radius, nebulaShape.radiusZ / nebula.radius]}>
-          <sphereGeometry args={[nebula.radius * 1.1, 32, 16]} />
+        <mesh>
+          <sphereGeometry args={[selectionRadius * 1.1, 32, 16]} />
           <meshBasicMaterial
             color={nebula.color}
             transparent
@@ -193,7 +194,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       {/* Labels - only when selected */}
       {isSelected && (
         <Text
-          position={[0, hitboxRadius + 5, 0]}
+          position={[0, selectionRadius + 5, 0]}
           fontSize={2}
           color={nebula.color}
           anchorX="center"
@@ -206,7 +207,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
       {isSelected && (
         <Text
-          position={[0, hitboxRadius + 2, 0]}
+          position={[0, selectionRadius + 2, 0]}
           fontSize={1}
           color={nebula.color}
           anchorX="center"
