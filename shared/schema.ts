@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  jsonb,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,8 +33,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // Universe data types
-export type ScopeType = 'galactic' | 'system' | 'planetary';
-export type ModeType = 'sandbox' | 'lore';
+export type ScopeType = "galactic" | "system" | "planetary";
+export type ModeType = "sandbox" | "lore";
 
 export interface Star {
   id: string;
@@ -69,24 +77,24 @@ export interface Moon {
 
 export interface SurfaceFeature {
   id: string;
-  type: 'city' | 'fort' | 'landmark';
+  type: "city" | "fort" | "landmark";
   name: string;
   position: [number, number]; // latitude, longitude
   description?: string;
   population?: number; // For cities - affects light intensity
-  size?: 'small' | 'medium' | 'large'; // Affects light cluster size
-  technology?: 'primitive' | 'industrial' | 'advanced'; // Affects light color
+  size?: "small" | "medium" | "large"; // Affects light cluster size
+  technology?: "primitive" | "industrial" | "advanced"; // Affects light color
 }
 
-export type PlanetType = 
-  | 'gas_giant' 
-  | 'frost_giant' 
-  | 'arid_world' 
-  | 'verdant_world' 
-  | 'acidic_world' 
-  | 'nuclear_world' 
-  | 'ocean_world' 
-  | 'dead_world';
+export type PlanetType =
+  | "gas_giant"
+  | "frost_giant"
+  | "arid_world"
+  | "verdant_world"
+  | "acidic_world"
+  | "nuclear_world"
+  | "ocean_world"
+  | "dead_world";
 
 export interface StarSystem {
   id: string;
@@ -115,4 +123,15 @@ export interface UniverseData {
     modified: string;
     seed?: number;
   };
+}
+
+export interface Nebula {
+  id: string;
+  name: string;
+  position: [number, number, number];
+  radius: number;
+  color: string;
+  composition: string;
+  type: "emission" | "reflection" | "dark" | "planetary";
+  starsWithin?: Star[]; // optional
 }

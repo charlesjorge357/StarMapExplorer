@@ -1,4 +1,4 @@
-import { Star } from "../../shared/schema";
+import { Star, Nebula } from "./types";
 
 export class StarGenerator {
   private static seededRandom(seed: number): () => number {
@@ -123,4 +123,30 @@ export class StarGenerator {
       default: return '#ffffff';
     }
   }
+  // In client/src/lib/universe/SystemGenerator.ts
+
+  private static generateNebulas(count: number): Nebula[] {
+    const nebulas: Nebula[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const nebula: Nebula = {
+        id: `nebula-${Math.random().toString(36).substring(2, 8)}`, // Unique random ID
+        name: `Nebula ${i + 1}`,
+        position: [
+          (Math.random() - 0.5) * 2000, // Random X position
+          (Math.random() - 0.5) * 2000, // Random Y position
+          (Math.random() - 0.5) * 2000  // Random Z position
+        ],
+        radius: Math.random() * 50 + 20, // Random radius between 20 and 70
+        color: `#${Math.floor(Math.random()*16777215).toString(16)}`, // Random color
+        composition: 'Hydrogen and Helium', // Replace with your own logic if needed
+        type: Math.random() < 0.5 ? 'emission' : 'reflection' // Random type
+      };
+      nebulas.push(nebula);
+    }
+
+    return nebulas;
+  }
+  
+  
 }
