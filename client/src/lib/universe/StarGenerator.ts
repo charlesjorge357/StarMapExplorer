@@ -1,4 +1,4 @@
-import { Star, Nebula } from "./types";
+import type { Star, Nebula } from "../../../../shared/schema";
 
 export class StarGenerator {
   private static seededRandom(seed: number): () => number {
@@ -125,7 +125,7 @@ export class StarGenerator {
   }
   // In client/src/lib/universe/SystemGenerator.ts
 
-  private static generateNebulas(count: number): Nebula[] {
+  static generateNebulas(count: number): Nebula[] {
     const nebulas: Nebula[] = [];
 
     for (let i = 0; i < count; i++) {
