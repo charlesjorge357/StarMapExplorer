@@ -15,6 +15,7 @@ import { NebulaMesh } from "./components/3d/NebulaMesh";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import * as THREE from "three";
+import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -781,7 +782,7 @@ function App() {
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Mass:</span> {currentSystem.star.mass?.toFixed(2)} M☉</p>
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Radius:</span> {currentSystem.star.radius?.toFixed(2)} R☉</p>
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Temperature:</span> {currentSystem.star.temperature?.toFixed(0)} K</p>
-                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass)) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 <p>Star information always visible in system view</p>
