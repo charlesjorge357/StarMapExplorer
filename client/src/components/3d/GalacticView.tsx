@@ -46,6 +46,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
           setHovered(false);
           document.body.style.cursor = 'auto';
         }}
+        renderOrder={1000}
       >
         <sphereGeometry args={[1, 8, 6]} />
         <meshStandardMaterial
