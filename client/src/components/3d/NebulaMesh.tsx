@@ -1,6 +1,6 @@
 
 import React, { useMemo, useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,6 +15,8 @@ interface NebulaMeshProps {
 export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [screenTintIntensity, setScreenTintIntensity] = useState(0);
+  const { camera } = useThree();
   
   // Create a simple circular texture procedurally
   const texture = useMemo(() => {
@@ -105,16 +107,36 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   }, [nebula.radius, nebula.id, nebulaShape]);
 
   useFrame((state, delta) => {
+    // Calculate screen tint intensity for this nebula
+    const cameraPos = camera.position;
+    const nebulaPos = new THREE.Vector3(...nebula.position);
+    const distance = cameraPos.distanceTo(nebulaPos);
+    const scaledRadius = nebula.radius * 3.5; // Match the scaled radius used in screen tint
+    
+    let tintIntensity = 0;
+    if (distance < scaledRadius) {
+      const penetration = 1 - (distance / scaledRadius);
+      tintIntensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
+    }
+    
+    setScreenTintIntensity(tintIntensity);
+
     if (groupRef.current) {
       // Gentle overall rotation
       groupRef.current.rotation.y += delta * 0.003;
       groupRef.current.rotation.x += delta * 0.001;
       
-      // Individual particle animation
+      // Individual particle animation with opacity fading
       groupRef.current.children.forEach((child, index) => {
         if (child instanceof THREE.Sprite && particles[index]) {
           const particle = particles[index];
           child.material.rotation += particle.rotationSpeed;
+          
+          // Fade particle opacity as screen tint increases
+          const fadeMultiplier = 1 - (tintIntensity / 0.15); // Fully fade when tint is at max
+          if (child.material instanceof THREE.SpriteMaterial) {
+            child.material.opacity = particle.opacity * (isSelected ? 1.8 : 1) * fadeMultiplier;
+          }
           
           // Gentle floating motion
           const time = state.clock.elapsedTime;
@@ -152,24 +174,27 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       </mesh>
 
       {/* Particle cloud */}
-      {particles.map((particle, i) => (
-        <sprite
-          key={i}
-          position={particle.position}
-          scale={[particle.scale, particle.scale, 1]}
-        >
-          <spriteMaterial
-            map={texture}
-            color={nebula.color}
-            transparent
-            opacity={particle.opacity * (isSelected ? 1.8 : 1)}
-            depthWrite={false}
-            depthTest={false}
-            blending={THREE.AdditiveBlending}
-            rotation={particle.initialRotation}
-          />
-        </sprite>
-      ))}
+      {particles.map((particle, i) => {
+        const fadeMultiplier = 1 - (screenTintIntensity / 0.15);
+        return (
+          <sprite
+            key={i}
+            position={particle.position}
+            scale={[particle.scale, particle.scale, 1]}
+          >
+            <spriteMaterial
+              map={texture}
+              color={nebula.color}
+              transparent
+              opacity={particle.opacity * (isSelected ? 1.8 : 1) * fadeMultiplier}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+              rotation={particle.initialRotation}
+            />
+          </sprite>
+        );
+      })}
 
       {/* Central glow for emission nebulas */}
       {nebula.type === 'emission' && (
@@ -178,7 +203,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
             map={texture}
             color={nebula.color}
             transparent
-            opacity={0.04}
+            opacity={0.04 * (1 - (screenTintIntensity / 0.15))}
             depthWrite={false}
             depthTest={false}
             blending={THREE.AdditiveBlending}
