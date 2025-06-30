@@ -66,6 +66,9 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
           tintIntensity = intensity;
           closestNebula = nebula;
         }
+        
+        // Debug logging for system view
+        console.log(`Camera in nebula ${nebula.name} - distance: ${distance.toFixed(1)}, intensity: ${intensity.toFixed(3)}`);
       }
     }
 
