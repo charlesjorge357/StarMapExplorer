@@ -38,12 +38,7 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
       .filter(nebula => excludeNebula?.id !== nebula.id)
   }, [nebulas, excludeNebula]);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      // Very slow rotation to make the skybox feel alive
-      groupRef.current.rotation.y += 0.0005;
-    }
-  });
+  // Removed useFrame rotation - nebulas are now static
 
   return (
     <group ref={groupRef}>
