@@ -46,7 +46,7 @@ export class StarGenerator {
     console.log(`Generating ${count} stars with seed ${seed}...`);
 
     // First generate nebulas to place stars inside them
-    const nebulas = this.generateNebulas(35, undefined, seed); // Generate 35 nebulas first with same seed
+    const nebulas = this.generateNebulas(35); // Generate 35 nebulas first
     
     // Calculate how many stars should be in nebulas vs scattered
     const starsInNebulas = Math.floor(count * 0.4); // 40% of stars in nebulas
@@ -167,9 +167,9 @@ export class StarGenerator {
       default: return '#ffffff';
     }
   }
-  static generateNebulas(count: number, stars?: Star[], seed: number = 54321): Nebula[] {
+  static generateNebulas(count: number, stars?: Star[]): Nebula[] {
     const nebulas: Nebula[] = [];
-    const random = this.seededRandom(seed); // Use provided seed for consistency
+    const random = this.seededRandom(54321); // Use seeded random for consistency
 
     const nebulaNames = [
       'Orion', 'Eagle', 'Horsehead', 'Cat\'s Eye', 'Rosette', 'Helix',
