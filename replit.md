@@ -151,6 +151,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - June 24, 2025: Enhanced planetary view texture consistency by ensuring full opacity (1.0) for all planet materials and reducing atmospheric glow to minimal levels (0.03 opacity) to preserve authentic texture colors in Google Earth-like globe view.
 - June 24, 2025: Synchronized planetary view material properties with system view, including seeded color variation, emissive effects for nuclear worlds (red tinting), proper metalness values, and consistent texture handling. Nuclear worlds now display the same red glow in both system and planetary views.
 - June 24, 2025: Fixed planet orbital overlap issues in SystemGenerator by improving orbital zone calculation. Increased base spacing, implemented progressive spacing that grows with planet index, and removed dependency on not-yet-created planet data. Planets now maintain proper orbital separation without collisions.
+- June 30, 2025: Resolved surface feature generation conflict by removing duplicate surface feature code from SystemGenerator and delegating to PlanetGenerator's well-written generateSurfaceFeatures method. This eliminates conflicts and ensures consistent surface feature generation across the application.
 
 ## User Preferences
 
