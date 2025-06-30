@@ -223,7 +223,7 @@ export class StarGenerator {
           y = distance * Math.sin(phi) * Math.sin(theta);
           z = distance * Math.cos(phi);
 
-          // Check minimum distance from existing cluster centers
+          // Check minimum distance from existing cluster centers (but allow fallback)
           validPosition = true;
           const minDistance = 800; // Minimum 800 units between cluster centers
 
@@ -240,11 +240,17 @@ export class StarGenerator {
           }
 
           attempts++;
-        } while (!validPosition && attempts < 50); // Limit attempts to prevent infinite loop
+          // Force accept position after many attempts to prevent infinite loops
+          if (attempts >= 45) {
+            validPosition = true;
+          }
+        } while (!validPosition && attempts < 50);
 
         clusterCenters.push([x, y, z]);
       }
     }
+
+    console.log(`Generating ${count} nebulas with ${clusterCenters.length} cluster centers...`);
 
     for (let i = 0; i < count; i++) {
       let x: number, y: number, z: number;
@@ -306,6 +312,7 @@ export class StarGenerator {
       nebulas.push(nebula);
     }
 
+    console.log(`Generated ${nebulas.length} nebulas`);
     return nebulas;
   }
 
