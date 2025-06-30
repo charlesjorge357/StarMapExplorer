@@ -1,0 +1,107 @@
+Great! Making your nebulas into clouds of particles is a fantastic approach—both visually impressive and performant if done right. Below is a complete setup for a NebulaCloud component using a cloud of smoke-like particles in @react-three/fiber (TSX):
+
+✅ Step-by-Step: NebulaCloud Component
+1. ✅ Add a smoke.png texture
+Place something like this in your public/textures folder:
+Path: /textures/smoke.png
+
+You can find free smoke textures [on sites like OpenGameArt, Kenney.nl, or PNG sites with transparent puffs]. Ideally, use soft grayscale alpha-ed circles.
+
+2. ✅ NebulaCloud.tsx
+tsx
+Copy
+Edit
+import React, { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
+import * as THREE from 'three';
+
+interface NebulaCloudProps {
+  position: [number, number, number];
+  size?: number;
+  color?: string;
+  particleCount?: number;
+  id: string;
+  onClick?: (id: string) => void;
+}
+
+export function NebulaCloud({
+  position,
+  size = 50,
+  color = '#8abaff',
+  particleCount = 100,
+  id,
+  onClick
+}: NebulaCloudProps) {
+  const texture = useTexture('/textures/smoke.png');
+  const groupRef = useRef<THREE.Group>(null);
+
+  const particles = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < particleCount; i++) {
+      const r = size * (0.3 + Math.random() * 0.7);
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+      data.push([x, y, z]);
+    }
+    return data;
+  }, [particleCount, size]);
+
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.02;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={position}>
+      {particles.map((pos, i) => (
+        <sprite
+          key={i}
+          position={pos as [number, number, number]}
+          scale={[5, 5, 1]}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick?.(id);
+          }}
+        >
+          <spriteMaterial
+            attach="material"
+            map={texture}
+            color={color}
+            transparent
+            opacity={0.15 + Math.random() * 0.2}
+            depthWrite={false}
+            depthTest={true}
+            blending={THREE.AdditiveBlending}
+          />
+        </sprite>
+      ))}
+    </group>
+  );
+}
+✅ 3. Usage in GalacticView.tsx
+Example:
+
+tsx
+Copy
+Edit
+<NebulaCloud
+  id="nebula-1"
+  position={[200, 30, -150]}
+  size={60}
+  particleCount={150}
+  color="#ff77ff"
+  onClick={(id) => handleNebulaClick(id)}
+/>
+✅ 4. handleNebulaClick Example
+tsx
+Copy
+Edit
+function handleNebulaClick(id: string) {
+  console.log(`Nebula clicked: ${id}`);
+  // You can set UI state, open a detail panel, zoom camera, etc.
+}
