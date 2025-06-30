@@ -158,8 +158,8 @@ export function GalacticView() {
     console.log(`Displaying ${stars.length} stars in galactic view`);
   }, [stars.length]);
 
-  // Limit displayed stars for performance (show first 4000)
-  const displayedStars = useMemo(() => stars.slice(0, 4000), [stars]);
+  // Display all generated stars
+  const displayedStars = useMemo(() => stars, [stars]);
 
   if (stars.length === 0) {
     return (

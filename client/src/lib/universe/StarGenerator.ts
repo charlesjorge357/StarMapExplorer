@@ -40,10 +40,10 @@ export class StarGenerator {
     return `${prefixes[prefixIndex]} ${suffixes[suffixIndex]}`;
   }
 
-  static generateStars(seed: number, count: number): Star[] {
+  static generateStars(seed: number, count: number = 4000): Star[] {
     const random = this.seededRandom(seed);
     const stars: Star[] = [];
-    console.log(`Generating ${count} stars...`);
+    console.log(`Generating ${count} stars with seed ${seed}...`);
 
     for (let i = 0; i < count; i++) {
       // Generate position in a much larger sphere to prevent overlapping (6000 unit radius)
@@ -124,8 +124,6 @@ export class StarGenerator {
       default: return '#ffffff';
     }
   }
-  // In client/src/lib/universe/SystemGenerator.ts
-
   static generateNebulas(count: number): Nebula[] {
     const nebulas: Nebula[] = [];
     const random = this.seededRandom(54321); // Use seeded random for consistency

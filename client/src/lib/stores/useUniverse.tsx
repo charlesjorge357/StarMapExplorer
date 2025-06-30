@@ -135,7 +135,9 @@ export const useUniverse = create<UniverseState>()(
       set({ isLoading: true, error: null });
 
       try {
+        console.log(`About to generate stars with seed ${actualSeed} and count 4000`);
         const stars = StarGenerator.generateStars(actualSeed, 4000);
+        console.log(`Actually generated ${stars.length} stars`);
 
         const universeData: UniverseData = {
           mode: 'sandbox',
