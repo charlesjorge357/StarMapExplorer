@@ -8,6 +8,7 @@ import { PlanetaryView } from "./components/3d/PlanetaryView";
 import { StarSkybox } from "./components/3d/StarSkybox";
 import { StarfieldSkybox } from "./components/3d/StarfieldSkybox";
 import { ObjectPanel } from "./components/ui/ObjectPanel";
+import { NebulaDetails } from "./components/ui/NebulaDetails";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
 import { useThree } from "@react-three/fiber";
@@ -63,10 +64,14 @@ function SelectionRing({ star }: { star: SimpleStar }) {
 function StarField({ 
   selectedStar, 
   setSelectedStar,
+  selectedNebula,
+  setSelectedNebula,
   stars
 }: { 
   selectedStar: SimpleStar | null; 
   setSelectedStar: (star: SimpleStar | null) => void;
+  selectedNebula: any;
+  setSelectedNebula: (nebula: any) => void;
   stars: SimpleStar[];
 }) {
   // Load star surface texture
@@ -85,13 +90,21 @@ function StarField({
     }
   };
 
+  // Generate nebulas once
+  const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
+
+  const onNebulaClick = (nebula: any) => {
+    console.log(`Nebula selected: ${nebula.name}`);
+    setSelectedNebula(nebula);
+  };
+
   const handleBackgroundClick = () => {
     // Unselect when clicking empty space
-    if (selectedStar) {
-      console.log("Unselected star by clicking background");
+    if (selectedStar || selectedNebula) {
+      setSelectedNebula(null);
       setSelectedStar(null);
+      console.log('Cleared selection');
     }
-
   };
 
   return (
@@ -146,6 +159,32 @@ function StarField({
         );
       })}
 
+      {/* Nebulas */}
+      {nebulas.map((nebula) => (
+        <group key={nebula.id}>
+          <mesh 
+            position={nebula.position}
+            onClick={(e) => {
+              e.stopPropagation();
+              onNebulaClick(nebula);
+            }}
+            onPointerOver={() => {
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
+            <sphereGeometry args={[nebula.radius, 32, 32]} />
+            <meshBasicMaterial
+              color={nebula.color}
+              opacity={selectedNebula?.id === nebula.id ? 0.8 : 0.6}
+              transparent
+            />
+          </mesh>
+        </group>
+      ))}
+
       {/* Camera-facing selection ring */}
       {selectedStar && <SelectionRing star={selectedStar} />}
     </group>
@@ -157,6 +196,7 @@ function StarField({
 function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
+  const [selectedNebula, setSelectedNebula] = useState<any>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   // Navigation mode removed - all interactions now use direct mouse controls
@@ -315,9 +355,15 @@ function App() {
           (window as any).resetToStar();
         }
 
-        if (currentView === 'galactic' && selectedStar) {
-          console.log(`Unselected star: ${selectedStar.name}`);
-          setSelectedStar(null);
+        if (currentView === 'galactic' && (selectedStar || selectedNebula)) {
+          if (selectedStar) {
+            console.log(`Unselected star: ${selectedStar.name}`);
+            setSelectedStar(null);
+          }
+          if (selectedNebula) {
+            console.log(`Unselected nebula: ${selectedNebula.name}`);
+            setSelectedNebula(null);
+          }
         } else if (currentView === 'system' && selectedPlanet) {
           // Only unselect planets in system view, not the central star
           console.log(`Unselected planet: ${selectedPlanet.name}`);
@@ -574,6 +620,8 @@ function App() {
                 <StarField 
                   selectedStar={selectedStar}
                   setSelectedStar={setSelectedStar}
+                  selectedNebula={selectedNebula}
+                  setSelectedNebula={setSelectedNebula}
                   stars={stars}
                 />
               )}
@@ -723,6 +771,11 @@ function App() {
                 <p>Click Again to deselect</p>
               </div>
             </div>
+          )}
+
+          {/* Galactic view - nebula information */}
+          {selectedNebula && currentView === 'galactic' && (
+            <NebulaDetails nebula={selectedNebula} />
           )}
 
           {/* System view - star information (always shown) */}

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { useCamera } from '../../lib/stores/useCamera';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
+import { NebulaMesh } from './NebulaMesh';
 import { Star, Nebula } from 'shared/schema';
 
 interface StarMeshProps {
@@ -161,21 +162,12 @@ export function GalacticView() {
 
       {/* Nebulas */}
       {nebulas.map((nebula) => (
-        <mesh
+        <NebulaMesh
           key={nebula.id}
-          position={nebula.position}
-          onClick={(e) => {
-            e.stopPropagation();
-            onNebulaClick(nebula);
-          }}
-        >
-          <sphereGeometry args={[nebula.radius, 32, 32]} />
-          <meshBasicMaterial
-            color={nebula.color}
-            opacity={0.6}
-            transparent
-          />
-        </mesh>
+          nebula={nebula}
+          isSelected={selectedNebula?.id === nebula.id}
+          onNebulaClick={onNebulaClick}
+        />
       ))}
 
       {/* Grid helper */}

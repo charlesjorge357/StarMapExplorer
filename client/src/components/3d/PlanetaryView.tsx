@@ -17,11 +17,11 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     computedGlow: planet?.computedGlow,
     computedEmissiveIntensity: planet?.computedEmissiveIntensity
   });
-  
+
   const { camera, gl } = useThree();
   const planetRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
-  
+
   // Planet radius for close-up view
   const planetRadius = planet?.radius ? planet.radius * 15 : 10;
 
@@ -37,7 +37,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
       'ocean_world': ['/textures/ocean.jpg'],
       'dead_world': ['/textures/mercury.jpg', '/textures/moon.jpg', '/textures/eris.jpg']
     };
-    
+
     const paths = texturePaths[planetType] || texturePaths['dead_world'];
     return paths[textureIndex % paths.length];
   };
@@ -68,14 +68,14 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
   useEffect(() => {
     if (camera && planet) {
       console.log(`Setting up Google Earth camera for ${planet.name}`);
-      
+
       // Position camera close to planet surface
       const distance = planetRadius * 1.8;
       camera.position.set(0, 0, distance);
       camera.lookAt(0, 0, 0);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
-      
+
       // Reset rotation state
       mouseState.current.rotationX = 0;
       mouseState.current.rotationY = 0;
@@ -121,16 +121,16 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
-      
+
       // Zoom in/out by moving camera
       const zoomSpeed = 0.1;
       const direction = event.deltaY > 0 ? 1 : -1;
       const currentDistance = camera.position.length();
       const minDistance = planetRadius * 1.2;
       const maxDistance = planetRadius * 5;
-      
+
       const newDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance + direction * zoomSpeed * planetRadius));
-      
+
       camera.position.normalize().multiplyScalar(newDistance);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
@@ -141,7 +141,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
-    
+
     // Set initial cursor
     canvas.style.cursor = 'grab';
 
@@ -173,7 +173,6 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     <group ref={groupRef}>
       {/* Planet sphere with high detail */}
       <mesh ref={planetRef}
-        ref ={planetRef}
         onPointerDown={() => setIsHeld(true)}
         onPointerUp={() => setIsHeld(false)}
         onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
@@ -199,7 +198,7 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
         />
       </mesh>
 
-      
+
 
       {/* Lighting */}
       <ambientLight intensity={0.3} />
