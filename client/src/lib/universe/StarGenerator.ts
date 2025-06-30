@@ -145,8 +145,8 @@ export class StarGenerator {
     ];
 
     for (let i = 0; i < count; i++) {
-      // More spread out positioning
-      const distance = 200 + random() * 1800;
+      // Much more spread out positioning for larger nebulas
+      const distance = 500 + random() * 4500; // Increased from 200-2000 to 500-5000
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
       
