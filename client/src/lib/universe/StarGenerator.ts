@@ -127,20 +127,64 @@ export class StarGenerator {
 
   static generateNebulas(count: number): Nebula[] {
     const nebulas: Nebula[] = [];
+    const random = this.seededRandom(54321); // Use seeded random for consistency
+
+    const nebulaNames = [
+      'Orion', 'Eagle', 'Horsehead', 'Cat\'s Eye', 'Rosette', 'Helix',
+      'Ring', 'Crab', 'Veil', 'Swan', 'Lagoon', 'Trifid', 'Flame',
+      'Witch Head', 'Heart', 'Soul', 'North America', 'Pelican'
+    ];
+
+    const compositions = [
+      'Hydrogen and Helium',
+      'Ionized Hydrogen',
+      'Dust and Gas',
+      'Carbon and Oxygen',
+      'Silicon and Iron',
+      'Molecular Hydrogen'
+    ];
 
     for (let i = 0; i < count; i++) {
+      // More spread out positioning
+      const distance = 200 + random() * 1800;
+      const theta = random() * Math.PI * 2;
+      const phi = Math.acos(2 * random() - 1);
+      
+      const x = distance * Math.sin(phi) * Math.cos(theta);
+      const y = distance * Math.sin(phi) * Math.sin(theta);
+      const z = distance * Math.cos(phi);
+
+      // Determine nebula type and properties
+      const typeRand = random();
+      let type: 'emission' | 'reflection';
+      let color: string;
+      let radius: number;
+
+      if (typeRand < 0.6) {
+        // Emission nebulas - larger, redder
+        type = 'emission';
+        const colors = ['#ff6b6b', '#ff8e8e', '#ffb3ba', '#ff69b4', '#ff1493'];
+        color = colors[Math.floor(random() * colors.length)];
+        radius = 30 + random() * 80; // 30-110 units
+      } else {
+        // Reflection nebulas - smaller, bluer
+        type = 'reflection';
+        const colors = ['#4d79ff', '#66b3ff', '#99ccff', '#b3d9ff', '#87ceeb'];
+        color = colors[Math.floor(random() * colors.length)];
+        radius = 15 + random() * 40; // 15-55 units
+      }
+
+      const nameIndex = Math.floor(random() * nebulaNames.length);
+      const compositionIndex = Math.floor(random() * compositions.length);
+
       const nebula: Nebula = {
-        id: `nebula-${Math.random().toString(36).substring(2, 8)}`, // Unique random ID
-        name: `Nebula ${i + 1}`,
-        position: [
-          (Math.random() - 0.5) * 2000, // Random X position
-          (Math.random() - 0.5) * 2000, // Random Y position
-          (Math.random() - 0.5) * 2000  // Random Z position
-        ],
-        radius: Math.random() * 50 + 20, // Random radius between 20 and 70
-        color: `#${Math.floor(Math.random()*16777215).toString(16)}`, // Random color
-        composition: 'Hydrogen and Helium', // Replace with your own logic if needed
-        type: Math.random() < 0.5 ? 'emission' : 'reflection' // Random type
+        id: `nebula-${i.toString().padStart(3, '0')}`,
+        name: `${nebulaNames[nameIndex]} Nebula`,
+        position: [x, y, z],
+        radius,
+        color,
+        composition: compositions[compositionIndex],
+        type
       };
       nebulas.push(nebula);
     }

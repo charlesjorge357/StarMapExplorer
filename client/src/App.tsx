@@ -11,6 +11,7 @@ import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { NebulaDetails } from "./components/ui/NebulaDetails";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
+import { NebulaMesh } from "./components/3d/NebulaMesh";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import * as THREE from "three";
@@ -168,31 +169,12 @@ function StarField({
 
       {/* Nebulas */}
       {nebulas.map((nebula) => (
-        <group key={nebula.id}>
-          <mesh 
-            position={nebula.position}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.nativeEvent.stopImmediatePropagation();
-              onNebulaClick(nebula);
-            }}
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              document.body.style.cursor = 'pointer';
-            }}
-            onPointerOut={(e) => {
-              e.stopPropagation();
-              document.body.style.cursor = 'auto';
-            }}
-          >
-            <sphereGeometry args={[nebula.radius, 32, 32]} />
-            <meshBasicMaterial
-              color={nebula.color}
-              opacity={selectedNebula?.id === nebula.id ? 0.8 : 0.6}
-              transparent
-            />
-          </mesh>
-        </group>
+        <NebulaMesh
+          key={nebula.id}
+          nebula={nebula}
+          isSelected={selectedNebula?.id === nebula.id}
+          onNebulaClick={onNebulaClick}
+        />
       ))}
 
       {/* Camera-facing selection ring */}
