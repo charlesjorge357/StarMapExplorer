@@ -117,7 +117,7 @@ export function GalacticView() {
       if (universeData?.nebulas) {
         return universeData.nebulas;
       }
-      return StarGenerator.generateNebulas(35, stars);
+      return StarGenerator.generateNebulas(40, stars);
     },
     [universeData, stars]
   );
