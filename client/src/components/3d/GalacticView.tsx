@@ -48,7 +48,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
         }}
       >
         <sphereGeometry args={[1, 8, 6]} />
-        <meshBasicMaterial
+        <meshStandardMaterial
           color={color}
           emissive={color}
           emissiveIntensity={isSelected ? 0.8 : 0.4}
