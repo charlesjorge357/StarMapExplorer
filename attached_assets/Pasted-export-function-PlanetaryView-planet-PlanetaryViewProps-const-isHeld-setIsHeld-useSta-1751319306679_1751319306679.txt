@@ -1,18 +1,3 @@
-import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
-import * as THREE from 'three';
-import SurfaceFeaturesList from '../ui/SurfaceFeaturesList';
-
-
-// Note: PlanetaryView deliberately does not include NebulaScreenTint
-
-interface PlanetaryViewProps {
-  planet: any;
-  selectedFeature: any;
-  onFeatureClick: (feature: any) => void;
-}
-
 export function PlanetaryView({ planet }: PlanetaryViewProps) {
   const [isHeld, setIsHeld] = useState(false);
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
@@ -211,7 +196,6 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
         intensity={0.7}
         castShadow
       />
-      <SurfaceFeaturesList features={planet.surfaceFeatures} />
     </group>
   );
 }

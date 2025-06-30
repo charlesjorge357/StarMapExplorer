@@ -175,7 +175,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
         }}
         renderOrder={-1}
       >
-        <sphereGeometry args={[selectionRadius, 16, 12]} />
+        <sphereGeometry args={[selectionRadius * 0.9, 16, 12]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -220,7 +220,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       {/* Selection indicator - spherical wireframe */}
       {isSelected && (
         <mesh>
-          <sphereGeometry args={[selectionRadius * 1.1, 32, 16]} />
+          <sphereGeometry args={[selectionRadius * 0.9, 32, 16]} />
           <meshBasicMaterial
             color={nebula.color}
             transparent
@@ -229,33 +229,6 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
             depthWrite={false}
           />
         </mesh>
-      )}
-
-      {/* Labels - only when selected */}
-      {isSelected && (
-        <Text
-          position={[0, selectionRadius + 5, 0]}
-          fontSize={2}
-          color={nebula.color}
-          anchorX="center"
-          anchorY="middle"
-          renderOrder={1000}
-        >
-          {nebula.name}
-        </Text>
-      )}
-
-      {isSelected && (
-        <Text
-          position={[0, selectionRadius + 2, 0]}
-          fontSize={1}
-          color={nebula.color}
-          anchorX="center"
-          anchorY="middle"
-          renderOrder={1000}
-        >
-          {nebula.type} • {nebula.composition}
-        </Text>
       )}
     </group>
   );
