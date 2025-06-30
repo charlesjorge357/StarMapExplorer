@@ -10,19 +10,19 @@ interface UniverseState {
   mode: ModeType;
   currentScope: ScopeType;
   universeData: UniverseData | null;
-  
+
   // Selection state
   selectedStar: Star | null;
   selectedSystem: StarSystem | null;
   selectedPlanet: Planet | null;
-  
+
   // Navigation breadcrumb
   breadcrumb: Array<{ scope: ScopeType; name: string; id?: string }>;
-  
+
   // Loading state
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   initialize: () => void;
   setMode: (mode: ModeType) => void;
@@ -70,24 +70,24 @@ export const useUniverse = create<UniverseState>()(
 
     setScope: (scope) => {
       set({ currentScope: scope });
-      
+
       // Update breadcrumb
       const { selectedStar, selectedPlanet } = get();
       let newBreadcrumb = [{ scope: 'galactic' as ScopeType, name: 'Galaxy' }];
-      
+
       if (scope === 'system' && selectedStar) {
         newBreadcrumb.push({ scope: 'system', name: selectedStar.name, id: selectedStar.id });
       } else if (scope === 'planetary' && selectedStar && selectedPlanet) {
         newBreadcrumb.push({ scope: 'system', name: selectedStar.name, id: selectedStar.id });
         newBreadcrumb.push({ scope: 'planetary', name: selectedPlanet.name, id: selectedPlanet.id });
       }
-      
+
       set({ breadcrumb: newBreadcrumb });
     },
 
     selectStar: (star) => {
       set({ selectedStar: star });
-      
+
       // Generate or get system data
       const { universeData } = get();
       if (universeData) {
@@ -106,7 +106,7 @@ export const useUniverse = create<UniverseState>()(
 
     jumpToScope: (scope, targetId) => {
       const { universeData, setScope, selectStar, selectPlanet } = get();
-      
+
       if (scope === 'galactic') {
         set({ selectedStar: null, selectedSystem: null, selectedPlanet: null });
         setScope('galactic');
@@ -131,11 +131,11 @@ export const useUniverse = create<UniverseState>()(
     generateSandbox: (seed) => {
       console.log("Generating sandbox universe with seed:", seed);
       set({ isLoading: true, error: null });
-      
+
       try {
         const actualSeed = seed || Math.floor(Math.random() * 1000000);
-        const stars = StarGenerator.generateStars(actualSeed, 1000);
-        
+        const stars = StarGenerator.generateStars(actualSeed, 3000);
+
         const universeData: UniverseData = {
           mode: 'sandbox',
           stars,
@@ -147,7 +147,7 @@ export const useUniverse = create<UniverseState>()(
             seed: actualSeed
           }
         };
-        
+
         set({ 
           universeData, 
           isLoading: false,
@@ -155,7 +155,7 @@ export const useUniverse = create<UniverseState>()(
           selectedSystem: null,
           selectedPlanet: null
         });
-        
+
         console.log(`Generated ${stars.length} stars`);
       } catch (error) {
         console.error("Error generating sandbox:", error);
@@ -165,13 +165,13 @@ export const useUniverse = create<UniverseState>()(
 
     loadLoreData: async () => {
       set({ isLoading: true, error: null });
-      
+
       try {
         const response = await fetch('/api/lore/universe');
         if (!response.ok) {
           throw new Error('Failed to load lore data');
         }
-        
+
         const universeData: UniverseData = await response.json();
         set({ 
           universeData, 
@@ -195,7 +195,7 @@ export const useUniverse = create<UniverseState>()(
 
     loadUniverse: async (file) => {
       set({ isLoading: true, error: null });
-      
+
       try {
         const universeData = await SaveSystem.loadUniverse(file);
         set({ 
