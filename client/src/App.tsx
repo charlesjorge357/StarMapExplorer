@@ -68,13 +68,15 @@ function StarField({
   setSelectedStar,
   selectedNebula,
   setSelectedNebula,
-  stars
+  stars,
+  nebulas
 }: { 
   selectedStar: SimpleStar | null; 
   setSelectedStar: (star: SimpleStar | null) => void;
   selectedNebula: any;
   setSelectedNebula: (nebula: any) => void;
   stars: SimpleStar[];
+  nebulas: any[];
 }) {
   // Load star surface texture
   const starBumpMap = useTexture('/textures/star_surface.jpg');
@@ -91,9 +93,6 @@ function StarField({
       setSelectedStar(star);
     }
   };
-
-  // Generate nebulas once
-  const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
 
   const onNebulaClick = (nebula: any) => {
     if (selectedNebula?.id === nebula.id) {
@@ -204,6 +203,8 @@ function App() {
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
 
+  // Generate nebulas once
+  const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
 
   // Generate stars when app loads and clear system cache
   useEffect(() => {
@@ -610,13 +611,17 @@ function App() {
               {/* <StarSkybox count={currentView === 'galactic' ? 500 : 300} radius={200} /> */}
               <CameraController />
               {currentView === 'galactic' && (
-                <StarField 
-                  selectedStar={selectedStar}
-                  setSelectedStar={setSelectedStar}
-                  selectedNebula={selectedNebula}
-                  setSelectedNebula={setSelectedNebula}
-                  stars={stars}
-                />
+                <>
+                  <StarField 
+                    selectedStar={selectedStar}
+                    setSelectedStar={setSelectedStar}
+                    selectedNebula={selectedNebula}
+                    setSelectedNebula={setSelectedNebula}
+                    stars={stars}
+                    nebulas={nebulas}
+                  />
+                  <NebulaScreenTint nebulas={nebulas} />
+                </>
               )}
               {currentView === 'system' && currentSystem && (
                 <>
@@ -782,7 +787,7 @@ function App() {
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Mass:</span> {currentSystem.star.mass?.toFixed(2)} M☉</p>
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Radius:</span> {currentSystem.star.radius?.toFixed(2)} R☉</p>
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Temperature:</span> {currentSystem.star.temperature?.toFixed(0)} K</p>
-                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass)) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
+                <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 <p>Star information always visible in system view</p>
