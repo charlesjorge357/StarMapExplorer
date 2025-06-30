@@ -16,7 +16,7 @@ import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
-import SurfaceFeaturesList from '../../ui/SurfaceFeaturesList';
+import SurfaceFeaturesList from './components/ui/SurfaceFeaturesList';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
