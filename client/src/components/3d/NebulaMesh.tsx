@@ -43,11 +43,11 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
     return texture;
   }, []);
 
-  // Generate elliptical nebula dimensions (1.2x larger on average)
+  // Generate elliptical nebula dimensions (larger scale)
   const nebulaShape = useMemo(() => {
     const aspectRatio1 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
     const aspectRatio2 = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
-    const sizeMultiplier = 3.2; // Make nebulas 80% larger on average
+    const sizeMultiplier = 4.5; // Make nebulas much larger
     
     const radiusX = nebula.radius * aspectRatio1 * sizeMultiplier;
     const radiusY = nebula.radius * sizeMultiplier;
@@ -116,7 +116,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       const cameraPos = camera.position;
       const nebulaPos = new THREE.Vector3(...nebula.position);
       const distance = cameraPos.distanceTo(nebulaPos);
-      const scaledRadius = nebula.radius * 3.5; // Match the scaled radius used in screen tint
+      const scaledRadius = nebula.radius * 4.5; // Match the new larger nebula scale
       
       if (distance < scaledRadius) {
         const penetration = 1 - (distance / scaledRadius);
