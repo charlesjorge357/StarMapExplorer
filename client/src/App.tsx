@@ -424,6 +424,12 @@ function App() {
             surfaceFeatures: selectedPlanet.surfaceFeatures,
             featureCount: selectedPlanet.surfaceFeatures?.length
           });
+          // List the surface features
+          if (selectedPlanet.surfaceFeatures && selectedPlanet.surfaceFeatures.length > 0) {
+            selectedPlanet.surfaceFeatures.forEach(feature => {
+              console.log(`Feature: ${feature.name}, Type: ${feature.type}, Position: ${feature.position}`);
+            });
+          }
 
           // Allow planetary view for all terrestrial planets (non-gas giants)
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
