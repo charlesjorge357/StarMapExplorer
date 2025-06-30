@@ -48,16 +48,15 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
     const radiusY = nebula.radius * sizeMultiplier;
     const radiusZ = nebula.radius * aspectRatio2 * sizeMultiplier;
     
-    // Calculate median XYZ for central glow sizing
-    const dimensions = [radiusX, radiusY, radiusZ].sort((a, b) => a - b);
-    const medianRadius = dimensions[1]; // Middle value
+    // Calculate max XYZ for central glow sizing
+    const maxRadius = Math.max(radiusX, radiusY, radiusZ);
     
     return {
       radiusX,
       radiusY,
       radiusZ,
       rotation: Math.random() * Math.PI * 2,
-      medianRadius
+      maxRadius
     };
   }, [nebula.radius, nebula.id]);
 
@@ -174,7 +173,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
       {/* Central glow for emission nebulas */}
       {nebula.type === 'emission' && (
-        <sprite scale={[nebulaShape.medianRadius, nebulaShape.medianRadius, 1]}>
+        <sprite scale={[nebulaShape.maxRadius, nebulaShape.maxRadius, 1]}>
           <spriteMaterial
             map={texture}
             color={nebula.color}
