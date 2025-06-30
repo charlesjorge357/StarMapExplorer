@@ -54,9 +54,8 @@ export const useUniverse = create<UniverseState>()(
     initialize: () => {
       console.log("Initializing Universe Mapper");
       const state = get();
-      if (!state.universeData) {
-        state.generateSandbox(); // This will generate a new random seed each time
-      }
+      // Always generate new sandbox to ensure fresh data
+      state.generateSandbox();
     },
 
     setMode: (mode) => {
