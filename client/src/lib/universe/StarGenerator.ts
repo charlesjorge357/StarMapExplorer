@@ -40,12 +40,44 @@ export class StarGenerator {
     return `${prefixes[prefixIndex]} ${suffixes[suffixIndex]}`;
   }
 
-  static generateStars(seed: number, count: number = 4000): Star[] {
+  static generateStarsWithNebulas(seed: number, count: number = 4000): { stars: Star[], nebulas: Nebula[] } {
     const random = this.seededRandom(seed);
     const stars: Star[] = [];
     console.log(`Generating ${count} stars with seed ${seed}...`);
 
-    for (let i = 0; i < count; i++) {
+    // First generate nebulas to place stars inside them
+    const nebulas = this.generateNebulas(35); // Generate 35 nebulas first
+    
+    // Calculate how many stars should be in nebulas vs scattered
+    const starsInNebulas = Math.floor(count * 0.4); // 40% of stars in nebulas
+    const scatteredStars = count - starsInNebulas;
+    
+    let starIndex = 0;
+    
+    // Place stars inside nebulas
+    const starsPerNebula = Math.floor(starsInNebulas / nebulas.length);
+    const extraStars = starsInNebulas % nebulas.length;
+    
+    nebulas.forEach((nebula, nebulaIndex) => {
+      const thisNebulaStarCount = starsPerNebula + (nebulaIndex < extraStars ? 1 : 0);
+      
+      for (let j = 0; j < thisNebulaStarCount; j++) {
+        // Generate position inside nebula volume
+        const distance = random() * nebula.radius; // Random distance from nebula center
+        const theta = random() * Math.PI * 2;
+        const phi = Math.acos(2 * random() - 1);
+        
+        const x = nebula.position[0] + distance * Math.sin(phi) * Math.cos(theta);
+        const y = nebula.position[1] + distance * Math.sin(phi) * Math.sin(theta);
+        const z = nebula.position[2] + distance * Math.cos(phi);
+
+        stars.push(this.createStar(starIndex, [x, y, z], random));
+        starIndex++;
+      }
+    });
+    
+    // Place remaining stars scattered throughout space
+    for (let i = starIndex; i < count; i++) {
       // Generate position in a much larger sphere to prevent overlapping (6000 unit radius)
       const distance = 150 + random() * 5850; // Minimum distance of 150 units from center
       const theta = random() * Math.PI * 2;
@@ -55,58 +87,72 @@ export class StarGenerator {
       const y = distance * Math.sin(phi) * Math.sin(theta);
       const z = distance * Math.cos(phi);
 
-      // Stellar properties based on realistic distributions
-      const massRand = random();
-      let mass: number;
-      let temperature: number;
-      
-      // Mass distribution (most stars are M-class)
-      if (massRand < 0.7) {
-        mass = 0.1 + random() * 0.4; // M-class: 0.1-0.5 solar masses
-        temperature = 2500 + random() * 1200; // 2500-3700K
-      } else if (massRand < 0.9) {
-        mass = 0.5 + random() * 0.8; // K-class: 0.5-1.3 solar masses
-        temperature = 3700 + random() * 1500; // 3700-5200K
-      } else if (massRand < 0.97) {
-        mass = 0.8 + random() * 1.2; // G-F class: 0.8-2.0 solar masses
-        temperature = 5200 + random() * 2300; // 5200-7500K
-      } else {
-        mass = 2 + random() * 8; // A-B-O class: 2-10 solar masses
-        temperature = 7500 + random() * 12500; // 7500-20000K
-      }
-
-      // More realistic radius calculation with extreme stellar variations
-      let radius;
-      if (mass < 0.5) {
-        // Red dwarfs: very small
-        radius = Math.pow(mass / 0.5, 0.8) * 0.4;
-      } else if (mass > 8) {
-        // Massive stars become giants/supergiants
-        radius = Math.pow(mass / 8, 0.6) * 8;
-      } else {
-        // Main sequence stars
-        radius = Math.pow(mass, 0.8);
-      }
-      const luminosity = Math.pow(mass, 3.5); // Mass-luminosity relationship
-      const age = 1 + random() * 10; // 1-11 billion years
-      const spectralClass = this.getSpectralClass(temperature);
-      const planetCount = Math.floor(random() * 12); // 0-11 planets
-
-      const star: Star = {
-        id: `star-${i}`,
-        name: this.generateStarName(i, spectralClass),
-        position: [x, y, z],
-        spectralClass,
-        mass,
-        radius,
-        temperature,
-        luminosity,
-        age,
-        planetCount
-      };
-
-      stars.push(star);
+      stars.push(this.createStar(i, [x, y, z], random));
     }
+
+    console.log(`Generated ${stars.length} stars (${starsInNebulas} in nebulas, ${scatteredStars} scattered)`);
+    return { stars, nebulas };
+  }
+
+  static generateStars(seed: number, count: number = 4000): Star[] {
+    // Keep the old method for compatibility, but use the new one internally
+    const result = this.generateStarsWithNebulas(seed, count);
+    return result.stars;
+  }
+
+  private static createStar(index: number, position: [number, number, number], random: () => number): Star {
+    const [x, y, z] = position;
+
+      // Stellar properties based on realistic distributions
+    const massRand = random();
+    let mass: number;
+    let temperature: number;
+    
+    // Mass distribution (most stars are M-class)
+    if (massRand < 0.7) {
+      mass = 0.1 + random() * 0.4; // M-class: 0.1-0.5 solar masses
+      temperature = 2500 + random() * 1200; // 2500-3700K
+    } else if (massRand < 0.9) {
+      mass = 0.5 + random() * 0.8; // K-class: 0.5-1.3 solar masses
+      temperature = 3700 + random() * 1500; // 3700-5200K
+    } else if (massRand < 0.97) {
+      mass = 0.8 + random() * 1.2; // G-F class: 0.8-2.0 solar masses
+      temperature = 5200 + random() * 2300; // 5200-7500K
+    } else {
+      mass = 2 + random() * 8; // A-B-O class: 2-10 solar masses
+      temperature = 7500 + random() * 12500; // 7500-20000K
+    }
+
+    // More realistic radius calculation with extreme stellar variations
+    let radius;
+    if (mass < 0.5) {
+      // Red dwarfs: very small
+      radius = Math.pow(mass / 0.5, 0.8) * 0.4;
+    } else if (mass > 8) {
+      // Massive stars become giants/supergiants
+      radius = Math.pow(mass / 8, 0.6) * 8;
+    } else {
+      // Main sequence stars
+      radius = Math.pow(mass, 0.8);
+    }
+    const luminosity = Math.pow(mass, 3.5); // Mass-luminosity relationship
+    const age = 1 + random() * 10; // 1-11 billion years
+    const spectralClass = this.getSpectralClass(temperature);
+    const planetCount = Math.floor(random() * 12); // 0-11 planets
+
+    return {
+      id: `star-${index}`,
+      name: this.generateStarName(index, spectralClass),
+      position,
+      spectralClass,
+      mass,
+      radius,
+      temperature,
+      luminosity,
+      age,
+      planetCount
+    };
+  }
 
     console.log(`Generated ${stars.length} stars`);
     return stars;
@@ -143,78 +189,40 @@ export class StarGenerator {
       'Molecular Hydrogen'
     ];
 
-    // If stars are provided, calculate density-based placement
-    let densityHotspots: { position: [number, number, number], weight: number }[] = [];
+    // Generate nebula cluster centers first (where stars will be placed)
+    let clusterCenters: [number, number, number][] = [];
     
-    if (stars && stars.length > 0) {
-      // Create a 3D grid to calculate star density
-      const gridSize = 1000; // Grid cell size
-      const densityMap = new Map<string, { count: number, totalMass: number, center: [number, number, number] }>();
-      
-      // Calculate density for each grid cell
-      stars.forEach(star => {
-        const gridX = Math.floor(star.position[0] / gridSize);
-        const gridY = Math.floor(star.position[1] / gridSize);
-        const gridZ = Math.floor(star.position[2] / gridSize);
-        const key = `${gridX},${gridY},${gridZ}`;
+    if (!stars) {
+      // Generate cluster centers for star formation regions
+      for (let i = 0; i < Math.min(count, 15); i++) {
+        const distance = 1000 + random() * 4000; // Spread across galaxy
+        const theta = random() * Math.PI * 2;
+        const phi = Math.acos(2 * random() - 1);
         
-        if (!densityMap.has(key)) {
-          densityMap.set(key, {
-            count: 0,
-            totalMass: 0,
-            center: [gridX * gridSize, gridY * gridSize, gridZ * gridSize]
-          });
-        }
+        const x = distance * Math.sin(phi) * Math.cos(theta);
+        const y = distance * Math.sin(phi) * Math.sin(theta);
+        const z = distance * Math.cos(phi);
         
-        const cell = densityMap.get(key)!;
-        cell.count++;
-        cell.totalMass += star.mass || 1;
-      });
-      
-      // Convert high-density cells to hotspots
-      densityMap.forEach(cell => {
-        if (cell.count >= 8) { // Only consider cells with 8+ stars as hotspots
-          const weight = Math.log(cell.count) * cell.totalMass; // Weight by count and total mass
-          densityHotspots.push({
-            position: cell.center,
-            weight: weight
-          });
-        }
-      });
-      
-      // Sort by weight and keep top hotspots
-      densityHotspots.sort((a, b) => b.weight - a.weight);
-      densityHotspots = densityHotspots.slice(0, Math.max(10, count * 0.4)); // Keep up to 40% of nebula count as hotspots
+        clusterCenters.push([x, y, z]);
+      }
     }
 
     for (let i = 0; i < count; i++) {
       let x: number, y: number, z: number;
       
-      // 70% chance to place near density hotspots if they exist, 30% random distribution
-      if (densityHotspots.length > 0 && random() < 0.7) {
-        // Choose a random hotspot weighted by density
-        const totalWeight = densityHotspots.reduce((sum, hotspot) => sum + hotspot.weight, 0);
-        let randomWeight = random() * totalWeight;
-        let selectedHotspot = densityHotspots[0];
-        
-        for (const hotspot of densityHotspots) {
-          randomWeight -= hotspot.weight;
-          if (randomWeight <= 0) {
-            selectedHotspot = hotspot;
-            break;
-          }
-        }
-        
-        // Place nebula near the selected hotspot with some random offset
-        const offsetDistance = 200 + random() * 800; // 200-1000 unit offset from hotspot center
+      // If we have cluster centers, place nebulas over them first
+      if (clusterCenters.length > 0 && i < clusterCenters.length) {
+        const center = clusterCenters[i];
+        // Place nebula directly at cluster center with minimal variation
+        const offsetDistance = 20 + random() * 80; // Very small offset to center over cluster
         const theta = random() * Math.PI * 2;
         const phi = Math.acos(2 * random() - 1);
         
-        x = selectedHotspot.position[0] + offsetDistance * Math.sin(phi) * Math.cos(theta);
-        y = selectedHotspot.position[1] + offsetDistance * Math.sin(phi) * Math.sin(theta);
-        z = selectedHotspot.position[2] + offsetDistance * Math.cos(phi);
+        x = center[0] + offsetDistance * Math.sin(phi) * Math.cos(theta);
+        y = center[1] + offsetDistance * Math.sin(phi) * Math.sin(theta);
+        z = center[2] + offsetDistance * Math.cos(phi);
       } else {
-        // Random placement for distribution variety
+        // Random placement for additional nebulas
         const distance = 800 + random() * 8647;
         const theta = random() * Math.PI * 2;
         const phi = Math.acos(2 * random() - 1);
@@ -231,17 +239,17 @@ export class StarGenerator {
       let radius: number;
 
       if (typeRand < 0.6) {
-        // Emission nebulas - larger, redder
+        // Emission nebulas - much larger to contain star clusters
         type = 'emission';
         const colors = ['#ff6b6b', '#ff8e8e', '#ffb3ba', '#ff69b4', '#ff1493'];
         color = colors[Math.floor(random() * colors.length)];
-        radius = 30 + random() * 80; // 30-110 units
+        radius = 100 + random() * 200; // 100-300 units - much larger to contain multiple stars
       } else {
-        // Reflection nebulas - smaller, bluer
+        // Reflection nebulas - larger than before but smaller than emission
         type = 'reflection';
         const colors = ['#4d79ff', '#66b3ff', '#99ccff', '#b3d9ff', '#87ceeb'];
         color = colors[Math.floor(random() * colors.length)];
-        radius = 15 + random() * 40; // 15-55 units
+        radius = 60 + random() * 120; // 60-180 units - larger to contain star groups
       }
 
       const nameIndex = Math.floor(random() * nebulaNames.length);

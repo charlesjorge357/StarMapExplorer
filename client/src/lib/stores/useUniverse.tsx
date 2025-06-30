@@ -135,13 +135,14 @@ export const useUniverse = create<UniverseState>()(
 
       try {
         console.log(`About to generate stars with seed ${actualSeed} and count 4000`);
-        const stars = StarGenerator.generateStars(actualSeed, 4000);
+        const { stars, nebulas } = StarGenerator.generateStarsWithNebulas(actualSeed, 4000);
         console.log(`Actually generated ${stars.length} stars`);
 
         const universeData: UniverseData = {
           mode: 'sandbox',
           stars,
           systems: [],
+          nebulas,
           metadata: {
             version: '1.0.0',
             created: new Date().toISOString(),

@@ -110,10 +110,16 @@ export function GalacticView() {
     setTimeout(() => setScope('system'), 2000);
   };
 
-  // generate 35 nebulas based on star density
+  // Use nebulas from universe data (generated with stars)
   const nebulas = useMemo<Nebula[]>(
-    () => StarGenerator.generateNebulas(35, stars),
-    [stars]
+    () => {
+      // If universe has nebulas, use them; otherwise generate them for backward compatibility
+      if (universeData?.nebulas) {
+        return universeData.nebulas;
+      }
+      return StarGenerator.generateNebulas(35, stars);
+    },
+    [universeData, stars]
   );
   const [selectedNebula, setSelectedNebula] = useState<Nebula | null>(null);
   const onNebulaClick = (nebula: Nebula) => {

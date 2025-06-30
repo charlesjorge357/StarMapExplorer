@@ -117,6 +117,7 @@ export interface UniverseData {
   mode: ModeType;
   stars: Star[];
   systems: StarSystem[];
+  nebulas?: Nebula[];
   metadata: {
     version: string;
     created: string;
