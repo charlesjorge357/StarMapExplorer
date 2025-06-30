@@ -209,7 +209,7 @@ function App() {
   // Generate stars when app loads and clear system cache
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 2000);
+    const generatedStars = StarGenerator.generateStars(12345, 4000);
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
