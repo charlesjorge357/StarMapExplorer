@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -9,46 +10,53 @@ interface NebulaScreenTintProps {
 
 export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
   const { camera } = useThree();
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const componentIdRef = useRef<string>(`nebula-tint-${Math.random().toString(36).substr(2, 9)}`);
 
-  // Create overlay element
+  // Create overlay element with unique ID
   useEffect(() => {
-    if (!overlayRef.current) {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100vw';
-      overlay.style.height = '100vh';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.zIndex = '1000';
-      overlay.style.transition = 'background-color 0.5s ease';
-      overlay.style.backgroundColor = 'transparent';
-      overlay.id = 'nebula-tint-overlay';
-      document.body.appendChild(overlay);
-      overlayRef.current = overlay;
-    }
+    // Clean up any existing overlays first
+    const existingOverlays = document.querySelectorAll('[id^="nebula-tint-"]');
+    existingOverlays.forEach(overlay => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+
+    // Create new overlay
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '1000';
+    overlay.style.transition = 'background-color 0.3s ease';
+    overlay.style.backgroundColor = 'transparent';
+    overlay.id = componentIdRef.current;
+    document.body.appendChild(overlay);
+    overlayRef.current = overlay;
     
-    // Cleanup function - always runs when component unmounts
+    // Cleanup function
     return () => {
-      if (overlayRef.current) {
-        document.body.removeChild(overlayRef.current);
+      if (overlayRef.current && overlayRef.current.parentNode) {
+        overlayRef.current.parentNode.removeChild(overlayRef.current);
         overlayRef.current = null;
       }
-      // Also clean up any stray overlays
-      const existingOverlay = document.getElementById('nebula-tint-overlay');
-      if (existingOverlay) {
-        document.body.removeChild(existingOverlay);
+      // Also clean up by ID as backup
+      const overlayById = document.getElementById(componentIdRef.current);
+      if (overlayById && overlayById.parentNode) {
+        overlayById.parentNode.removeChild(overlayById);
       }
     };
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   useFrame(() => {
     if (!overlayRef.current) return;
 
     const cameraPos = camera.position;
     let closestNebula: Nebula | null = null;
-    let minDistance = Infinity;
     let tintIntensity = 0;
 
     // Find closest nebula and check if camera is inside
@@ -59,11 +67,6 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       // Check if camera is inside the nebula (using scaled radius to match visual size)
       const scaledRadius = nebula.radius * 4.5; // Match the larger nebula mesh scaling
       
-      // Debug every nebula check
-      if (distance < scaledRadius * 1.5) { // Debug nearby nebulas
-        console.log(`Nebula ${nebula.name}: distance=${distance.toFixed(1)}, scaledRadius=${scaledRadius.toFixed(1)}, inside=${distance < scaledRadius}`);
-      }
-      
       if (distance < scaledRadius) {
         const penetration = 1 - (distance / scaledRadius);
         const intensity = Math.min(penetration * 0.15, 0.15); // Max 15% opacity
@@ -72,9 +75,6 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
           tintIntensity = intensity;
           closestNebula = nebula;
         }
-        
-        // Debug logging for system view
-        console.log(`Camera in nebula ${nebula.name} - distance: ${distance.toFixed(1)}, intensity: ${intensity.toFixed(3)}, tintIntensity: ${tintIntensity.toFixed(3)}`);
       }
     }
 
@@ -84,12 +84,8 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       const alpha = Math.floor(tintIntensity * 255).toString(16).padStart(2, '0');
       const backgroundColor = `${color}${alpha}`;
       overlayRef.current.style.backgroundColor = backgroundColor;
-      console.log(`Applying tint: ${backgroundColor} for nebula ${closestNebula.name}`);
     } else {
       overlayRef.current.style.backgroundColor = 'transparent';
-      if (nebulas.length > 0) {
-        console.log('No tint applied - not inside any nebula');
-      }
     }
   });
 
