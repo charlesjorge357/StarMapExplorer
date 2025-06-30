@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Nebula } from 'shared/schema';
@@ -11,8 +11,8 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
   const { camera } = useThree();
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Create overlay element if it doesn't exist
-  useMemo(() => {
+  // Create overlay element
+  useEffect(() => {
     if (!overlayRef.current) {
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
@@ -29,8 +29,13 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       overlayRef.current = overlay;
     }
     
-    // Cleanup function
+    // Cleanup function - always runs when component unmounts
     return () => {
+      if (overlayRef.current) {
+        document.body.removeChild(overlayRef.current);
+        overlayRef.current = null;
+      }
+      // Also clean up any stray overlays
       const existingOverlay = document.getElementById('nebula-tint-overlay');
       if (existingOverlay) {
         document.body.removeChild(existingOverlay);
