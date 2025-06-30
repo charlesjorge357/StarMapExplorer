@@ -11,8 +11,8 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
   const { camera } = useThree();
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Create overlay element
-  useEffect(() => {
+  // Create overlay element if it doesn't exist
+  useMemo(() => {
     if (!overlayRef.current) {
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
@@ -28,17 +28,12 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
       document.body.appendChild(overlay);
       overlayRef.current = overlay;
     }
-    
-    // Cleanup function - always runs when component unmounts
+
+    // Cleanup function
     return () => {
       if (overlayRef.current) {
         document.body.removeChild(overlayRef.current);
         overlayRef.current = null;
-      }
-      // Also clean up any stray overlays
-      const existingOverlay = document.getElementById('nebula-tint-overlay');
-      if (existingOverlay) {
-        document.body.removeChild(existingOverlay);
       }
     };
   }, []);
