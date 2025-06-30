@@ -154,10 +154,6 @@ export class StarGenerator {
     };
   }
 
-    console.log(`Generated ${stars.length} stars`);
-    return stars;
-  }
-
   static getStarColor(spectralClass: string): string {
     switch (spectralClass) {
       case 'O': return '#9bb0ff';
