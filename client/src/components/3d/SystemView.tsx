@@ -26,7 +26,7 @@ function MoonMesh({
       // Use same time calculation as planets for consistency
       const time = Date.now() * 0.0001;
       const angle = time * moon.orbitSpeed * 10 + moonIndex * (Math.PI * 2 / 8); // Apply planetary offset pattern
-      
+
       // Moon orbit relative to planet's current position
       const moonX = planetRef.current.position.x + Math.cos(angle) * moon.orbitRadius * planetRadius * 1.05;
       const moonZ = planetRef.current.position.z + Math.sin(angle) * moon.orbitRadius * planetRadius * 1.05;
@@ -56,10 +56,10 @@ function getPlanetColor(type: string, planetId?: string): string {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
-  
+
   const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
-  
+
   const baseColors: Record<string, [number, number, number]> = {
     gas_giant: [30, 80, 50],
     frost_giant: [220, 60, 60],
@@ -70,7 +70,7 @@ function getPlanetColor(type: string, planetId?: string): string {
     ocean_world: [210, 80, 55],
     dead_world: [0, 0, 40]
   };
-  
+
   let [h, s, l] = baseColors[type] || [0, 0, 50];
   h = (h + variation * 360 + 360) % 360;
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
@@ -114,10 +114,10 @@ function getPlanetGlow(type: string, planetId?: string): string {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
-  
+
   const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 3000) - 0.5) * 0.2; // Less variation for glow
-  
+
   const baseGlows: Record<string, [number, number, number]> = {
     gas_giant: [15, 85, 55],   // Orange-red
     frost_giant: [200, 70, 70], // Blue
@@ -128,10 +128,10 @@ function getPlanetGlow(type: string, planetId?: string): string {
     ocean_world: [210, 85, 60], // Blue
     dead_world: [0, 0, 35]      // Dark gray
   };
-  
+
   let [h, s, l] = baseGlows[type] || [0, 0, 30];
   if (type === 'verdant_world') return '#000000'; // No glow for verdant worlds
-  
+
   h = (h + variation * 60 + 360) % 360;
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
 }
@@ -213,7 +213,7 @@ function PlanetMesh({
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
       planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
       planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
-      
+
       // Axis rotation using frame time
       planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;
     }
@@ -222,7 +222,7 @@ function PlanetMesh({
   // Compute material properties and store them on the planet object for reuse in planetary view
   const hasTexture = getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0);
   const isVerdantWithTexture = planet.type === 'verdant_world' && hasTexture;
-  
+
   const materialColor = isVerdantWithTexture
     ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
     : hasTexture 
@@ -316,21 +316,21 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { selectStar } = useUniverse();
-  
+
   // Generate nebulas for this system view
   const nebulas = useMemo(() => StarGenerator.generateNebulas(35), []);
-  
-  // Check if current star is inside any nebula for screen tinting
+
+  // Check if current star is inside any nebula (using scaled radius to match visual representation)
   const starInNebula = useMemo(() => {
     if (!system.star || !system.star.position) return null;
-    
+
     const starPos = new THREE.Vector3(...(system.star.position || [0, 0, 0]));
-    
+
     for (const nebula of nebulas) {
       const nebulaPos = new THREE.Vector3(...nebula.position);
       const distance = starPos.distanceTo(nebulaPos);
-      const scaledRadius = nebula.radius * 3.2; // Match nebula scaling
-      
+      const scaledRadius = nebula.radius * 3.5; // Match nebula scaling
+
       if (distance < scaledRadius) {
         return nebula;
       }
@@ -347,12 +347,12 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // Load all planetary textures
   const starBumpMap = useTexture('/textures/star_surface.jpg');
-  
+
   // Gaseous planet textures
   const jupiterTexture = useTexture('/textures/jupiter.jpg');
   const uranusTexture = useTexture('/textures/uranus.jpg');
   const neptuneTexture = useTexture('/textures/neptune.jpg');
-  
+
   // Terrestrial planet textures
   const marsTexture = useTexture('/textures/mars.jpg');
   const venusAtmosphereTexture = useTexture('/textures/venus_atmosphere.jpg');
@@ -362,15 +362,15 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
-  
+
   // Verdant world (Earth-like) textures with proper opacity
   const terrestrial1Texture = useTexture('/textures/terrestrial1.jpg');
   const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
   const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
-  
+
 
   // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
-  
+
   // Comprehensive planet texture mapping based on planet types
   const planetTextures = {
     gas_giant: jupiterTexture, // Jupiter texture for gas giants
@@ -386,7 +386,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Use planets from the cached system
   const planets = system.planets || [];
   const asteroidBelts = system.asteroidBelts || [];
-  
+
   // Debug planet data including surface features
   console.log('SystemView planets data:', planets.map(p => ({ 
     name: p.name, 
@@ -395,14 +395,14 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     surfaceFeatureCount: p.surfaceFeatures?.length || 0,
     surfaceFeatures: p.surfaceFeatures?.map(f => f.name) || []
   })));
-  
+
   // Debug: Log system data
   console.log('System data:', {
     planets: planets.length,
     asteroidBelts: asteroidBelts.length,
     belts: asteroidBelts
   });
-  
+
   // Debug: Log planet data to check IDs
   if (planets.length > 0 && !planets[0].id) {
     console.warn('Planets missing IDs:', planets);
@@ -429,7 +429,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     const planet = system.planets.find((p: any) => 
       p.name.toLowerCase().includes(planetName.toLowerCase())
     );
-    
+
     if (planet) {
       // Select the planet
       onPlanetClick(planet);
@@ -444,19 +444,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     const asteroidData = useMemo(() => {
       const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 500);
       const asteroids = [];
-      
+
       for (let i = 0; i < totalAsteroids; i++) {
         // Use index-based pseudo-random for consistent distribution
         const seed1 = (i * 73 + 37) % 1000 / 1000;
         const seed2 = (i * 149 + 83) % 1000 / 1000;
         const seed3 = (i * 211 + 127) % 1000 / 1000;
-        
+
         const baseAngle = seed1 * Math.PI * 2;
         const radius = belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius);
         const size = 0.1 + (seed3 * 0.3); // Random size variation
         const yOffset = (seed1 - 0.5) * 3; // Random y offset
         const orbitSpeed = 0.01 + (radius * 0.00005); // Slower for outer asteroids
-        
+
         asteroids.push({
           id: i,
           baseAngle,
@@ -466,7 +466,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           orbitSpeed
         });
       }
-      
+
       return asteroids;
     }, [belt.id]); // Only regenerate if belt ID changes
 
@@ -504,7 +504,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     // Add search functionality to window for external access
     (window as any).searchPlanet = searchPlanet;
     (window as any).systemPlanets = system.planets;
-    
+
     return () => {
       delete (window as any).searchPlanet;
       delete (window as any).systemPlanets;
@@ -515,10 +515,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     <group>
       {/* Nebula screen tint - only if star is inside a nebula */}
       {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />}
-      
+
       {/* Distant nebula skybox */}
       <SystemNebulaSkybox nebulas={nebulas} excludeNebula={starInNebula} />
-      
+
       {/* Background plane for deselection clicks */}
       <mesh 
         position={[0, 0, -5000]} 
@@ -602,7 +602,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
               side={2}
             />
           </mesh>
-          
+
           {/* Individual asteroids (exponentially scaled by belt radius) */}
           <AsteroidField belt={belt} />
         </group>
