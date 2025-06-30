@@ -173,6 +173,7 @@ function StarField({
             position={nebula.position}
             onClick={(e) => {
               e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
               onNebulaClick(nebula);
             }}
             onPointerOver={(e) => {

@@ -90,7 +90,11 @@ export function GalacticView() {
   const stars = universeData?.stars || [];
 
   const handleBackgroundClick = () => {
-    if (selectedStar || selectedNebula) {
+    if (selectedStar) {
+      // Only clear star selection since GalacticView doesn't manage nebula state
+      console.log('Cleared star selection in GalacticView');
+    }
+    if (selectedNebula) {
       setSelectedNebula(null);
       console.log('Cleared nebula selection in GalacticView');
     }

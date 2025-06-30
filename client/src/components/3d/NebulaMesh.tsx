@@ -31,6 +31,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
         ref={meshRef}
         onClick={(e) => {
           e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
           onNebulaClick(nebula);
         }}
         onPointerOver={(e) => {
