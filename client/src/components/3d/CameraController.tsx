@@ -113,6 +113,12 @@ export function CameraController() {
   const resetToStar = () => {
     if (!camera) return;
     
+    // Don't reset if orbital tracking is active
+    if (isOrbitalTrackingRef.current) {
+      console.log('Skipping camera reset - orbital tracking is active');
+      return;
+    }
+    
     // Stop orbital tracking
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
@@ -126,7 +132,7 @@ export function CameraController() {
     console.log('Camera reset to center star position');
   };
 
-  // Handle escape key to break orbital tracking
+  // Handle escape key to break orbital tracking and clear on scope changes
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOrbitalTrackingRef.current) {
@@ -139,6 +145,15 @@ export function CameraController() {
     document.addEventListener('keydown', handleEscapeKey);
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, []);
+
+  // Clear orbital tracking when leaving system view
+  useEffect(() => {
+    if (currentScope !== 'system' && isOrbitalTrackingRef.current) {
+      console.log('Clearing orbital tracking - left system view');
+      isOrbitalTrackingRef.current = false;
+      orbitalTargetRef.current = null;
+    }
+  }, [currentScope]);
 
   // Set camera to look at specific star with offset
   const setCameraLookingAtStar = (star: any) => {
@@ -227,24 +242,32 @@ export function CameraController() {
     };
   }, [camera, gl.domElement, isTransitioning]);
 
-  // Set camera position based on scope
+  // Set camera position based on scope - only when first entering system view
+  const hasInitializedSystemView = useRef(false);
+  
   useEffect(() => {
     if (currentScope === 'system') {
-      // Only set initial position, don't override during orbital tracking
-      const currentDistance = camera.position.length();
-      
-      if (currentDistance < 5) {
-        // If too close or at origin, set default position
-        camera.position.set(0, 20, 200);
-        camera.lookAt(0, 0, 0);
-      }
-      // Don't force camera position if it's already positioned
-      
       // Set extended camera range for system view
       camera.near = 0.1;
       camera.far = 500000;
       camera.updateProjectionMatrix();
-      console.log('Set system view camera position:', camera.position);
+      
+      // Only set initial position if we haven't initialized system view yet
+      // and we're not in orbital tracking mode
+      if (!hasInitializedSystemView.current && !isOrbitalTrackingRef.current) {
+        const currentDistance = camera.position.length();
+        
+        if (currentDistance < 5) {
+          // If too close or at origin, set default position
+          camera.position.set(0, 20, 200);
+          camera.lookAt(0, 0, 0);
+          console.log('Set initial system view camera position:', camera.position);
+        }
+        hasInitializedSystemView.current = true;
+      }
+    } else {
+      // Reset when leaving system view
+      hasInitializedSystemView.current = false;
     }
   }, [camera, currentScope]);
 
@@ -258,7 +281,7 @@ export function CameraController() {
     }
 
     // Handle orbital tracking - copy planet's movement data directly to camera
-    if (isOrbitalTrackingRef.current && orbitalTargetRef.current) {
+    if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope === 'system') {
       const planetData = orbitalTargetRef.current;
       const time = Date.now() * 0.0001;
       const planetIndex = planetData.index || 0;
@@ -291,8 +314,7 @@ export function CameraController() {
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
       
-      // Don't return here - allow other controls to be processed for escape key handling
-      // But skip movement controls
+      // Skip movement controls when in orbital tracking
       return;
     }
 
