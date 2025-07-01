@@ -113,12 +113,6 @@ export function CameraController() {
   const resetToStar = () => {
     if (!camera) return;
     
-    // Don't reset if orbital tracking is active
-    if (isOrbitalTrackingRef.current) {
-      console.log('Skipping camera reset - orbital tracking is active');
-      return;
-    }
-    
     // Stop orbital tracking
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
@@ -242,9 +236,7 @@ export function CameraController() {
     };
   }, [camera, gl.domElement, isTransitioning]);
 
-  // Set camera position based on scope - only when first entering system view
-  const hasInitializedSystemView = useRef(false);
-  
+  // Set camera position based on scope
   useEffect(() => {
     if (currentScope === 'system') {
       // Set extended camera range for system view
@@ -252,22 +244,13 @@ export function CameraController() {
       camera.far = 500000;
       camera.updateProjectionMatrix();
       
-      // Only set initial position if we haven't initialized system view yet
-      // and we're not in orbital tracking mode
-      if (!hasInitializedSystemView.current && !isOrbitalTrackingRef.current) {
-        const currentDistance = camera.position.length();
-        
-        if (currentDistance < 5) {
-          // If too close or at origin, set default position
-          camera.position.set(0, 20, 200);
-          camera.lookAt(0, 0, 0);
-          console.log('Set initial system view camera position:', camera.position);
-        }
-        hasInitializedSystemView.current = true;
+      // Only set initial position if camera is too close to origin
+      const currentDistance = camera.position.length();
+      if (currentDistance < 5) {
+        camera.position.set(0, 20, 200);
+        camera.lookAt(0, 0, 0);
+        console.log('Set system view camera position:', camera.position);
       }
-    } else {
-      // Reset when leaving system view
-      hasInitializedSystemView.current = false;
     }
   }, [camera, currentScope]);
 
@@ -281,7 +264,7 @@ export function CameraController() {
     }
 
     // Handle orbital tracking - copy planet's movement data directly to camera
-    if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope === 'system') {
+    if (isOrbitalTrackingRef.current && orbitalTargetRef.current) {
       const planetData = orbitalTargetRef.current;
       const time = Date.now() * 0.0001;
       const planetIndex = planetData.index || 0;
