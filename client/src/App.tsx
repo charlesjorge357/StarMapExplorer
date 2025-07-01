@@ -344,10 +344,7 @@ function App() {
           (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
         }
 
-        // Reset camera to center star position if in system view
-        if (currentView === 'system' && (window as any).resetToStar) {
-          (window as any).resetToStar();
-        }
+        // Note: Camera positioning for planetary view is handled by the view transition itself
 
         if (currentView === 'galactic' && (selectedStar || selectedNebula)) {
           if (selectedStar) {
