@@ -2,8 +2,7 @@ import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-
-
+import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 
 // Note: PlanetaryView deliberately does not include NebulaScreenTint
 
@@ -13,7 +12,7 @@ interface PlanetaryViewProps {
   onFeatureClick: (feature: any) => void;
 }
 
-export function PlanetaryView({ planet }: PlanetaryViewProps) {
+export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
   const [isHeld, setIsHeld] = useState(false);
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
@@ -202,7 +201,15 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
         />
       </mesh>
 
-
+      {/* Surface Features */}
+      {planet.surfaceFeatures && planet.surfaceFeatures.map((feature: any) => (
+        <SurfaceFeatureMarker
+          key={feature.id}
+          feature={feature}
+          planetRadius={planetRadius}
+          onFeatureClick={onFeatureClick}
+        />
+      ))}
 
       {/* Lighting */}
       <ambientLight intensity={0.3} />
