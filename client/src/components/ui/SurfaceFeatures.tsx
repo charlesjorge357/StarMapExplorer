@@ -18,16 +18,32 @@ export function SurfaceFeatureMarker({
   onFeatureClick,
   ...meshProps
 }: Props) {
-  // Convert lat/lon → 3D position
-  const position = useMemo(() => {
+  // Convert lat/lon → 3D position and calculate orientation
+  const { position, rotation } = useMemo(() => {
     const [lat, lon] = feature.position
     const phi = (90 - lat) * (Math.PI / 180)
     const theta = (lon + 180) * (Math.PI / 180)
     const x = -planetRadius * Math.sin(phi) * Math.cos(theta)
     const y =  planetRadius * Math.cos(phi)
     const z =  planetRadius * Math.sin(phi) * Math.sin(theta)
-    // push it just above the surface
-    return new THREE.Vector3(x, y, z).multiplyScalar((planetRadius + 0.05) / planetRadius)
+    
+    // Surface position, pushed slightly above the surface
+    const surfacePos = new THREE.Vector3(x, y, z).multiplyScalar((planetRadius + 0.05) / planetRadius)
+    
+    // Calculate rotation to orient model toward planet center
+    // The surface normal points away from planet center
+    const surfaceNormal = surfacePos.clone().normalize()
+    
+    // Create a rotation that aligns the model's "up" direction with the surface normal
+    // This makes the bottom of the model face the planet center
+    const up = new THREE.Vector3(0, 1, 0)
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, surfaceNormal)
+    const euler = new THREE.Euler().setFromQuaternion(quaternion)
+    
+    return {
+      position: surfacePos,
+      rotation: euler
+    }
   }, [feature.position, planetRadius])
 
   const markerSize = planetRadius * 0.02
@@ -129,12 +145,13 @@ export function SurfaceFeatureMarker({
   };
 
   return (
-    <mesh
+    <group
       {...meshProps}
       position={position}
+      rotation={rotation}
       onClick={() => onFeatureClick(feature)}
     >
       {renderFeatureModel()}
-    </mesh>
+    </group>
   )
 }
