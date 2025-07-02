@@ -187,7 +187,7 @@ export function CameraController() {
 
     const handleMouseMove = (event: MouseEvent) => {
       // Only rotate camera during right-click drag
-      if (!isRightClickDragRef.current || isTransitioning)
+      if (!isRightClickDragRef.current || isTransitioning || (window as any).disableGalacticSystemControls)
         return;
         
 
@@ -205,7 +205,7 @@ export function CameraController() {
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 2) { // Right click
+      if (event.button === 2 && !(window as any).disableGalacticSystemControls) { // Right click
         event.preventDefault();
         isRightClickDragRef.current = true;
         document.body.style.cursor = 'grabbing';
