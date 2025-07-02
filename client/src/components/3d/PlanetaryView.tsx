@@ -36,7 +36,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
       'frost_giant': ['/textures/uranus.jpg', '/textures/neptune.jpg'],
       'arid_world': ['/textures/mars.jpg', '/textures/venus_surface.jpg'],
       'verdant_world': ['/textures/terrestrial1.jpg', '/textures/terrestrial2.jpg', '/textures/terrestrial3.png'],
-      'acidic_world': ['/textures/venus_atmosphere.jpg'],
+      'acidic_world': ['/textures/venus_atmosphere.jpg', '/textures/venus_surface.jpg'],
       'nuclear_world': ['/textures/ceres.jpg'],
       'ocean_world': ['/textures/ocean.jpg'],
       'dead_world': ['/textures/mercury.jpg', '/textures/moon.jpg', '/textures/eris.jpg']
