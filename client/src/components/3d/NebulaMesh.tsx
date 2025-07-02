@@ -155,18 +155,31 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   // Calculate the maximum radius for the hitbox and selection ring (elliptical bounding sphere)
   const selectionRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusZ); // Use X or Z, whichever is longer
 
+  // Check if camera is far enough away to allow clicking (2x radius minimum distance)
+  const canClick = useMemo(() => {
+    const cameraPos = camera.position;
+    const nebulaPos = new THREE.Vector3(...nebula.position);
+    const distance = cameraPos.distanceTo(nebulaPos);
+    const minClickDistance = nebula.radius * 2; // 2x the original nebula radius
+    return distance >= minClickDistance;
+  }, [camera.position, nebula.position, nebula.radius]);
+
   return (
     <group ref={groupRef} position={nebula.position}>
       {/* Invisible sphere for hitbox */}
       <mesh
         onClick={(e) => {
           e.stopPropagation();
-          onNebulaClick(nebula);
+          if (canClick) {
+            onNebulaClick(nebula);
+          }
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
+          if (canClick) {
+            setHovered(true);
+            document.body.style.cursor = 'pointer';
+          }
         }}
         onPointerOut={(e) => {
           e.stopPropagation();
