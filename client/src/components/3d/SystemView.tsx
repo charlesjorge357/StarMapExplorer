@@ -329,7 +329,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     for (const nebula of nebulas) {
       const nebulaPos = new THREE.Vector3(...nebula.position);
       const distance = starPos.distanceTo(nebulaPos);
-      const scaledRadius = nebula.radius * 3.5; // Match nebula scaling
+      const scaledRadius = nebula.radius * 4.5; // Match nebula scaling used in NebulaScreenTint and NebulaMesh
 
       if (distance < scaledRadius) {
         return nebula;
