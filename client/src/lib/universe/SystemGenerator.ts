@@ -98,7 +98,9 @@ export class SystemGenerator {
     // Include planet type in the seed to ensure variety between planets of the same type
     const typeHash = planetType.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const nameHash = starName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const seed = nameHash + planetIndex * 1000 + typeHash * 100;
+    
+    // Use a more complex seed that includes planet position and type for better distribution
+    const seed = nameHash * 7919 + planetIndex * 2003 + typeHash * 701;
     
     // Define texture count per planet type (based on available textures)
     const textureCountMap = {
@@ -120,7 +122,12 @@ export class SystemGenerator {
     };
     
     const textureCount = textureCountMap[planetType] || 1;
-    return Math.floor(this.seededRandom(seed) * textureCount);
+    const textureIndex = Math.floor(this.seededRandom(seed) * textureCount);
+    
+    // Debug logging for texture selection
+    console.log(`Texture selection for ${planetType} planet ${planetIndex} in ${starName}: index ${textureIndex} of ${textureCount}`);
+    
+    return textureIndex;
   }
 
   static generatePlanetName(starName: string, index: number): string {
