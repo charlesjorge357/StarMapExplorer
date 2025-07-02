@@ -431,6 +431,7 @@ function App() {
             // Stop any orbital tracking when entering planetary view
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+              (window as any)
             }
           } else {
             console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
