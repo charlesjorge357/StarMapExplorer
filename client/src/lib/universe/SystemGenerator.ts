@@ -73,8 +73,8 @@ export class SystemGenerator {
     grassland_world: { min: 0.7, max: 2.5 },
     jungle_world: { min: 0.7, max: 2.5 },
     marshy_world: { min: 0.7, max: 2.5 },
-    martian_world: { min: 0.4, max: 1.1 },
-    methane_world: { min: 0.3, max: 0.9 },
+    martian_world: { min: 0.45, max: 0.6 }, // Mars-like: 0.45-0.6 Earth radii (Mars is 0.53)
+    methane_world: { min: 0.4, max: 2.2 }, // Titan-like to super-Earth: 0.4-2.2 Earth radii (Titan is 0.4)
     sandy_world: { min: 0.7, max: 2.5 },
     snowy_world: { min: 0.7, max: 2.5 },
     tundra_world: { min: 0.7, max: 2.5 },
