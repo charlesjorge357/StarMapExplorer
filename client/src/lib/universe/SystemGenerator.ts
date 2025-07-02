@@ -33,11 +33,18 @@ type PlanetType =
   | 'gas_giant' 
   | 'frost_giant' 
   | 'arid_world' 
-  | 'verdant_world' 
-  | 'acidic_world' 
+  | 'barren_world' 
+  | 'dusty_world' 
+  | 'grassland_world' 
+  | 'jungle_world' 
+  | 'marshy_world' 
+  | 'martian_world' 
+  | 'methane_world' 
+  | 'sandy_world' 
+  | 'snowy_world' 
+  | 'tundra_world'
   | 'nuclear_world' 
-  | 'ocean_world' 
-  | 'dead_world';
+  | 'ocean_world';
 
 interface AsteroidBelt {
   id: string;
@@ -61,11 +68,18 @@ export class SystemGenerator {
     gas_giant: { min: 6.5, max: 11.2 },
     frost_giant: { min: 5.5, max: 10.0 },
     arid_world: { min: 0.4, max: 1.2 },
-    verdant_world: { min: 0.8, max: 1.5 },
-    acidic_world: { min: 0.6, max: 1.1 },
+    barren_world: { min: 0.2, max: 0.8 },
+    dusty_world: { min: 0.3, max: 1.0 },
+    grassland_world: { min: 0.8, max: 1.5 },
+    jungle_world: { min: 0.9, max: 1.6 },
+    marshy_world: { min: 0.7, max: 1.4 },
+    martian_world: { min: 0.4, max: 1.1 },
+    methane_world: { min: 0.3, max: 0.9 },
+    sandy_world: { min: 0.3, max: 1.0 },
+    snowy_world: { min: 0.5, max: 1.2 },
+    tundra_world: { min: 0.6, max: 1.3 },
     nuclear_world: { min: 0.3, max: 0.8 },
-    ocean_world: { min: 0.7, max: 1.3 },
-    dead_world: { min: 0.1, max: 0.6 }
+    ocean_world: { min: 0.7, max: 1.3 }
   };
 
   static ORBITAL_ZONES = {
@@ -88,14 +102,21 @@ export class SystemGenerator {
     
     // Define texture count per planet type (based on available textures)
     const textureCountMap = {
-      gas_giant: 1, // Jupiter only
-      frost_giant: 2, // Neptune, Jupiter for variety
-      arid_world: 2, // Mars, Venus surface
-      verdant_world: 3, // Earth-like terrestrial textures
-      acidic_world: 2, // Venus atmosphere, Venus surface
-      nuclear_world: 2, // Ceres, Eris
-      ocean_world: 1, // Ocean texture available
-      dead_world: 3 // Moon, Mercury, Eris
+      gas_giant: 20, // Gaseous textures (20 available)
+      frost_giant: 20, // Gaseous textures (20 available)
+      arid_world: 5, // Arid textures
+      barren_world: 5, // Barren textures
+      dusty_world: 5, // Dusty textures
+      grassland_world: 5, // Grassland textures
+      jungle_world: 5, // Jungle textures
+      marshy_world: 5, // Marshy textures
+      martian_world: 5, // Martian textures
+      methane_world: 5, // Methane textures
+      sandy_world: 5, // Sandy textures
+      snowy_world: 5, // Snowy textures
+      tundra_world: 5, // Tundra textures
+      nuclear_world: 2, // Keep existing nuclear world textures
+      ocean_world: 1 // Keep existing ocean texture
     };
     
     const textureCount = textureCountMap[planetType] || 1;
@@ -111,16 +132,47 @@ export class SystemGenerator {
     const random = this.seededRandom(seed);
     const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
 
+    // Hot inner zone - close to star
     if (orbitRadius < 1.5) {
-      if (effectiveTemp > 800) return random < 0.3 ? 'dead_world' : 'arid_world';
-      if (effectiveTemp > 400) return random < 0.4 ? 'arid_world' : 'acidic_world';
-      return random < 0.6 ? 'verdant_world' : 'ocean_world';
-    } else if (orbitRadius < 4.0) {
+      if (effectiveTemp > 800) {
+        const rand = random * 4;
+        if (rand < 1) return 'barren_world';
+        if (rand < 2) return 'dusty_world'; 
+        if (rand < 3) return 'martian_world';
+        return 'arid_world';
+      }
+      if (effectiveTemp > 400) {
+        const rand = random * 3;
+        if (rand < 1) return 'arid_world';
+        if (rand < 2) return 'sandy_world';
+        return 'dusty_world';
+      }
+      // Habitable zone
+      const rand = random * 4;
+      if (rand < 1) return 'grassland_world';
+      if (rand < 2) return 'jungle_world';
+      if (rand < 3) return 'marshy_world';
+      return 'ocean_world';
+    } 
+    // Mid zone
+    else if (orbitRadius < 4.0) {
       if (random < 0.3) return 'gas_giant';
-      if (random < 0.6) return 'arid_world';
-      return 'dead_world';
-    } else {
-      return random < 0.7 ? 'gas_giant' : 'frost_giant';
+      const terrestrialRand = random * 6;
+      if (terrestrialRand < 1) return 'arid_world';
+      if (terrestrialRand < 2) return 'barren_world';
+      if (terrestrialRand < 3) return 'dusty_world';
+      if (terrestrialRand < 4) return 'martian_world';
+      if (terrestrialRand < 5) return 'sandy_world';
+      return 'tundra_world';
+    } 
+    // Outer zone - cold
+    else {
+      if (random < 0.4) return 'gas_giant';
+      if (random < 0.7) return 'frost_giant';
+      const coldRand = random * 3;
+      if (coldRand < 1) return 'snowy_world';
+      if (coldRand < 2) return 'tundra_world';
+      return 'methane_world';
     }
   }
 
@@ -138,16 +190,23 @@ export class SystemGenerator {
 
     const baseTemp = starTemp / (orbitRadius * orbitRadius * 16);
     let temperature = baseTemp;
-    if (type === 'acidic_world') temperature *= 2;
     if (type === 'gas_giant') temperature *= 0.7;
+    if (type === 'dusty_world') temperature *= 1.5; // Dust traps heat
+    if (type === 'methane_world') temperature *= 0.8; // Methane atmosphere cooling
 
     let atmosphere: string[] = [];
     switch (type) {
       case 'gas_giant': atmosphere = ['Hydrogen', 'Helium', 'Methane']; break;
       case 'frost_giant': atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia']; break;
-      case 'acidic_world': atmosphere = ['Carbon Dioxide', 'Sulfuric Acid', 'Nitrogen']; break;
-      case 'verdant_world': case 'ocean_world': atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor']; break;
       case 'arid_world': atmosphere = ['Carbon Dioxide', 'Nitrogen']; break;
+      case 'barren_world': atmosphere = []; break;
+      case 'dusty_world': atmosphere = ['Carbon Dioxide', 'Dust Particles']; break;
+      case 'grassland_world': case 'jungle_world': case 'ocean_world': atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor']; break;
+      case 'marshy_world': atmosphere = ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor']; break;
+      case 'martian_world': atmosphere = ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide']; break;
+      case 'methane_world': atmosphere = ['Methane', 'Nitrogen', 'Ethane']; break;
+      case 'sandy_world': atmosphere = ['Carbon Dioxide', 'Silicon Particles']; break;
+      case 'snowy_world': case 'tundra_world': atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor']; break;
       case 'nuclear_world': atmosphere = ['Radioactive Gases', 'Noble Gases']; break;
     }
 
@@ -192,8 +251,10 @@ export class SystemGenerator {
     const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
 
     const planetTypes: PlanetType[] = [
-      'gas_giant', 'frost_giant', 'arid_world', 'verdant_world',
-      'acidic_world', 'nuclear_world', 'ocean_world', 'dead_world'
+      'gas_giant', 'frost_giant', 'arid_world', 'barren_world',
+      'dusty_world', 'grassland_world', 'jungle_world', 'marshy_world',
+      'martian_world', 'methane_world', 'sandy_world', 'snowy_world',
+      'tundra_world', 'nuclear_world', 'ocean_world'
     ];
 
     // Calculate orbital zones with proper spacing to prevent overlaps
@@ -235,14 +296,21 @@ export class SystemGenerator {
         case 'frost_giant':
           radius = 4 + Math.random() * 4; // 4–8 R⊕
           break;
-        case 'verdant_world':
-        case 'acidic_world':
+        case 'grassland_world':
+        case 'jungle_world':
         case 'ocean_world':
         case 'arid_world':
+        case 'marshy_world':
           radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
           break;
         case 'nuclear_world':
-        case 'dead_world':
+        case 'barren_world':
+        case 'dusty_world':
+        case 'martian_world':
+        case 'methane_world':
+        case 'sandy_world':
+        case 'snowy_world':
+        case 'tundra_world':
           radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
           break;
         default:
@@ -265,21 +333,38 @@ export class SystemGenerator {
         case 'frost_giant':
           atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
           break;
-        case 'verdant_world':
+        case 'grassland_world':
+        case 'jungle_world':
         case 'ocean_world':
           atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
           break;
         case 'arid_world':
           atmosphere = ['Carbon Dioxide', 'Nitrogen'];
           break;
-        case 'acidic_world':
-          atmosphere = ['Carbon Dioxide', 'Sulfuric Acid', 'Nitrogen'];
+        case 'barren_world':
+          atmosphere = [];
+          break;
+        case 'dusty_world':
+          atmosphere = ['Carbon Dioxide', 'Dust Particles'];
+          break;
+        case 'marshy_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor'];
+          break;
+        case 'martian_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide'];
+          break;
+        case 'methane_world':
+          atmosphere = ['Methane', 'Nitrogen', 'Ethane'];
+          break;
+        case 'sandy_world':
+          atmosphere = ['Carbon Dioxide', 'Silicon Particles'];
+          break;
+        case 'snowy_world':
+        case 'tundra_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
           break;
         case 'nuclear_world':
           atmosphere = ['Helium-3', 'Argon', 'Tritium'];
-          break;
-        case 'dead_world':
-          atmosphere = [];
           break;
       }
 
@@ -334,11 +419,18 @@ export class SystemGenerator {
       gas_giant: [30, 80, 50],
       frost_giant: [220, 60, 60],
       arid_world: [30, 50, 45],
-      verdant_world: [125, 70, 45],
-      acidic_world: [55, 90, 60],
+      barren_world: [25, 30, 35],
+      dusty_world: [40, 60, 50],
+      grassland_world: [110, 60, 50],
+      jungle_world: [130, 70, 40],
+      marshy_world: [90, 55, 45],
+      martian_world: [15, 75, 45],
+      methane_world: [290, 65, 35],
+      sandy_world: [45, 70, 60],
+      snowy_world: [200, 20, 85],
+      tundra_world: [180, 40, 70],
       nuclear_world: [10, 90, 50],
-      ocean_world: [210, 80, 55],
-      dead_world: [0, 0, 40]
+      ocean_world: [210, 80, 55]
     };
     let [h, s, l] = baseColors[type];
     h = (h + variation * 360 + 360) % 360;

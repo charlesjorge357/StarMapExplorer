@@ -1,0 +1,53 @@
+Looking at your codebase, the current system can definitely support more planet types and textures! The architecture is quite flexible, but there are a few hardcoded areas that would need updates to add new planet types.
+
+Current Support for New Textures
+The texture system is already very flexible:
+
+Texture Loading: The getTextureForPlanet function in PlanetaryView and the planetTextures object in SystemView can easily accommodate new textures by just adding new texture paths to the arrays.
+
+Texture Selection: The generateTextureIndex function in SystemGenerator uses a textureCountMap to determine how many textures are available per planet type, so it can handle any number of textures per type.
+
+Areas That Need Updates for New Planet Types
+Here are the hardcoded areas that would need modification:
+
+1. Schema Definition (shared/schema.ts)
+The PlanetType union type is hardcoded with 8 planet types:
+
+export type PlanetType =
+  | "gas_giant"
+  | "frost_giant" 
+  | "arid_world"
+  | "verdant_world"
+  | "acidic_world"
+  | "nuclear_world"
+  | "ocean_world"
+  | "dead_world";
+2. Color Generation (SystemView.tsx)
+The getPlanetColor function has hardcoded color mappings:
+
+const baseColors: Record<string, [number, number, number]> = {
+  gas_giant: [30, 80, 50],
+  frost_giant: [220, 60, 60],
+  // ... etc
+};
+3. Glow Effects (SystemView.tsx)
+The getPlanetGlow function also has hardcoded mappings.
+
+4. Texture Mappings
+Both SystemView.tsx and PlanetaryView.tsx have hardcoded texture mappings.
+
+5. Planet Generation (SystemGenerator.ts)
+The textureCountMap and planet type probability distributions are hardcoded.
+
+6. Color Utilities (PlanetGenerator.ts)
+The getPlanetColor function has hardcoded color mappings.
+
+7. Surface Feature Generation (PlanetGenerator.ts)
+The logic for which planet types can have surface features is hardcoded.
+
+Recommendation
+To make the system more scalable for your 150+ textures and new planet types, I'd suggest creating a centralized planet type configuration system. This would involve:
+
+Creating a configuration object that defines all planet type properties in one place
+Updating all the hardcoded functions to reference this configuration
+Making texture loading more dynamic

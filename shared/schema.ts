@@ -90,11 +90,18 @@ export type PlanetType =
   | "gas_giant"
   | "frost_giant"
   | "arid_world"
-  | "verdant_world"
-  | "acidic_world"
+  | "barren_world"
+  | "dusty_world"
+  | "grassland_world"
+  | "jungle_world"
+  | "marshy_world"
+  | "martian_world"
+  | "methane_world"
+  | "sandy_world"
+  | "snowy_world"
+  | "tundra_world"
   | "nuclear_world"
-  | "ocean_world"
-  | "dead_world";
+  | "ocean_world";
 
 export interface StarSystem {
   id: string;
