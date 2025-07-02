@@ -130,23 +130,26 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
 
 
-  // Load planet texture lazily with error handling
+  // Load planet texture with proper fallback
   const texturePath = useMemo(() => {
-    if (!planet?.type) return null;
-    return getTextureForPlanet(planet.type, planet.textureIndex || 0);
+    if (!planet?.type) return '/textures/Barren/Barren_01-1024x512.png';
+    const path = getTextureForPlanet(planet.type, planet.textureIndex || 0);
+    return path || '/textures/Barren/Barren_01-1024x512.png';
   }, [planet?.type, planet?.textureIndex]);
   
   console.log(`Loading texture for ${planet?.name}: ${texturePath}`);
   
-  let texture = null;
-  if (texturePath) {
-    try {
-      texture = useTexture(texturePath);
-    } catch (error) {
-      console.error(`Failed to load texture for ${planet?.type}:`, error);
-      texture = null;
+  // Always load a texture (with fallback)
+  const texture = useTexture(texturePath);
+  
+  // Validate texture loading
+  useEffect(() => {
+    if (texture) {
+      console.log('PlanetaryView: Texture loaded successfully for', planet?.name);
+    } else {
+      console.warn('PlanetaryView: No texture loaded for', planet?.name);
     }
-  }
+  }, [texture, planet?.name]);
 
   // Mouse interaction state
   const mouseState = useRef({
@@ -177,57 +180,79 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
   // Mouse controls for globe rotation
   useEffect(() => {
-    if (!gl?.domElement) return;
+    if (!gl?.domElement || !mouseState.current) {
+      console.warn('PlanetaryView: Missing gl.domElement or mouseState');
+      return;
+    }
+    
     const canvas = gl.domElement;
 
     const handleMouseDown = (event: MouseEvent) => {
-      mouseState.current.isDown = true;
-      mouseState.current.lastX = event.clientX;
-      mouseState.current.lastY = event.clientY;
-      canvas.style.cursor = 'grabbing';
+      try {
+        if (!mouseState.current) return;
+        mouseState.current.isDown = true;
+        mouseState.current.lastX = event.clientX;
+        mouseState.current.lastY = event.clientY;
+        if (canvas) canvas.style.cursor = 'grabbing';
+      } catch (error) {
+        console.error('PlanetaryView handleMouseDown error:', error);
+      }
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!mouseState.current.isDown || !groupRef.current) return;
+      try {
+        if (!mouseState.current?.isDown || !groupRef.current) return;
 
-      const deltaX = event.clientX - mouseState.current.lastX;
-      const deltaY = event.clientY - mouseState.current.lastY;
+        const deltaX = event.clientX - mouseState.current.lastX;
+        const deltaY = event.clientY - mouseState.current.lastY;
 
-      // Rotate globe based on mouse movement
-      mouseState.current.rotationY += deltaX * 0.005;
-      mouseState.current.rotationX += deltaY * 0.005;
+        // Rotate globe based on mouse movement
+        mouseState.current.rotationY += deltaX * 0.005;
+        mouseState.current.rotationX += deltaY * 0.005;
 
-      // Clamp vertical rotation to prevent flipping
-      mouseState.current.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseState.current.rotationX));
+        // Clamp vertical rotation to prevent flipping
+        mouseState.current.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseState.current.rotationX));
 
-      // Apply rotations to planet group
-      groupRef.current.rotation.y = mouseState.current.rotationY;
-      groupRef.current.rotation.x = mouseState.current.rotationX;
+        // Apply rotations to planet group
+        groupRef.current.rotation.y = mouseState.current.rotationY;
+        groupRef.current.rotation.x = mouseState.current.rotationX;
 
-      mouseState.current.lastX = event.clientX;
-      mouseState.current.lastY = event.clientY;
+        mouseState.current.lastX = event.clientX;
+        mouseState.current.lastY = event.clientY;
+      } catch (error) {
+        console.error('PlanetaryView handleMouseMove error:', error);
+      }
     };
 
     const handleMouseUp = () => {
-      mouseState.current.isDown = false;
-      canvas.style.cursor = 'grab';
+      try {
+        if (!mouseState.current) return;
+        mouseState.current.isDown = false;
+        if (canvas) canvas.style.cursor = 'grab';
+      } catch (error) {
+        console.error('PlanetaryView handleMouseUp error:', error);
+      }
     };
 
     const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
+      try {
+        event.preventDefault();
 
-      // Zoom in/out by moving camera
-      const zoomSpeed = 0.1;
-      const direction = event.deltaY > 0 ? 1 : -1;
-      const currentDistance = camera.position.length();
-      const minDistance = planetRadius * 1.2;
-      const maxDistance = planetRadius * 5;
+        // Zoom in/out by moving camera
+        const zoomSpeed = 0.1;
+        const direction = event.deltaY > 0 ? 1 : -1;
+        const currentDistance = camera.position.length();
+        const minDistance = planetRadius * 1.2;
+        const maxDistance = planetRadius * 5;
 
-      const newDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance + direction * zoomSpeed * planetRadius));
+        const newDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance + direction * zoomSpeed * planetRadius));
 
-      camera.position.normalize().multiplyScalar(newDistance);
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
+        camera.position.normalize().multiplyScalar(newDistance);
+        camera.updateMatrix();
+        camera.updateMatrixWorld(true);
+      } catch (error) {
+        console.error('PlanetaryView handleWheel error:', error);
+      }
     };
 
     // Add event listeners
@@ -291,7 +316,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
             // Always use computed emissive intensity from SystemView when available
             planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : 0.1
           }
-          map={texture}
+          map={texture || undefined}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
           transparent={false}
