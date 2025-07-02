@@ -121,11 +121,12 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
 
 
-  // Load planet texture
+  // Load planet texture lazily
+  const texturePath = getTextureForPlanet(planet.type, planet.textureIndex || 0);
+  console.log(`Loading texture for ${planet.name}: ${texturePath}`);
+  
   let texture;
   try {
-    const texturePath = getTextureForPlanet(planet.type, planet.textureIndex || 0);
-    console.log(`Loading texture for ${planet.name}: ${texturePath}`);
     texture = useTexture(texturePath);
   } catch (error) {
     console.error(`Failed to load texture for ${planet?.type}:`, error);

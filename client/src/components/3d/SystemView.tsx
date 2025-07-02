@@ -8,6 +8,7 @@ import { StarGenerator } from '../../lib/universe/StarGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
 import { SystemNebulaSkybox } from './SystemNebulaSkybox';
 import { StarSkybox } from './StarSkybox';
+import { LazyTexturePlanet } from './LazyTexturePlanet';
 
 function MoonMesh({ 
   moon, 
@@ -84,17 +85,41 @@ function getPlanetColor(type: string, planetId?: string): string {
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
 }
 
-function getPlanetTexture(type: string, planetTextures: any, textureIndex: number): any {
-  const textures = planetTextures[type as keyof typeof planetTextures];
-  if (!textures) return undefined;
+// Texture cache to prevent re-loading the same texture multiple times
+const textureCache = new Map<string, THREE.Texture>();
 
-  // Handle array of textures (use stored texture index)
-  if (Array.isArray(textures)) {
-    return textures[textureIndex % textures.length];
+function getPlanetTexture(type: string, planetTextures: any, textureIndex: number): any {
+  // For legacy textures (nuclear_world, ocean_world) that are already loaded
+  const textures = planetTextures[type as keyof typeof planetTextures];
+  if (textures) {
+    if (Array.isArray(textures)) {
+      return textures[textureIndex % textures.length];
+    }
+    return textures;
   }
 
-  // Single texture
-  return textures;
+  // For new planet types, use lazy loading with cache
+  if (planetTextures.getTextureForPlanet) {
+    const texturePath = planetTextures.getTextureForPlanet(type, textureIndex);
+    if (texturePath) {
+      // Check cache first
+      if (textureCache.has(texturePath)) {
+        return textureCache.get(texturePath);
+      }
+      
+      try {
+        const texture = new THREE.TextureLoader().load(texturePath);
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        textureCache.set(texturePath, texture);
+        return texture;
+      } catch (e) {
+        console.log(`Failed to load texture: ${texturePath}`);
+        return null;
+      }
+    }
+  }
+  
+  return null;
 }
 
 // Helper function to get texture for a planet - moved to top level
@@ -227,28 +252,14 @@ function PlanetMesh({
     }
   });
 
-  // Compute material properties and store them on the planet object for reuse in planetary view
-  const hasTexture = getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0);
-  const isVerdantWithTexture = planet.type === 'verdant_world' && hasTexture;
-
-  const materialColor = isVerdantWithTexture
-    ? '#ffffff'  // Pure white for verdant worlds to show true texture colors
-    : hasTexture 
-      ? '#ffffff'  // White for all textured planets
-      : getPlanetColor(planet.type, planet.id || planet.name);  // Use seeded color variation
-
-  const materialEmissive = isVerdantWithTexture
-    ? '#000000'  // No emissive glow for verdant worlds with textures
-    : getPlanetGlow(planet.type, planet.id || planet.name);
-
-  const materialEmissiveIntensity = isVerdantWithTexture
-    ? 0.0  // No emissive intensity for verdant worlds
-    : hasTexture ? 0.1 : 0.2;
+  // Calculate planet properties
+  const planetColor = getPlanetColor(planet.type, planet.id || planet.name);
+  const planetGlow = getPlanetGlow(planet.type, planet.id || planet.name);
+  const planetRadius = planet.radius * 0.6; // Visual scaling
 
   // Store these computed values directly on the planet object for planetary view
-  planet.computedColor = materialColor;
-  planet.computedGlow = materialEmissive;
-  planet.computedEmissiveIntensity = materialEmissiveIntensity;
+  planet.computedColor = planetColor;
+  planet.computedGlow = planetGlow;
 
  const handleClick = (event: any) => {
     event.stopPropagation();
@@ -281,9 +292,9 @@ function PlanetMesh({
       >
         <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
         <meshStandardMaterial 
-          color={materialColor}
-          emissive={materialEmissive}
-          emissiveIntensity={materialEmissiveIntensity}
+          color={planetColor}
+          emissive={planet.type === 'nuclear_world' ? '#330000' : '#000000'}
+          emissiveIntensity={planet.type === 'nuclear_world' ? 0.3 : 0}
           map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
@@ -361,166 +372,76 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
     name: 'Central Star'
   };
 
-  // Load all planetary textures
+  // Load only essential textures immediately
   const starBumpMap = useTexture('/textures/star_surface.jpg');
-
-  // Gaseous planet textures
-  const jupiterTexture = useTexture('/textures/jupiter.jpg');
-  const uranusTexture = useTexture('/textures/uranus.jpg');
-  const neptuneTexture = useTexture('/textures/neptune.jpg');
-
-  // Terrestrial planet textures
-  const marsTexture = useTexture('/textures/mars.jpg');
-  const venusAtmosphereTexture = useTexture('/textures/venus_atmosphere.jpg');
-  const venusSurfaceTexture = useTexture('/textures/venus_surface.jpg');
-  const mercuryTexture = useTexture('/textures/mercury.jpg');
-  const moonTexture = useTexture('/textures/moon.jpg');
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
 
-  // Verdant world (Earth-like) textures with proper opacity
-  const terrestrial1Texture = useTexture('/textures/terrestrial1.jpg');
-  const terrestrial2Texture = useTexture('/textures/terrestrial2.jpg');
-  const terrestrial3Texture = useTexture('/textures/terrestrial3.png');
-
-
-  // Note: acidic_world.jpg and nuclear_world.jpg are corrupted placeholder files
-
-  // Load new planet texture arrays based on the new structure
-  const aridTextures = [
-    useTexture('/textures/Arid/Arid_01-1024x512.png'),
-    useTexture('/textures/Arid/Arid_02-1024x512.png'),
-    useTexture('/textures/Arid/Arid_03-1024x512.png'),
-    useTexture('/textures/Arid/Arid_04-1024x512.png'),
-    useTexture('/textures/Arid/Arid_05-1024x512.png')
-  ];
-  
-  const barrenTextures = [
-    useTexture('/textures/Barren/Barren_01-1024x512.png'),
-    useTexture('/textures/Barren/Barren_02-1024x512.png'),
-    useTexture('/textures/Barren/Barren_03-1024x512.png'),
-    useTexture('/textures/Barren/Barren_04-1024x512.png'),
-    useTexture('/textures/Barren/Barren_05-1024x512.png')
-  ];
-  
-  const dustyTextures = [
-    useTexture('/textures/Dusty/Dusty_01-1024x512.png'),
-    useTexture('/textures/Dusty/Dusty_02-1024x512.png'),
-    useTexture('/textures/Dusty/Dusty_03-1024x512.png'),
-    useTexture('/textures/Dusty/Dusty_04-1024x512.png'),
-    useTexture('/textures/Dusty/Dusty_05-1024x512.png')
-  ];
-  
-  const gaseousTextures = [
-    useTexture('/textures/Gaseous/Gaseous_01-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_02-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_03-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_04-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_05-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_06-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_07-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_08-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_09-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_10-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_11-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_12-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_13-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_14-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_15-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_16-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_17-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_18-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_19-1024x512.png'),
-    useTexture('/textures/Gaseous/Gaseous_20-1024x512.png')
-  ];
-  
-  const grasslandTextures = [
-    useTexture('/textures/Grassland/Grassland_01-1024x512.png'),
-    useTexture('/textures/Grassland/Grassland_02-1024x512.png'),
-    useTexture('/textures/Grassland/Grassland_03-1024x512.png'),
-    useTexture('/textures/Grassland/Grassland_04-1024x512.png'),
-    useTexture('/textures/Grassland/Grassland_05-1024x512.png')
-  ];
-  
-  const jungleTextures = [
-    useTexture('/textures/Jungle/Jungle_01-1024x512.png'),
-    useTexture('/textures/Jungle/Jungle_02-1024x512.png'),
-    useTexture('/textures/Jungle/Jungle_03-1024x512.png'),
-    useTexture('/textures/Jungle/Jungle_04-1024x512.png'),
-    useTexture('/textures/Jungle/Jungle_05-1024x512.png')
-  ];
-  
-  const marshyTextures = [
-    useTexture('/textures/Marshy/Marshy_01-1024x512.png'),
-    useTexture('/textures/Marshy/Marshy_02-1024x512.png'),
-    useTexture('/textures/Marshy/Marshy_03-1024x512.png'),
-    useTexture('/textures/Marshy/Marshy_04-1024x512.png'),
-    useTexture('/textures/Marshy/Marshy_05-1024-512.png')
-  ];
-  
-  const martianTextures = [
-    useTexture('/textures/Martian/Martian_01-1024x512.png'),
-    useTexture('/textures/Martian/Martian_02-1024x512.png'),
-    useTexture('/textures/Martian/Martian_03-1024x512.png'),
-    useTexture('/textures/Martian/Martian_04-1024x512.png'),
-    useTexture('/textures/Martian/Martian_05-1024x512.png')
-  ];
-  
-  const methaneTextures = [
-    useTexture('/textures/Methane/Methane_01-1024x512.png'),
-    useTexture('/textures/Methane/Methane_02-1024x512.png'),
-    useTexture('/textures/Methane/Methane_03-1024x512.png'),
-    useTexture('/textures/Methane/Methane_04-1024x512.png'),
-    useTexture('/textures/Methane/Methane_05-1024x512.png')
-  ];
-  
-  const sandyTextures = [
-    useTexture('/textures/Sandy/Sandy_01-1024x512.png'),
-    useTexture('/textures/Sandy/Sandy_02-1024x512.png'),
-    useTexture('/textures/Sandy/Sandy_03-1024x512.png'),
-    useTexture('/textures/Sandy/Sandy_04-1024x512.png'),
-    useTexture('/textures/Sandy/Sandy_05-1024x512.png')
-  ];
-  
-  const snowyTextures = [
-    useTexture('/textures/Snowy/Snowy_01-1024x512.png'),
-    useTexture('/textures/Snowy/Snowy_02-1024x512.png'),
-    useTexture('/textures/Snowy/Snowy_03-1024x512.png'),
-    useTexture('/textures/Snowy/Snowy_04-1024x512.png'),
-    useTexture('/textures/Snowy/Snowy_05-1024x512.png')
-  ];
-  
-  const tundraTextures = [
-    useTexture('/textures/Tundra/Tundra_01-1024x512.png'),
-    useTexture('/textures/Tundra/Tundra_02-1024x512.png'),
-    useTexture('/textures/Tundra/Tundra_03-1024x512.png'),
-    useTexture('/textures/Tundra/Tundra_04-1024x512.png'),
-    useTexture('/textures/Tundra/Tundra_05-1024x512.png')
-  ];
-
-  // Comprehensive planet texture mapping based on new planet types
-  const planetTextures = {
-    gas_giant: gaseousTextures, // Use gaseous textures for gas giants
-    frost_giant: gaseousTextures, // Use gaseous textures for frost giants
-    arid_world: aridTextures,
-    barren_world: barrenTextures,
-    dusty_world: dustyTextures,
-    grassland_world: grasslandTextures,
-    jungle_world: jungleTextures,
-    marshy_world: marshyTextures,
-    martian_world: martianTextures,
-    methane_world: methaneTextures,
-    sandy_world: sandyTextures,
-    snowy_world: snowyTextures,
-    tundra_world: tundraTextures,
-    nuclear_world: [ceresTexture, erisTexture], // Keep existing nuclear world textures
-    ocean_world: oceanTexture // Keep existing ocean texture
-  };
-
   // Use planets from the cached system
   const planets = system.planets || [];
   const asteroidBelts = system.asteroidBelts || [];
+
+  // Optimized lazy texture loading - only load textures as needed
+  const planetTextures = useMemo(() => {
+    const textures: any = {
+      nuclear_world: [ceresTexture, erisTexture],
+      ocean_world: oceanTexture
+    };
+    
+    // Return texture path getter instead of loading all textures upfront
+    const getTextureForPlanet = (planetType: string, textureIndex: number = 0) => {
+      const texturePaths: Record<string, string[]> = {
+        gas_giant: Array.from({length: 20}, (_, i) => 
+          `/textures/Gaseous/Gaseous_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        frost_giant: Array.from({length: 20}, (_, i) => 
+          `/textures/Gaseous/Gaseous_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        arid_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Arid/Arid_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        barren_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Barren/Barren_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        dusty_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Dusty/Dusty_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        grassland_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Grassland/Grassland_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        jungle_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Jungle/Jungle_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        marshy_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Marshy/Marshy_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        martian_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Martian/Martian_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        methane_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Methane/Methane_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        sandy_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Sandy/Sandy_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        snowy_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Snowy/Snowy_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        tundra_world: Array.from({length: 5}, (_, i) => 
+          `/textures/Tundra/Tundra_${String(i + 1).padStart(2, '0')}-1024x512.png`
+        ),
+        nuclear_world: ['/textures/ceres.jpg'],
+        ocean_world: ['/textures/ocean.jpg']
+      };
+      
+      const paths = texturePaths[planetType] || texturePaths['barren_world'];
+      return paths[textureIndex % paths.length];
+    };
+    
+    textures.getTextureForPlanet = getTextureForPlanet;
+    return textures;
+  }, [ceresTexture, erisTexture, oceanTexture]);
 
   // Debug planet data including surface features
   console.log('SystemView planets data:', planets.map(p => ({ 
