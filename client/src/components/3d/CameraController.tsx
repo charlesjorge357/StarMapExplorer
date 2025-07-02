@@ -328,7 +328,7 @@ export function CameraController() {
     const forward = new Vector3(0, 0, -1);
     const right = new Vector3(1, 0, 0);
     const worldUp = new Vector3(0, 1, 0); // Keep Y movement world-relative
-    
+
     // Apply camera rotation only to forward/back and left/right
     forward.applyQuaternion(camera.quaternion);
     right.applyQuaternion(camera.quaternion);
@@ -342,7 +342,7 @@ export function CameraController() {
       .filter(([_, active]) => active)
       .map(([key, _]) => key);
     
-    if (isMoving) {
+    if (isMoving && disableGalacticSystemControls != true) {
       // Reset target velocity and apply movement inputs
       targetVelocityRef.current.set(0, 0, 0);
       
