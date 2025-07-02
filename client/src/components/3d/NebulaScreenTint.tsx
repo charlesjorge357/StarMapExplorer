@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -11,32 +12,37 @@ export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
   const { camera } = useThree();
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Create overlay element if it doesn't exist
-  useMemo(() => {
-    if (!overlayRef.current) {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100vw';
-      overlay.style.height = '100vh';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.zIndex = '1000';
-      overlay.style.transition = 'background-color 0.5s ease';
-      overlay.style.backgroundColor = 'transparent';
-      overlay.id = 'nebula-tint-overlay';
-      document.body.appendChild(overlay);
-      overlayRef.current = overlay;
+  // Create overlay element on mount and ensure cleanup on unmount
+  useEffect(() => {
+    // Remove any existing overlay first
+    const existingOverlay = document.getElementById('nebula-tint-overlay');
+    if (existingOverlay) {
+      document.body.removeChild(existingOverlay);
     }
 
-    // Cleanup function
+    // Create new overlay
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '1000';
+    overlay.style.transition = 'background-color 0.5s ease';
+    overlay.style.backgroundColor = 'transparent';
+    overlay.id = 'nebula-tint-overlay';
+    document.body.appendChild(overlay);
+    overlayRef.current = overlay;
+
+    // Cleanup on unmount
     return () => {
-      if (overlayRef.current) {
+      if (overlayRef.current && document.body.contains(overlayRef.current)) {
         document.body.removeChild(overlayRef.current);
-        overlayRef.current = null;
       }
+      overlayRef.current = null;
     };
-  }, []);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   useFrame(() => {
     if (!overlayRef.current) return;
