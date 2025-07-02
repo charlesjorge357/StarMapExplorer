@@ -5,9 +5,10 @@ import * as THREE from 'three';
 interface StarSkyboxProps {
   count?: number;
   radius?: number;
+  starPosition?: [number, number, number];
 }
 
-export function StarSkybox({ count = 5000, radius = 800 }: StarSkyboxProps) {
+export function StarSkybox({ count = 5000, radius = 800, starPosition = [0, 0, 0] }: StarSkyboxProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
   // Generate star data once
@@ -21,9 +22,9 @@ export function StarSkybox({ count = 5000, radius = 800 }: StarSkyboxProps) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(1 - 2 * Math.random());
       
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
+      const x = starPosition[0] + radius * Math.sin(phi) * Math.cos(theta);
+      const y = starPosition[1] + radius * Math.sin(phi) * Math.sin(theta);
+      const z = starPosition[2] + radius * Math.cos(phi);
       
       positions.push(x, y, z);
       

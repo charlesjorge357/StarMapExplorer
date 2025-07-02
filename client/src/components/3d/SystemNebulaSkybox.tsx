@@ -6,9 +6,10 @@ import { Nebula } from 'shared/schema';
 interface SystemNebulaSkyboxProps {
   nebulas: Nebula[];
   excludeNebula?: Nebula | null; // Don't show the nebula we're inside
+  starPosition?: [number, number, number];
 }
 
-export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkyboxProps) {
+export function SystemNebulaSkybox({ nebulas, excludeNebula, starPosition = [0, 0, 0] }: SystemNebulaSkyboxProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   // Create a simple circular texture for nebula sprites
@@ -45,8 +46,10 @@ export function SystemNebulaSkybox({ nebulas, excludeNebula }: SystemNebulaSkybo
       {nebulas
         .filter(nebula => excludeNebula?.id !== nebula.id)
         .map((nebula) => {
-          // Calculate direction from origin to nebula
-          const direction = new THREE.Vector3(...nebula.position).normalize();
+          // Calculate direction from star position to nebula
+          const starPos = new THREE.Vector3(...starPosition);
+          const nebulaPos = new THREE.Vector3(...nebula.position);
+          const direction = nebulaPos.sub(starPos).normalize();
 
           // Place nebula sprites at the same distance as the starfield skybox (2000 units)
           const skyboxDistance = 21000; // Match the starfield skybox distance

@@ -7,6 +7,7 @@ import { useThree } from '@react-three/fiber';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
 import { SystemNebulaSkybox } from './SystemNebulaSkybox';
+import { StarSkybox } from './StarSkybox';
 
 function MoonMesh({ 
   moon, 
@@ -525,7 +526,18 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />}
 
       {/* Distant nebula skybox */}
-      <SystemNebulaSkybox nebulas={nebulas} excludeNebula={starInNebula} />
+      <SystemNebulaSkybox 
+        nebulas={nebulas} 
+        excludeNebula={starInNebula} 
+        starPosition={system.star?.position || [0, 0, 0]} 
+      />
+
+      {/* Starfield skybox */}
+      <StarSkybox 
+        count={5000} 
+        radius={800} 
+        starPosition={system.star?.position || [0, 0, 0]} 
+      />
 
       {/* Background plane for deselection clicks */}
       <mesh 
