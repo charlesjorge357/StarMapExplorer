@@ -187,7 +187,9 @@ export function CameraController() {
 
     const handleMouseMove = (event: MouseEvent) => {
       // Only rotate camera during right-click drag
-      if (!isRightClickDragRef.current || isTransitioning) return;
+      if (!isRightClickDragRef.current || isTransitioning)
+        return;
+        
 
       const { movementX, movementY } = event;
 
