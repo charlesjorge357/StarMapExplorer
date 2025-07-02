@@ -27,8 +27,8 @@ export function SurfaceFeatureMarker({
     const y =  planetRadius * Math.cos(phi)
     const z =  planetRadius * Math.sin(phi) * Math.sin(theta)
     
-    // Surface position, pushed slightly above the surface
-    const surfacePos = new THREE.Vector3(x, y, z).multiplyScalar((planetRadius + 0.05) / planetRadius)
+    // Surface position, directly on the planet surface
+    const surfacePos = new THREE.Vector3(x, y, z)
     
     // Calculate rotation to orient model toward planet center
     // The surface normal points away from planet center
