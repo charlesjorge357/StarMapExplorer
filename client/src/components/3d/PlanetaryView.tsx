@@ -190,15 +190,16 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial
           color={
-            // Use computed values from SystemView if available, otherwise fallback
-            planet.computedColor || (texture ? '#ffffff' : '#666666')
+            // Always use computed values from SystemView when available
+            planet.computedColor || '#ffffff'
           }
           emissive={
-            // Use computed glow from SystemView if available, otherwise fallback
+            // Always use computed glow from SystemView when available
             planet.computedGlow || '#000000'
           }
           emissiveIntensity={
-            planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : (texture ? 0.1 : 0.2)
+            // Always use computed emissive intensity from SystemView when available
+            planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : 0.1
           }
           map={texture}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
