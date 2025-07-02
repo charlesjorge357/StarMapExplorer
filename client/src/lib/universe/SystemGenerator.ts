@@ -189,7 +189,19 @@ export class SystemGenerator {
     const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed);
 
     const radiusRange = this.PLANET_RADII[type];
-    const radius = radiusRange.min + this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
+    
+    // For habitable worlds, bias toward smaller sizes using power distribution
+    const habitableTypes = ['arid_world', 'dusty_world', 'grassland_world', 'jungle_world', 'marshy_world', 'sandy_world', 'snowy_world', 'tundra_world'];
+    let radius: number;
+    
+    if (habitableTypes.includes(type)) {
+      // Use power of 2 to bias toward lower end (0.7-2.5 range)
+      const biasedRandom = Math.pow(this.seededRandom(planetSeed + 1), 2);
+      radius = radiusRange.min + biasedRandom * (radiusRange.max - radiusRange.min);
+    } else {
+      // Normal distribution for non-habitable worlds
+      radius = radiusRange.min + this.seededRandom(planetSeed + 1) * (radiusRange.max - radiusRange.min);
+    }
 
     const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15;
     let mass = Math.pow(radius, 3);
