@@ -13,6 +13,12 @@ interface PlanetaryViewProps {
 }
 
 export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
+  // Early return if planet is not provided or invalid
+  if (!planet || !planet.type) {
+    console.error('PlanetaryView: Invalid or missing planet data');
+    return null;
+  }
+
   const [isHeld, setIsHeld] = useState(false);
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
@@ -115,22 +121,31 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
       'ocean_world': ['/textures/ocean.jpg']
     };
 
-    const paths = texturePaths[planetType] || texturePaths['dead_world'];
+    const paths = texturePaths[planetType] || texturePaths['barren_world'];
+    if (!paths || paths.length === 0) {
+      return '/textures/Barren/Barren_01-1024x512.png'; // Fallback texture
+    }
     return paths[textureIndex % paths.length];
   };
 
 
 
-  // Load planet texture lazily
-  const texturePath = getTextureForPlanet(planet.type, planet.textureIndex || 0);
-  console.log(`Loading texture for ${planet.name}: ${texturePath}`);
+  // Load planet texture lazily with error handling
+  const texturePath = useMemo(() => {
+    if (!planet?.type) return null;
+    return getTextureForPlanet(planet.type, planet.textureIndex || 0);
+  }, [planet?.type, planet?.textureIndex]);
   
-  let texture;
-  try {
-    texture = useTexture(texturePath);
-  } catch (error) {
-    console.error(`Failed to load texture for ${planet?.type}:`, error);
-    texture = null;
+  console.log(`Loading texture for ${planet?.name}: ${texturePath}`);
+  
+  let texture = null;
+  if (texturePath) {
+    try {
+      texture = useTexture(texturePath);
+    } catch (error) {
+      console.error(`Failed to load texture for ${planet?.type}:`, error);
+      texture = null;
+    }
   }
 
   // Mouse interaction state
