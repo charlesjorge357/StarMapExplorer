@@ -16,7 +16,6 @@ import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
-import { useTextureColorExtraction, getPlanetTexturePath } from './hooks/useTextureColorExtraction';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -203,35 +202,6 @@ function App() {
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
-
-  // Extract color from selected planet's texture
-  const selectedPlanetTexturePath = useMemo(() => {
-    if (!selectedPlanet?.type || !selectedPlanet?.textureIndex) return null;
-    return getPlanetTexturePath(selectedPlanet.type, selectedPlanet.textureIndex);
-  }, [selectedPlanet?.type, selectedPlanet?.textureIndex]);
-
-  const planetColors = useTextureColorExtraction(selectedPlanetTexturePath);
-
-  // Create dynamic UI theme based on planet colors
-  const uiTheme = useMemo(() => {
-    if (!planetColors) {
-      return {
-        background: 'rgba(0, 0, 0, 0.9)',
-        border: 'rgba(255, 255, 255, 0.2)',
-        text: 'white',
-        accent: '#4CAF50',
-        button: 'rgba(255, 255, 255, 0.1)'
-      };
-    }
-
-    return {
-      background: `${planetColors.dominant}20`, // 20% opacity
-      border: `${planetColors.accent}60`, // 60% opacity
-      text: planetColors.text,
-      accent: planetColors.accent,
-      button: `${planetColors.dominant}40` // 40% opacity
-    };
-  }, [planetColors]);
 
   // Generate nebulas once
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
@@ -522,15 +492,13 @@ function App() {
               top: '20px',
               right: '20px',
               zIndex: 1000,
-              background: isSearching ? uiTheme.accent : uiTheme.button,
-              color: uiTheme.text,
-              border: `1px solid ${uiTheme.border}`,
+              background: isSearching ? '#4CAF50' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
               borderRadius: '6px',
               padding: '10px 15px',
               cursor: 'pointer',
-              fontSize: '14px',
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)'
+              fontSize: '14px'
             }}
           >
             {isSearching ? 'Close Selector' : 'Select Planet'}
@@ -542,17 +510,15 @@ function App() {
               top: '70px',
               right: '20px',
               zIndex: 1000,
-              background: uiTheme.background || 'rgba(0, 0, 0, 0.9)',
+              background: 'rgba(0, 0, 0, 0.9)',
               padding: '15px',
               borderRadius: '8px',
-              border: `1px solid ${uiTheme.border}`,
+              border: '1px solid #333',
               minWidth: '300px',
               maxHeight: '400px',
-              overflowY: 'auto',
-              backdropFilter: 'blur(15px)',
-              transition: 'all 0.3s ease'
+              overflowY: 'auto'
             }}>
-              <div style={{ marginBottom: '15px', color: uiTheme.text, fontSize: '14px', fontWeight: 'bold' }}>
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
                 Select Planet
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -574,9 +540,9 @@ function App() {
                         }, 100);
                       }}
                       style={{
-                        background: selectedPlanet?.id === planet.id ? uiTheme.accent : uiTheme.button,
-                        color: uiTheme.text,
-                        border: selectedPlanet?.id === planet.id ? `2px solid ${uiTheme.accent}` : `1px solid ${uiTheme.border}`,
+                        background: selectedPlanet?.id === planet.id ? '#4CAF50' : '#333',
+                        color: 'white',
+                        border: selectedPlanet?.id === planet.id ? '2px solid #66BB6A' : '1px solid #555',
                         borderRadius: '6px',
                         padding: '12px',
                         cursor: 'pointer',
@@ -586,14 +552,14 @@ function App() {
                       }}
                       onMouseEnter={(e) => {
                         if (selectedPlanet?.id !== planet.id) {
-                          e.currentTarget.style.background = `${uiTheme.accent}30`;
-                          e.currentTarget.style.borderColor = uiTheme.accent;
+                          e.currentTarget.style.background = '#444';
+                          e.currentTarget.style.borderColor = '#777';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (selectedPlanet?.id !== planet.id) {
-                          e.currentTarget.style.background = uiTheme.button;
-                          e.currentTarget.style.borderColor = uiTheme.border;
+                          e.currentTarget.style.background = '#333';
+                          e.currentTarget.style.borderColor = '#555';
                         }
                       }}
                     >
@@ -618,20 +584,19 @@ function App() {
                   width: '100%',
                   padding: '8px',
                   background: 'transparent',
-                  color: uiTheme.text,
-                  border: `1px solid ${uiTheme.border}`,
+                  color: '#aaa',
+                  border: '1px solid #555',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  opacity: 0.7
+                  fontSize: '12px'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                  e.currentTarget.style.borderColor = uiTheme.accent;
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '0.7';
-                  e.currentTarget.style.borderColor = uiTheme.border;
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
                 }}
               >
                 Cancel
@@ -707,17 +672,15 @@ function App() {
           position: 'absolute',
           top: '20px',
           left: '20px',
-          background: currentView === 'system' && selectedPlanet ? uiTheme.background : 'rgba(0, 0, 0, 0.7)',
-          color: currentView === 'system' && selectedPlanet ? uiTheme.text : 'white',
+          background: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
           padding: '12px 16px',
           borderRadius: '6px',
-          border: `1px solid ${currentView === 'system' && selectedPlanet ? uiTheme.border : 'rgba(255, 255, 255, 0.2)'}`,
+          border: '1px solid rgba(255, 255, 255, 0.2)',
           pointerEvents: 'none',
           zIndex: 10,
           fontSize: '14px',
-          fontWeight: '500',
-          transition: 'all 0.3s ease',
-          backdropFilter: 'blur(10px)'
+          fontWeight: '500'
         }}>
           📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : 
                currentView === 'system' ? `System View • ${currentSystem?.star?.name || lastVisitedStar?.name || 'Unknown'}` :
@@ -838,32 +801,23 @@ function App() {
 
           {/* System view - planet information */}
           {currentView === 'system' && selectedPlanet && (
-            <div 
-              className="absolute top-4 right-4 p-4 rounded-lg min-w-72 backdrop-blur transition-all duration-300" 
-              style={{ 
-                marginTop: (window as any).systemStarSelected ? '280px' : '0px',
-                background: uiTheme.background,
-                color: uiTheme.text,
-                border: `1px solid ${uiTheme.border}`,
-                backdropFilter: 'blur(15px)'
-              }}
-            >
-              <h3 className="text-lg font-bold" style={{ color: uiTheme.accent }}>{selectedPlanet.name}</h3>
-              <p className="text-sm mb-2 capitalize" style={{ color: uiTheme.text, opacity: 0.8 }}>{selectedPlanet.type.replace('_', ' ')}</p>
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ marginTop: (window as any).systemStarSelected ? '280px' : '0px' }}>
+              <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
+              <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
               <div className="space-y-1 text-sm">
-                <p><span style={{ color: uiTheme.accent }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
-                <p><span style={{ color: uiTheme.accent }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span style={{ color: uiTheme.accent }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
-                <p><span style={{ color: uiTheme.accent }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
-                <p><span style={{ color: uiTheme.accent }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 {selectedPlanet.atmosphere.length >0 && (
                   <div>
-                    <p style={{ color: uiTheme.accent }}>Atmosphere:</p>
-                    <p className="text-xs" style={{ color: uiTheme.text, opacity: 0.7 }}>{selectedPlanet.atmosphere.join(', ')}</p>
+                    <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
+                    <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
                   </div>
                 )}
               </div>
-              <div className="mt-3 text-xs" style={{ color: uiTheme.text, opacity: 0.6 }}>
+              <div className="mt-3 text-xs text-gray-400">
                 <p>Press Enter to focus camera • Escape to deselect</p>
               </div>
             </div>
