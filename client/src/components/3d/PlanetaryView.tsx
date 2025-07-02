@@ -86,77 +86,41 @@ export function PlanetaryView({ planet }: PlanetaryViewProps) {
     }
   }, [camera, planet, planetRadius]);
 
-  // Mouse controls for globe rotation
+  // Keyboard controls for zoom only (W/S keys)
   useEffect(() => {
-    const canvas = gl.domElement;
-
-    const handleMouseDown = (event: MouseEvent) => {
-      mouseState.current.isDown = true;
-      mouseState.current.lastX = event.clientX;
-      mouseState.current.lastY = event.clientY;
-      canvas.style.cursor = 'grabbing';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'w' || event.key === 'W') {
+        event.preventDefault();
+        // Zoom in
+        const currentDistance = camera.position.length();
+        const minDistance = planetRadius * 1.2;
+        const zoomSpeed = 0.05;
+        const newDistance = Math.max(minDistance, currentDistance - zoomSpeed * planetRadius);
+        
+        camera.position.normalize().multiplyScalar(newDistance);
+        camera.updateMatrix();
+        camera.updateMatrixWorld(true);
+      } else if (event.key === 's' || event.key === 'S') {
+        event.preventDefault();
+        // Zoom out
+        const currentDistance = camera.position.length();
+        const maxDistance = planetRadius * 5;
+        const zoomSpeed = 0.05;
+        const newDistance = Math.min(maxDistance, currentDistance + zoomSpeed * planetRadius);
+        
+        camera.position.normalize().multiplyScalar(newDistance);
+        camera.updateMatrix();
+        camera.updateMatrixWorld(true);
+      }
     };
 
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!mouseState.current.isDown || !groupRef.current) return;
-
-      const deltaX = event.clientX - mouseState.current.lastX;
-      const deltaY = event.clientY - mouseState.current.lastY;
-
-      // Rotate globe based on mouse movement
-      mouseState.current.rotationY += deltaX * 0.005;
-      mouseState.current.rotationX += deltaY * 0.005;
-
-      // Clamp vertical rotation to prevent flipping
-      mouseState.current.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseState.current.rotationX));
-
-      // Apply rotations to planet group
-      groupRef.current.rotation.y = mouseState.current.rotationY;
-      groupRef.current.rotation.x = mouseState.current.rotationX;
-
-      mouseState.current.lastX = event.clientX;
-      mouseState.current.lastY = event.clientY;
-    };
-
-    const handleMouseUp = () => {
-      mouseState.current.isDown = false;
-      canvas.style.cursor = 'grab';
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-
-      // Zoom in/out by moving camera
-      const zoomSpeed = 0.1;
-      const direction = event.deltaY > 0 ? 1 : -1;
-      const currentDistance = camera.position.length();
-      const minDistance = planetRadius * 1.2;
-      const maxDistance = planetRadius * 5;
-
-      const newDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance + direction * zoomSpeed * planetRadius));
-
-      camera.position.normalize().multiplyScalar(newDistance);
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
-    };
-
-    // Add event listeners
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-
-    // Set initial cursor
-    canvas.style.cursor = 'grab';
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('wheel', handleWheel);
-      canvas.style.cursor = 'auto';
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [gl, camera, planetRadius]);
+  }, [camera, planetRadius]);
 
   // Planet rotation animation
   useFrame((state) => {
