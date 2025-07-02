@@ -160,7 +160,8 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
     const cameraPos = camera.position;
     const nebulaPos = new THREE.Vector3(...nebula.position);
     const distance = cameraPos.distanceTo(nebulaPos);
-    const minClickDistance = nebula.radius * 2; // 2x the original nebula radius
+    const scaledRadius = nebula.radius * 4.5; // Match the visual nebula scaling
+    const minClickDistance = scaledRadius * 2; // 2x the scaled nebula radius
     return distance >= minClickDistance;
   }, [camera.position, nebula.position, nebula.radius]);
 
