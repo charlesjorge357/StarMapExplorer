@@ -22,7 +22,8 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
   });
 
   const { camera, gl } = useThree();
-  const planetRef = useRef<THREE.Mesh>(null);
+  const planetMeshRef = useRef<THREE.Mesh>(null);
+  const featuresGroupRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
 
   // Planet radius for close-up view
@@ -157,11 +158,17 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
     };
   }, [gl, camera, planetRadius]);
 
-  // Planet rotation animation
+  // Planet and features rotation animation
   useFrame((state) => {
-    if (planetRef.current && !isHeld) {
-      // Slow automatic rotation
-      planetRef.current.rotation.y += 0.001;
+    if (!isHeld) {
+      // Rotate planet mesh
+      if (planetMeshRef.current) {
+        planetMeshRef.current.rotation.y += 0.001;
+      }
+      // Rotate features group to match planet
+      if (featuresGroupRef.current) {
+        featuresGroupRef.current.rotation.y += 0.001;
+      }
     }
   });
 
@@ -175,7 +182,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
   return (
     <group ref={groupRef}>
       {/* Planet sphere with high detail */}
-      <mesh ref={planetRef}
+      <mesh ref={planetMeshRef}
         onPointerDown={() => setIsHeld(true)}
         onPointerUp={() => setIsHeld(false)}
         onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
@@ -201,15 +208,17 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         />
       </mesh>
 
-      {/* Surface Features */}
-      {planet.surfaceFeatures && planet.surfaceFeatures.map((feature: any) => (
-        <SurfaceFeatureMarker
-          key={feature.id}
-          feature={feature}
-          planetRadius={planetRadius}
-          onFeatureClick={onFeatureClick}
-        />
-      ))}
+      {/* Surface Features - grouped to rotate with planet */}
+      <group ref={featuresGroupRef}>
+        {planet.surfaceFeatures && planet.surfaceFeatures.map((feature: any) => (
+          <SurfaceFeatureMarker
+            key={feature.id}
+            feature={feature}
+            planetRadius={planetRadius}
+            onFeatureClick={onFeatureClick}
+          />
+        ))}
+      </group>
 
       {/* Lighting */}
       <ambientLight intensity={0.3} />
