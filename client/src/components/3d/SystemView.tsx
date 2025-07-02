@@ -322,19 +322,27 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // Check if current star is inside any nebula (using scaled radius to match visual representation)
   const starInNebula = useMemo(() => {
-    if (!system.star || !system.star.position) return null;
+    if (!system.star || !system.star.position) {
+      console.log('No star or star position:', system.star);
+      return null;
+    }
 
     const starPos = new THREE.Vector3(...(system.star.position || [0, 0, 0]));
+    console.log(`Checking nebula for ${system.star.spectralClass}-class star "${system.star.name}" at position:`, starPos, 'with radius:', system.star.radius);
 
     for (const nebula of nebulas) {
       const nebulaPos = new THREE.Vector3(...nebula.position);
       const distance = starPos.distanceTo(nebulaPos);
       const scaledRadius = nebula.radius * 4.5; // Match nebula scaling used in NebulaScreenTint and NebulaMesh
 
+      console.log(`Distance to ${nebula.name}: ${distance.toFixed(2)}, scaled radius: ${scaledRadius.toFixed(2)}, inside: ${distance < scaledRadius}`);
+
       if (distance < scaledRadius) {
+        console.log(`${system.star.spectralClass}-class star "${system.star.name}" is inside ${nebula.name}`);
         return nebula;
       }
     }
+    console.log(`${system.star.spectralClass}-class star "${system.star.name}" is NOT inside any nebula`);
     return null;
   }, [system.star, nebulas]);
 
