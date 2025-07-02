@@ -372,6 +372,9 @@ function App() {
           setCurrentView('system');
           setSelectedFeature(null);
 
+          // Re-enable galactic and system view keyboard controls
+          (window as any).disableGalacticSystemControls = false;
+
           // Re-establish orbital tracking for the selected planet since it continued rotating
           if (selectedPlanet && (window as any).homeToPlanet) {
             setTimeout(() => {
