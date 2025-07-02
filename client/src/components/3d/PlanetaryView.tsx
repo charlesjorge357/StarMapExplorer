@@ -177,6 +177,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
   // Mouse controls for globe rotation
   useEffect(() => {
+    if (!gl?.domElement) return;
     const canvas = gl.domElement;
 
     const handleMouseDown = (event: MouseEvent) => {
