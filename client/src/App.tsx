@@ -831,9 +831,34 @@ function App() {
             </div>
           )}
 
+          {/* Planetary view - planet information (persistent from system view) */}
+          {currentView === 'planetary' && selectedPlanet && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
+              <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
+              <div className="space-y-1 text-sm">
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Surface Features:</span> {selectedPlanet.surfaceFeatures?.length || 0}</p>
+                {selectedPlanet.atmosphere.length >0 && (
+                  <div>
+                    <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
+                    <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Backspace to return to system view</p>
+              </div>
+            </div>
+          )}
+
           {/* Planetary view - surface feature information */}
           {currentView === 'planetary' && selectedFeature && (
-            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+            <div className="absolute right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ top: selectedPlanet ? '320px' : '4px' }}>
               <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>{selectedFeature.name}</h3>
               <p className="text-sm text-gray-300 mb-2 capitalize">{selectedFeature.type.replace('_', ' ')}</p>
               <div className="space-y-1 text-sm">
