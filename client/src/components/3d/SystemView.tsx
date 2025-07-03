@@ -64,21 +64,21 @@ function getPlanetColor(type: string, planetId?: string): string {
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
 
   const baseColors: Record<string, [number, number, number]> = {
-    gas_giant: [30, 80, 50],        // Orange
-    frost_giant: [220, 60, 60],     // Sky blue
-    arid_world: [45, 70, 55],       // Goldenrod
-    barren_world: [35, 30, 45],     // Dark khaki
-    dusty_world: [35, 40, 65],      // Tan
-    grassland_world: [80, 60, 50],  // Yellow green
-    jungle_world: [120, 70, 35],    // Forest green
-    marshy_world: [80, 55, 35],     // Dark olive green
-    martian_world: [0, 55, 55],     // Indian red
-    methane_world: [300, 50, 70],   // Plum
-    sandy_world: [30, 70, 70],      // Sandy brown
-    snowy_world: [210, 20, 95],     // Alice blue
-    tundra_world: [210, 15, 55],    // Slate gray
-    nuclear_world: [10, 90, 50],    // Orange red
-    ocean_world: [210, 80, 55]      // Deep blue
+    gas_giant: [30, 40, 50],        // Orange (reduced saturation)
+    frost_giant: [220, 30, 60],     // Sky blue (reduced saturation)
+    arid_world: [45, 35, 55],       // Goldenrod (reduced saturation)
+    barren_world: [35, 15, 45],     // Dark khaki (reduced saturation)
+    dusty_world: [35, 20, 65],      // Tan (reduced saturation)
+    grassland_world: [80, 30, 50],  // Yellow green (reduced saturation)
+    jungle_world: [120, 35, 35],    // Forest green (reduced saturation)
+    marshy_world: [80, 25, 35],     // Dark olive green (reduced saturation)
+    martian_world: [0, 25, 55],     // Indian red (reduced saturation)
+    methane_world: [300, 25, 70],   // Plum (reduced saturation)
+    sandy_world: [30, 35, 70],      // Sandy brown (reduced saturation)
+    snowy_world: [210, 10, 95],     // Alice blue (reduced saturation)
+    tundra_world: [210, 8, 55],     // Slate gray (reduced saturation)
+    nuclear_world: [10, 90, 50],    // Orange red (kept high for visibility)
+    ocean_world: [210, 40, 55]      // Deep blue (reduced saturation)
   };
 
   let [h, s, l] = baseColors[type] || [0, 0, 50];
