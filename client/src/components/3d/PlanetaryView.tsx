@@ -339,7 +339,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       const surfaceNormal = worldFeaturePosition.clone().normalize();
       
       // Create a 190-degree rotation around the surface normal
-      const rotationAngle = (190 * Math.PI) / 180; // Convert to radians
+      const rotationAngle = (270 * Math.PI) / 180; // Convert to radians
       
       // Create rotation matrix around the surface normal
       const rotationMatrix = new THREE.Matrix4().makeRotationAxis(surfaceNormal, rotationAngle);
