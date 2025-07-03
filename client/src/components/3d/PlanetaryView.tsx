@@ -265,11 +265,11 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         ))}
       </group>
 
-      {/* Lighting */}
-      <ambientLight intensity={0.3} />
+      {/* Subtle additional lighting for planetary detail (matches SystemView brightness) */}
+      <ambientLight intensity={0.05} />
       <directionalLight 
         position={[planetRadius * 2, planetRadius * 2, planetRadius * 2]} 
-        intensity={0.7}
+        intensity={0.15}
         castShadow
       />
       
