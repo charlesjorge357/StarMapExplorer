@@ -58,9 +58,58 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
   const planetMeshRef = useRef<THREE.Mesh>(null);
   const featuresGroupRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
+  
+  // Camera lock state for surface feature tracking
+  const [isFeatureTracking, setIsFeatureTracking] = useState(false);
+  const featureTrackingRef = useRef<any>(null);
+  const trackingDistanceRef = useRef<number>(0);
 
   // Planet radius for close-up view
   const planetRadius = planet?.radius ? planet.radius * 15 : 10;
+  
+  // Expose feature tracking function globally (similar to homeToPlanet in SystemView)
+  useEffect(() => {
+    (window as any).homeToFeature = (feature: any, distance: number) => {
+      if (feature) {
+        setIsFeatureTracking(true);
+        featureTrackingRef.current = feature;
+        trackingDistanceRef.current = distance || planetRadius * 1.8;
+        console.log(`Starting feature tracking for ${feature.name}`);
+      } else {
+        setIsFeatureTracking(false);
+        featureTrackingRef.current = null;
+        console.log('Stopping feature tracking');
+      }
+    };
+
+    return () => {
+      delete (window as any).homeToFeature;
+    };
+  }, [planetRadius]);
+  
+  // Keyboard controls for feature tracking (Enter key)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && selectedFeature) {
+        event.preventDefault();
+        
+        if (isFeatureTracking) {
+          // Disable tracking
+          if ((window as any).homeToFeature) {
+            (window as any).homeToFeature(null, 0);
+          }
+        } else {
+          // Enable tracking for selected feature
+          if ((window as any).homeToFeature) {
+            (window as any).homeToFeature(selectedFeature, planetRadius * 1.8);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedFeature, isFeatureTracking, planetRadius]);
   
   // Generate nebulas for atmospheric effect
   const nebulas = useMemo(() => {
@@ -167,7 +216,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 
     const handleMouseDown = (event: MouseEvent) => {
       try {
-        if (!mouseState.current) return;
+        if (!mouseState.current || isFeatureTracking) return; // Disable mouse during tracking
         mouseState.current.isDown = true;
         mouseState.current.lastX = event.clientX;
         mouseState.current.lastY = event.clientY;
@@ -179,7 +228,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 
     const handleMouseMove = (event: MouseEvent) => {
       try {
-        if (!mouseState.current?.isDown || !groupRef.current) return;
+        if (!mouseState.current?.isDown || !groupRef.current || isFeatureTracking) return; // Disable mouse during tracking
 
         const deltaX = event.clientX - mouseState.current.lastX;
         const deltaY = event.clientY - mouseState.current.lastY;
@@ -249,16 +298,49 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       canvas.removeEventListener('wheel', handleWheel);
       canvas.style.cursor = 'auto';
     };
-  }, [gl, camera, planetRadius]);
+  }, [gl, camera, planetRadius, isFeatureTracking]);
 
   // Planet and features rotation animation
   useFrame((state) => {
-    if (!isHeld) {
+    // Handle feature tracking camera positioning
+    if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current) {
+      const feature = featureTrackingRef.current;
+      
+      // Convert lat/lng to spherical coordinates on planet surface
+      const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians
+      const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians
+      
+      // Calculate feature position on planet surface (accounting for planet rotation)
+      const planetRotation = planetMeshRef.current.rotation.y;
+      const featureX = planetRadius * Math.cos(lat) * Math.sin(lng + planetRotation);
+      const featureY = planetRadius * Math.sin(lat);
+      const featureZ = planetRadius * Math.cos(lat) * Math.cos(lng + planetRotation);
+      
+      // Position camera at a distance from feature but looking toward planet center
+      const distance = trackingDistanceRef.current;
+      const cameraOffset = new THREE.Vector3(featureX, featureY, featureZ).normalize().multiplyScalar(distance);
+      
+      camera.position.copy(cameraOffset);
+      camera.lookAt(0, 0, 0); // Always look at planet center
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+    }
+    
+    // Planet and feature rotation (only if not being held by mouse)
+    if (!isHeld && !isFeatureTracking) {
       // Rotate planet mesh
       if (planetMeshRef.current) {
         planetMeshRef.current.rotation.y += 0.001;
       }
       // Rotate features group to match planet
+      if (featuresGroupRef.current) {
+        featuresGroupRef.current.rotation.y += 0.001;
+      }
+    } else if (!isHeld && isFeatureTracking) {
+      // Still rotate planet even when tracking (camera moves with it)
+      if (planetMeshRef.current) {
+        planetMeshRef.current.rotation.y += 0.001;
+      }
       if (featuresGroupRef.current) {
         featuresGroupRef.current.rotation.y += 0.001;
       }
