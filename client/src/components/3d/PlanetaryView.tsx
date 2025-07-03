@@ -243,8 +243,8 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial
           color={planetMaterial.color}
-          emissive={planetMaterial.glow}
-          emissiveIntensity={planetMaterial.emissiveIntensity}
+          emissive={planet.type === 'nuclear_world' ? '#330000' : '#000000'}
+          emissiveIntensity={planet.type === 'nuclear_world' ? 0.3 : 0}
           map={texture || undefined}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
@@ -252,6 +252,18 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
           opacity={1.0}
         />
       </mesh>
+
+      {/* Atmospheric glow for gas planets (matching SystemView) */}
+      {(planet.type === 'gas_giant' || planet.type === 'frost_giant') && (
+        <mesh position={[0, 0, 0]} raycast={() => null}>
+          <sphereGeometry args={[planetRadius * 1.05, 32, 16]} />
+          <meshBasicMaterial 
+            color={planet.type === 'gas_giant' ? '#FF7043' : '#81C784'}
+            transparent
+            opacity={0.15}
+          />
+        </mesh>
+      )}
 
       {/* Surface Features - grouped to rotate with planet */}
       <group ref={featuresGroupRef}>
