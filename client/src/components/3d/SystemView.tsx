@@ -63,21 +63,21 @@ function getPlanetColor(type: string, planetId?: string): string {
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
 
   const baseColors: Record<string, [number, number, number]> = {
-    gas_giant: [30, 80, 50],
-    frost_giant: [220, 60, 60],
-    arid_world: [30, 50, 45],
-    barren_world: [25, 30, 35],
-    dusty_world: [40, 60, 50],
-    grassland_world: [110, 60, 50],
-    jungle_world: [130, 70, 40],
-    marshy_world: [90, 55, 45],
-    martian_world: [15, 75, 45],
-    methane_world: [290, 65, 35],
-    sandy_world: [45, 70, 60],
-    snowy_world: [200, 20, 85],
-    tundra_world: [180, 40, 70],
-    nuclear_world: [10, 90, 50],
-    ocean_world: [210, 80, 55]
+    gas_giant: [30, 80, 50],        // Orange
+    frost_giant: [220, 60, 60],     // Sky blue
+    arid_world: [45, 70, 55],       // Goldenrod
+    barren_world: [35, 30, 45],     // Dark khaki
+    dusty_world: [35, 40, 65],      // Tan
+    grassland_world: [80, 60, 50],  // Yellow green
+    jungle_world: [120, 70, 35],    // Forest green
+    marshy_world: [80, 55, 35],     // Dark olive green
+    martian_world: [0, 55, 55],     // Indian red
+    methane_world: [300, 50, 70],   // Plum
+    sandy_world: [30, 70, 70],      // Sandy brown
+    snowy_world: [210, 20, 95],     // Alice blue
+    tundra_world: [210, 15, 55],    // Slate gray
+    nuclear_world: [10, 90, 50],    // Orange red
+    ocean_world: [210, 80, 55]      // Deep blue
   };
 
   let [h, s, l] = baseColors[type] || [0, 0, 50];
@@ -152,18 +152,24 @@ function getPlanetGlow(type: string, planetId?: string): string {
   const variation = (seededRandom(seed + 3000) - 0.5) * 0.2; // Less variation for glow
 
   const baseGlows: Record<string, [number, number, number]> = {
-    gas_giant: [15, 85, 55],   // Orange-red
-    frost_giant: [200, 70, 70], // Blue
-    arid_world: [45, 75, 50],   // Gold
-    verdant_world: [200, 70, 70],   // No glow for textured verdant worlds
-    acidic_world: [35, 90, 55], // Orange
-    nuclear_world: [0, 90, 45], // Red
-    ocean_world: [210, 85, 60], // Blue
-    dead_world: [0, 0, 35]      // Dark gray
+    gas_giant: [15, 85, 55],      // Orange-red
+    frost_giant: [200, 70, 70],   // Blue
+    arid_world: [45, 75, 50],     // Gold
+    barren_world: [35, 40, 35],   // Dim brown
+    dusty_world: [40, 60, 40],    // Tan glow
+    grassland_world: [80, 50, 45], // Green glow
+    jungle_world: [120, 60, 40],  // Forest green
+    marshy_world: [90, 45, 35],   // Olive green
+    martian_world: [0, 65, 45],   // Red glow
+    methane_world: [290, 55, 50], // Purple glow
+    sandy_world: [35, 65, 50],    // Sandy glow
+    snowy_world: [200, 15, 80],   // Icy blue
+    tundra_world: [180, 25, 45],  // Cold gray
+    nuclear_world: [0, 90, 45],   // Red
+    ocean_world: [210, 85, 60]    // Blue
   };
 
   let [h, s, l] = baseGlows[type] || [0, 0, 30];
-  if (type === 'verdant_world') return '#000000'; // No glow for verdant worlds
 
   h = (h + variation * 60 + 360) % 360;
   return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;

@@ -4,11 +4,16 @@ export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {
     // Return appropriate texture based on planet type
     switch (planet.type) {
-      case 'verdant_world':
+      case 'grassland_world':
+      case 'jungle_world':
         return '/textures/grass.png';
       case 'arid_world':
-      case 'dead_world':
+      case 'sandy_world':
+      case 'dusty_world':
         return '/textures/sand.jpg';
+      case 'barren_world':
+      case 'martian_world':
+        return '/textures/asphalt.png';
       default:
         return '/textures/asphalt.png'; // Default rocky texture
     }
@@ -20,18 +25,32 @@ export class PlanetGenerator {
         return '#ffa500'; // Orange
       case 'frost_giant':
         return '#87ceeb'; // Sky blue
-      case 'verdant_world':
-        return '#228b22'; // Forest green
-      case 'ocean_world':
-        return '#006994'; // Deep blue
       case 'arid_world':
         return '#daa520'; // Goldenrod
-      case 'acidic_world':
+      case 'barren_world':
+        return '#8b7355'; // Dark khaki
+      case 'dusty_world':
+        return '#d2b48c'; // Tan
+      case 'grassland_world':
         return '#9acd32'; // Yellow green
+      case 'jungle_world':
+        return '#228b22'; // Forest green
+      case 'marshy_world':
+        return '#556b2f'; // Dark olive green
+      case 'martian_world':
+        return '#cd5c5c'; // Indian red
+      case 'methane_world':
+        return '#dda0dd'; // Plum
+      case 'sandy_world':
+        return '#f4a460'; // Sandy brown
+      case 'snowy_world':
+        return '#f0f8ff'; // Alice blue
+      case 'tundra_world':
+        return '#708090'; // Slate gray
       case 'nuclear_world':
         return '#ff4500'; // Orange red
-      case 'dead_world':
-        return '#696969'; // Dim gray
+      case 'ocean_world':
+        return '#006994'; // Deep blue
       default:
         return '#808080'; // Default gray
     }

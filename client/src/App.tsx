@@ -285,14 +285,21 @@ function App() {
   // Function to get planet color for UI consistency
   const getPlanetColor = (type: string): string => {
     const colors = {
-      gas_giant: '#FF7043',
-      frost_giant: '#81C784', 
-      arid_world: '#D4A574',
-      verdant_world: '#4CAF50',
-      acidic_world: '#FFC107',
-      nuclear_world: '#F44336',
-      ocean_world: '#2196F3',
-      dead_world: '#616161'
+      gas_giant: '#FF7043',        // Orange
+      frost_giant: '#81C784',      // Light green (sky blue)
+      arid_world: '#D4A574',       // Goldenrod
+      barren_world: '#8B7355',     // Dark khaki
+      dusty_world: '#D2B48C',      // Tan
+      grassland_world: '#9ACD32',  // Yellow green
+      jungle_world: '#228B22',     // Forest green
+      marshy_world: '#556B2F',     // Dark olive green
+      martian_world: '#CD5C5C',    // Indian red
+      methane_world: '#DDA0DD',    // Plum
+      sandy_world: '#F4A460',      // Sandy brown
+      snowy_world: '#F0F8FF',      // Alice blue
+      tundra_world: '#708090',     // Slate gray
+      nuclear_world: '#F44336',    // Orange red
+      ocean_world: '#2196F3'       // Deep blue
     };
     return colors[type as keyof typeof colors] || '#888888';
   };

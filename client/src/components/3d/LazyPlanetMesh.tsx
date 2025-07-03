@@ -8,20 +8,36 @@ function getPlanetColor(type: string, planetId?: string): string {
     return x - Math.floor(x);
   };
 
-  // Only apply colors to specific planet types
-  const coloredTypes = ['gas_giant', 'frost_giant', 'nuclear_world', 'ocean_world'];
+  // Apply colors to all planet types now (since we have comprehensive textures)
+  const coloredTypes = [
+    'gas_giant', 'frost_giant', 'nuclear_world', 'ocean_world',
+    'arid_world', 'barren_world', 'dusty_world', 'grassland_world',
+    'jungle_world', 'marshy_world', 'martian_world', 'methane_world',
+    'sandy_world', 'snowy_world', 'tundra_world'
+  ];
   if (!coloredTypes.includes(type)) {
-    return '#ffffff'; // White for all other planet types
+    return '#ffffff'; // White for unknown planet types
   }
 
   const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
 
   const baseColors: Record<string, [number, number, number]> = {
-    gas_giant: [30, 80, 50],
-    frost_giant: [220, 60, 60],
-    nuclear_world: [10, 90, 50],
-    ocean_world: [210, 80, 55]
+    gas_giant: [30, 80, 50],        // Orange
+    frost_giant: [220, 60, 60],     // Sky blue
+    arid_world: [45, 70, 55],       // Goldenrod
+    barren_world: [35, 30, 45],     // Dark khaki
+    dusty_world: [35, 40, 65],      // Tan
+    grassland_world: [80, 60, 50],  // Yellow green
+    jungle_world: [120, 70, 35],    // Forest green
+    marshy_world: [80, 55, 35],     // Dark olive green
+    martian_world: [0, 55, 55],     // Indian red
+    methane_world: [300, 50, 70],   // Plum
+    sandy_world: [30, 70, 70],      // Sandy brown
+    snowy_world: [210, 20, 95],     // Alice blue
+    tundra_world: [210, 15, 55],    // Slate gray
+    nuclear_world: [10, 90, 50],    // Orange red
+    ocean_world: [210, 80, 55]      // Deep blue
   };
 
   let [h, s, l] = baseColors[type] || [0, 0, 50];
