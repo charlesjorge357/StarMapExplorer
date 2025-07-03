@@ -64,6 +64,7 @@ export interface Planet {
   atmosphere: string[];
   moons: Moon[];
   surfaceFeatures: SurfaceFeature[];
+  rings: PlanetRing[]; // Planetary ring systems
   textureIndex?: number; // Persistent texture selection index
 }
 
@@ -73,6 +74,17 @@ export interface Moon {
   radius: number;
   orbitRadius: number;
   orbitSpeed: number;
+}
+
+export interface PlanetRing {
+  id: string;
+  name: string;
+  innerRadius: number; // In planet radii
+  outerRadius: number; // In planet radii
+  thickness: number;   // Visual thickness
+  density: number;     // Particle density (0-1)
+  color: string;       // Ring color
+  composition: "ice" | "rock" | "dust" | "mixed";
 }
 
 export interface SurfaceFeature {

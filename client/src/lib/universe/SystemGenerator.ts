@@ -1,50 +1,9 @@
 import { PlanetGenerator } from './PlanetGenerator';
-import { SurfaceFeature } from '../../../../shared/schema';
+import { SurfaceFeature, Planet, Moon, PlanetRing, PlanetType } from '../../../../shared/schema';
 import { SurfaceFeatureMarker } from 'client/src/components/ui/SurfaceFeatures'
 import React, { useRef, useMemo } from 'react';
 
-interface Planet {
-  id: string;
-  name: string;
-  position: [number, number, number];
-  radius: number;
-  mass: number;
-  type: PlanetType;
-  orbitRadius: number;
-  orbitSpeed: number;
-  rotationSpeed: number;
-  temperature: number;
-  atmosphere: string[];
-  moons: Moon[];
-  inclination?: number;
-  textureIndex?: number;
-  surfaceFeatures: SurfaceFeature[];
-}
-
-interface Moon {
-  id: string;
-  name: string;
-  radius: number;
-  orbitRadius: number;
-  orbitSpeed: number;
-}
-
-type PlanetType = 
-  | 'gas_giant' 
-  | 'frost_giant' 
-  | 'arid_world' 
-  | 'barren_world' 
-  | 'dusty_world' 
-  | 'grassland_world' 
-  | 'jungle_world' 
-  | 'marshy_world' 
-  | 'martian_world' 
-  | 'methane_world' 
-  | 'sandy_world' 
-  | 'snowy_world' 
-  | 'tundra_world'
-  | 'nuclear_world' 
-  | 'ocean_world';
+// Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
 interface AsteroidBelt {
   id: string;
@@ -250,7 +209,7 @@ export class SystemGenerator {
       temperature,
       atmosphere,
       moons: [],
-      inclination,
+      rings: this.generatePlanetRings(type, radius, name, planetSeed + 1000),
       textureIndex: this.generateTextureIndex(type, index, starName),
       surfaceFeatures: []
     };
@@ -408,7 +367,7 @@ export class SystemGenerator {
         temperature,
         atmosphere,
         moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
-        inclination,
+        rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
         textureIndex: this.generateTextureIndex(type, i, star.name),
         surfaceFeatures: []
       };
@@ -560,6 +519,69 @@ export class SystemGenerator {
     });
 
     return belts;
+  }
+
+  static generatePlanetRings(type: PlanetType, radius: number, planetName: string, seed: number): PlanetRing[] {
+    const rings: PlanetRing[] = [];
+    const random = this.seededRandom(seed);
+    
+    // Determine ring probability based on planet type and size
+    let ringChance = 0;
+    if (type === 'gas_giant' || type === 'frost_giant') {
+      ringChance = 0.4; // 40% chance
+    } else if (radius > 1.0) { // Terrestrial planets larger than Earth
+      ringChance = 0.3; // 30% chance
+    }
+    
+    // Check if planet gets rings
+    if (random > ringChance) {
+      return rings; // No rings
+    }
+    
+    // Generate 1-3 ring systems
+    const numRingSystems = Math.floor(this.seededRandom(seed + 100) * 3) + 1;
+    
+    for (let i = 0; i < numRingSystems; i++) {
+      const systemSeed = seed + i * 200;
+      
+      // Ring distances from planet (in planet radii)
+      const baseDistance = 2.0 + i * 1.5; // Start at 2 planet radii, space out subsequent rings
+      const innerRadius = baseDistance + this.seededRandom(systemSeed + 1) * 0.5;
+      const ringWidth = 0.3 + this.seededRandom(systemSeed + 2) * 0.7; // 0.3-1.0 planet radii wide
+      const outerRadius = innerRadius + ringWidth;
+      
+      // Ring properties based on planet type
+      let composition: "ice" | "rock" | "dust" | "mixed";
+      let color: string;
+      let density = 0.3 + this.seededRandom(systemSeed + 3) * 0.6; // 0.3-0.9
+      
+      if (type === 'gas_giant') {
+        composition = this.seededRandom(systemSeed + 4) > 0.5 ? "ice" : "rock";
+        color = composition === "ice" ? "#E6F3FF" : "#8B7355";
+      } else if (type === 'frost_giant') {
+        composition = "ice";
+        color = "#B8E6FF";
+        density *= 1.2; // Frost giants have denser ice rings
+      } else {
+        // Terrestrial planets
+        composition = this.seededRandom(systemSeed + 5) > 0.7 ? "rock" : "dust";
+        color = composition === "rock" ? "#A0A0A0" : "#D2B48C";
+        density *= 0.7; // Terrestrial rings are typically less dense
+      }
+      
+      rings.push({
+        id: `ring-${planetName.replace(/\s+/g, '-')}-${i}`,
+        name: `${planetName} Ring ${String.fromCharCode(65 + i)}`, // A, B, C
+        innerRadius,
+        outerRadius,
+        thickness: 0.02 + this.seededRandom(systemSeed + 6) * 0.08, // 0.02-0.1 thickness
+        density,
+        color,
+        composition
+      });
+    }
+    
+    return rings;
   }
 
   static getStarColor(spectralClass: string): string {

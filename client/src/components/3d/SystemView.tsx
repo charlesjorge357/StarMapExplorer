@@ -9,6 +9,7 @@ import { NebulaScreenTint } from './NebulaScreenTint';
 import { SystemNebulaSkybox } from './SystemNebulaSkybox';
 import { StarSkybox } from './StarSkybox';
 import { LazyTexturePlanet } from './LazyTexturePlanet';
+import { PlanetRings } from './PlanetRings';
 
 function MoonMesh({ 
   moon, 
@@ -655,6 +656,29 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           planetTextures={planetTextures}
         />
       ))}
+
+      {/* Planet Rings */}
+      {planets.map((planet) => {
+        if (!planet.rings || planet.rings.length === 0) return null;
+        
+        // Calculate planet position (matching orbital mechanics from PlanetMesh)
+        const time = Date.now() * 0.001;
+        const angle = time * planet.orbitSpeed * 0.1;
+        const planetPosition: [number, number, number] = [
+          Math.cos(angle) * planet.orbitRadius * 30,
+          0,
+          Math.sin(angle) * planet.orbitRadius * 30
+        ];
+        
+        return (
+          <PlanetRings
+            key={`rings-${planet.id}`}
+            rings={planet.rings}
+            planetRadius={planet.radius * 0.6} // Same scaling as planets
+            planetPosition={planetPosition}
+          />
+        );
+      })}
 
       {/* Asteroid belts */}
       {asteroidBelts.map((belt) => (
