@@ -5,8 +5,7 @@ import * as THREE from 'three';
 import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
-
-// Note: PlanetaryView deliberately does not include NebulaScreenTint
+import { NebulaScreenTint } from './NebulaScreenTint';
 
 interface PlanetaryViewProps {
   planet: any;
@@ -36,6 +35,21 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
 
   // Planet radius for close-up view
   const planetRadius = planet?.radius ? planet.radius * 15 : 10;
+  
+  // Generate nebulas for atmospheric effect
+  const nebulas = useMemo(() => {
+    return [{
+      id: 'planetary-nebula',
+      name: 'Atmospheric Nebula',
+      position: [0, 0, 0] as [number, number, number],
+      radius: planetRadius * 100,
+      color: planet.type === 'gas_giant' ? '#FF7043' : 
+             planet.type === 'frost_giant' ? '#81C784' :
+             planet.type === 'nuclear_world' ? '#FF4500' : '#4A90E2',
+      composition: 'hydrogen',
+      type: 'emission' as const
+    }];
+  }, [planetRadius, planet.type]);
 
   // Load planet texture using the same system as SystemView
   const texturePath = useMemo(() => {
@@ -290,6 +304,9 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
       {/* Cosmic neighbors starfield background */}
       <CosmicNeighbors planetRadius={planetRadius} />
 
+      {/* Nebula screen tint for atmospheric effect */}
+      <NebulaScreenTint nebulas={nebulas} />
+
       {/* Subtle additional lighting for planetary detail (matches SystemView brightness) */}
       <ambientLight intensity={0.05} />
       <directionalLight 
@@ -376,12 +393,14 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
       emissive: true
     });
     
-    // Add other planets in the system as distant points
+    // Add other planets in the system as distant points (larger and brighter)
     const planetPositions = [
       [-skyboxRadius * 0.4, skyboxRadius * 0.1, skyboxRadius * 0.8],
       [skyboxRadius * 0.6, -skyboxRadius * 0.3, skyboxRadius * 0.7],
       [-skyboxRadius * 0.8, skyboxRadius * 0.5, -skyboxRadius * 0.2],
-      [skyboxRadius * 0.3, skyboxRadius * 0.8, -skyboxRadius * 0.5]
+      [skyboxRadius * 0.3, skyboxRadius * 0.8, -skyboxRadius * 0.5],
+      [-skyboxRadius * 0.2, -skyboxRadius * 0.6, skyboxRadius * 0.9],
+      [skyboxRadius * 0.9, skyboxRadius * 0.1, -skyboxRadius * 0.3]
     ];
     
     planetPositions.forEach((pos, index) => {
@@ -389,11 +408,38 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
         id: `planet-${index}`,
         type: 'planet',
         position: pos as [number, number, number],
-        size: Math.random() * 0.3 + 0.1,
-        color: ['#FF7043', '#81C784', '#D4A574', '#9ACD32'][index % 4],
-        brightness: 0.6,
+        size: Math.random() * 1.2 + 0.8, // Larger planets
+        color: ['#FF7043', '#81C784', '#D4A574', '#9ACD32', '#FF4500', '#006994'][index % 6],
+        brightness: 0.9, // Brighter
         emissive: false
       });
+    });
+    
+    // Add asteroid belts as dust clouds
+    const beltPositions = [
+      [skyboxRadius * 0.5, 0, skyboxRadius * 0.5],
+      [-skyboxRadius * 0.7, skyboxRadius * 0.2, -skyboxRadius * 0.4],
+      [skyboxRadius * 0.3, -skyboxRadius * 0.4, skyboxRadius * 0.8]
+    ];
+    
+    beltPositions.forEach((pos, index) => {
+      // Create multiple asteroids in each belt
+      for (let i = 0; i < 15; i++) {
+        const spread = skyboxRadius * 0.1;
+        const offsetX = (Math.random() - 0.5) * spread;
+        const offsetY = (Math.random() - 0.5) * spread * 0.3;
+        const offsetZ = (Math.random() - 0.5) * spread;
+        
+        objects.push({
+          id: `asteroid-${index}-${i}`,
+          type: 'asteroid',
+          position: [pos[0] + offsetX, pos[1] + offsetY, pos[2] + offsetZ] as [number, number, number],
+          size: Math.random() * 0.15 + 0.05,
+          color: '#8B7355', // Rocky brown
+          brightness: 0.4,
+          emissive: false
+        });
+      }
     });
     
     // Add distant stars
@@ -422,34 +468,57 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
   return (
     <group>
       {cosmicObjects.map((obj) => (
-        <mesh key={obj.id} position={obj.position} raycast={() => null}>
-          <sphereGeometry args={[obj.size, obj.type === 'star' ? 16 : 8, obj.type === 'star' ? 16 : 8]} />
-          {obj.emissive ? (
-            <meshStandardMaterial 
-              color={obj.color}
-              emissive={obj.color}
-              emissiveIntensity={0.5}
-            />
-          ) : (
-            <meshBasicMaterial 
-              color={obj.color}
-              transparent
-              opacity={obj.brightness}
-            />
-          )}
-          {/* Add corona effect for the parent star */}
-          {obj.type === 'star' && (
-            <mesh raycast={() => null}>
-              <sphereGeometry args={[obj.size * 1.5, 12, 12]} />
-              <meshBasicMaterial 
-                color={obj.color}
-                transparent
-                opacity={0.2}
-              />
-            </mesh>
-          )}
-        </mesh>
+        <CosmicObject key={obj.id} obj={obj} />
       ))}
     </group>
+  );
+}
+
+// Individual cosmic object component with animation
+function CosmicObject({ obj }: { obj: any }) {
+  const meshRef = useRef<any>();
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      // Subtle rotation for planets and asteroids
+      if (obj.type === 'planet' || obj.type === 'asteroid') {
+        meshRef.current.rotation.y += 0.001;
+      }
+      // Gentle pulsing for stars
+      if (obj.type === 'star') {
+        const pulse = Math.sin(state.clock.getElapsedTime() * 2) * 0.1 + 1;
+        meshRef.current.scale.setScalar(pulse);
+      }
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={obj.position} raycast={() => null}>
+      <sphereGeometry args={[obj.size, obj.type === 'star' ? 16 : 8, obj.type === 'star' ? 16 : 8]} />
+      {obj.emissive ? (
+        <meshStandardMaterial 
+          color={obj.color}
+          emissive={obj.color}
+          emissiveIntensity={0.5}
+        />
+      ) : (
+        <meshBasicMaterial 
+          color={obj.color}
+          transparent
+          opacity={obj.brightness}
+        />
+      )}
+      {/* Add corona effect for the parent star */}
+      {obj.type === 'star' && (
+        <mesh raycast={() => null}>
+          <sphereGeometry args={[obj.size * 1.5, 12, 12]} />
+          <meshBasicMaterial 
+            color={obj.color}
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+      )}
+    </mesh>
   );
 }
