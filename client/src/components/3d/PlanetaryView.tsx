@@ -340,8 +340,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         <AsteroidBelts belts={system.asteroidBelts} planetRadius={planetRadius} />
       )}
 
-      {/* Nebula screen tint for atmospheric effect */}
-      <NebulaScreenTint nebulas={nebulas} />
+      {/* Removed nebula screen tint to prevent planet color tinting */}
 
       {/* Subtle additional lighting for planetary detail (matches SystemView brightness) */}
       <ambientLight intensity={0.05} />
