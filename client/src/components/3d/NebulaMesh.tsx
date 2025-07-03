@@ -155,15 +155,18 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   const selectionRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusZ); // Use X or Z, whichever is longer
 
   // Check if camera is within clickable range (not too close, not too far)
-  const canClick = useMemo(() => {
+  const [canClick, setCanClick] = useState(true);
+  
+  useFrame(() => {
     const cameraPos = camera.position;
     const nebulaPos = new THREE.Vector3(...nebula.position);
     const distance = cameraPos.distanceTo(nebulaPos);
     const scaledRadius = nebula.radius * 4.5; // Match the visual nebula scaling
     const minClickDistance = scaledRadius * 0.1; // Don't click when inside nebula
-    const maxClickDistance = scaledRadius * 8; // Don't click nebulas that are too far away
-    return distance >= minClickDistance && distance <= maxClickDistance;
-  }, [camera.position, nebula.position, nebula.radius]);
+    const maxClickDistance = scaledRadius * 3; // Much smaller max distance to prevent far-away clicks
+    const clickable = distance >= minClickDistance && distance <= maxClickDistance;
+    setCanClick(clickable);
+  });
 
   return (
     <group ref={groupRef} position={nebula.position}>
