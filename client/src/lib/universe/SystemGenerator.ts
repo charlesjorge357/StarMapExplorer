@@ -401,8 +401,8 @@ export class SystemGenerator {
     }
     
     const baseColors: Record<string, [number, number, number]> = {
-      gas_giant: [30, 80, 50],
-      frost_giant: [220, 60, 60],
+      gas_giant: [30, 70, 65],        // Increased lightness from 50 to 65
+      frost_giant: [220, 50, 75],     // Increased lightness from 60 to 75, reduced saturation
       nuclear_world: [10, 90, 50],
       ocean_world: [210, 80, 55]
     };

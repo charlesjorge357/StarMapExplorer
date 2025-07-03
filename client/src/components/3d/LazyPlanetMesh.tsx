@@ -57,7 +57,7 @@ interface LazyPlanetMeshProps {
 function PlanetTexture({ planet }: { planet: any }) {
   const texturePath = getPlanetTexturePath(planet.type, planet.textureIndex || 0);
   const texture = texturePath ? useTexture(texturePath) : null;
-  
+
   useEffect(() => {
     if (texture) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -70,7 +70,7 @@ function PlanetTexture({ planet }: { planet: any }) {
 // Planet mesh component that loads textures lazily
 function PlanetMeshContent({ planet, isSelected, index, onClick }: LazyPlanetMeshProps) {
   const texture = PlanetTexture({ planet });
-  
+
   const planetColor = useMemo(() => 
     getPlanetColor(planet.type, planet.id || planet.name), 
     [planet.type, planet.id, planet.name]
@@ -90,7 +90,7 @@ function PlanetMeshContent({ planet, isSelected, index, onClick }: LazyPlanetMes
 
   const planetRadius = planet.radius * 0.6; // Visual scaling
   const orbitRadius = planet.orbitRadius * 30; // Orbital scaling
-  
+
   // Calculate position based on time for orbital motion
   const position = useMemo(() => {
     const time = Date.now() * 0.001;
@@ -111,7 +111,7 @@ function PlanetMeshContent({ planet, isSelected, index, onClick }: LazyPlanetMes
           <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} transparent opacity={0.8} />
         </mesh>
       )}
-      
+
       {/* Planet mesh */}
       <mesh onClick={() => onClick(planet)}>
         <sphereGeometry args={[planetRadius, 32, 32]} />
