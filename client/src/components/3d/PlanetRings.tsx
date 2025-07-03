@@ -30,10 +30,11 @@ export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps
         blending: THREE.AdditiveBlending
       });
 
-      // Generate random rotation angles for ring variety
-      const rotationX = (Math.random() - 0.5) * 0.4; // Random tilt up to ±0.2 radians
-      const rotationY = Math.random() * Math.PI * 2; // Random rotation around Y axis  
-      const rotationZ = (Math.random() - 0.5) * 0.4; // Random tilt around Z axis
+      // Generate deterministic rotation angles based on ring properties to match SystemView
+      const ringHash = ring.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+      const rotationX = ((ringHash % 100) / 100 - 0.5) * 0.4; // Deterministic tilt up to ±0.2 radians
+      const rotationY = ((ringHash * 7) % 360) * (Math.PI / 180); // Deterministic rotation around Y axis  
+      const rotationZ = (((ringHash * 13) % 100) / 100 - 0.5) * 0.4; // Deterministic tilt around Z axis
 
       return { geometry, material, ring, index, rotationX, rotationY, rotationZ };
     });

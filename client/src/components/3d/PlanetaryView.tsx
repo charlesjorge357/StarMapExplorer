@@ -11,6 +11,7 @@ interface PlanetaryViewProps {
   planet: any;
   selectedFeature: any;
   onFeatureClick: (feature: any) => void;
+  system?: any; // Optional system data for asteroid belts
 }
 
 // Component for planet rings in planetary view
@@ -38,7 +39,7 @@ function PlanetaryRings({ rings, planetRadius }: { rings: any[]; planetRadius: n
   );
 }
 
-export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
+export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system }: PlanetaryViewProps) {
   // Early return if planet is not provided or invalid
   if (!planet || !planet.type) {
     console.error('PlanetaryView: Invalid or missing planet data');
@@ -334,6 +335,11 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
       {/* Cosmic neighbors starfield background */}
       <CosmicNeighbors planetRadius={planetRadius} />
 
+      {/* Asteroid belts from the system */}
+      {system?.asteroidBelts && system.asteroidBelts.length > 0 && (
+        <AsteroidBelts belts={system.asteroidBelts} planetRadius={planetRadius} />
+      )}
+
       {/* Nebula screen tint for atmospheric effect */}
       <NebulaScreenTint nebulas={nebulas} />
 
@@ -402,6 +408,81 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex }: { moon: any; planetRad
           opacity={0.1}
         />
       </mesh>
+    </group>
+  );
+}
+
+// Component for asteroid belts in planetary view
+function AsteroidBelts({ belts, planetRadius }: { belts: any[]; planetRadius: number }) {
+  return (
+    <group>
+      {belts.map((belt: any, beltIndex: number) => (
+        <AsteroidBelt key={belt.id} belt={belt} planetRadius={planetRadius} beltIndex={beltIndex} />
+      ))}
+    </group>
+  );
+}
+
+// Individual asteroid belt component
+function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadius: number; beltIndex: number }) {
+  const asteroidData = useMemo(() => {
+    const asteroidCount = Math.min(25, belt.asteroidCount || 25); // Limit asteroids for performance
+    const asteroids = [];
+
+    for (let i = 0; i < asteroidCount; i++) {
+      // Use deterministic generation based on belt ID and asteroid index
+      const seed1 = (beltIndex * 1000 + i * 73 + 37) % 1000 / 1000;
+      const seed2 = (beltIndex * 1000 + i * 149 + 83) % 1000 / 1000;
+      const seed3 = (beltIndex * 1000 + i * 211 + 127) % 1000 / 1000;
+
+      const baseAngle = seed1 * Math.PI * 2;
+      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * planetRadius * 5; // Scale relative to planet
+      const size = (0.3 + seed3 * 0.8) * planetRadius * 0.02; // Size relative to planet
+      const yOffset = (seed1 - 0.5) * planetRadius * 0.5; // Y variation
+      const orbitSpeed = 0.001 + (radius * 0.000001); // Very slow orbit
+
+      asteroids.push({
+        id: i,
+        baseAngle,
+        radius,
+        size,
+        yOffset,
+        orbitSpeed
+      });
+    }
+
+    return asteroids;
+  }, [belt.id, beltIndex, planetRadius]);
+
+  const groupRef = useRef<any>();
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      const time = state.clock.getElapsedTime();
+      groupRef.current.children.forEach((child: any, i: number) => {
+        const asteroid = asteroidData[i];
+        if (asteroid) {
+          const angle = asteroid.baseAngle + time * asteroid.orbitSpeed;
+          const x = Math.cos(angle) * asteroid.radius;
+          const z = Math.sin(angle) * asteroid.radius;
+          child.position.set(x, asteroid.yOffset, z);
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {asteroidData.map((asteroid) => (
+        <mesh key={asteroid.id} raycast={() => null}>
+          <sphereGeometry args={[asteroid.size, 6, 6]} />
+          <meshStandardMaterial 
+            color="#999999" 
+            roughness={0.9}
+            metalness={0.1}
+          />
+        </mesh>
+      ))}
     </group>
   );
 }
