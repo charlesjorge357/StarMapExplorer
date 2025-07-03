@@ -307,15 +307,19 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current && groupRef.current) {
       const feature = featureTrackingRef.current;
 
-      // Convert lat/lng to spherical coordinates on planet surface (in local space)
-      const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians
-      const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians
+      // Convert lat/lng to proper spherical coordinates
+      // Note: feature.position[0] = latitude, feature.position[1] = longitude
+      const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians (-π/2 to π/2)
+      const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians (-π to π)
 
-      // Calculate feature position on planet surface in local coordinates
+      // Standard spherical to Cartesian conversion:
+      // x = r * cos(lat) * cos(lng)
+      // y = r * sin(lat)  
+      // z = r * cos(lat) * sin(lng)
       const localFeaturePosition = new THREE.Vector3(
-        planetRadius * Math.cos(lat) * Math.sin(lng),
-        planetRadius * Math.sin(lat),
-        planetRadius * Math.cos(lat) * Math.cos(lng)
+        planetRadius * Math.cos(lat) * Math.cos(lng),  // x
+        planetRadius * Math.sin(lat),                   // y
+        planetRadius * Math.cos(lat) * Math.sin(lng)   // z
       );
 
       // Apply planet's rotation quaternion to get world-space position
@@ -338,7 +342,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       // Direction from planet center to feature (surface normal)
       const surfaceNormal = worldFeaturePosition.clone().normalize();
       
-      // Create a 190-degree rotation around the surface normal
+      // Create a 270-degree rotation around the surface normal for better viewing angle
       const rotationAngle = (270 * Math.PI) / 180; // Convert to radians
       
       // Create rotation matrix around the surface normal
@@ -347,7 +351,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       // Calculate initial camera direction (above the feature)
       const initialDirection = surfaceNormal.clone().multiplyScalar(distance * 0.6);
       
-      // Apply 190-degree rotation to the camera direction
+      // Apply rotation to the camera direction
       const rotatedDirection = initialDirection.clone().applyMatrix4(rotationMatrix);
       
       // Position camera with rotated direction
