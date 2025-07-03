@@ -76,7 +76,11 @@ export class PlanetGenerator {
         type,
         name: this.generateFeatureName(type, i),
         position: [lat, lon],
-        description: this.generateFeatureDescription(type)
+        description: this.generateFeatureDescription(type),
+        population: type === 'city' ? Math.floor(Math.random() * 10000000) + 50000 : undefined,
+        size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)] as 'small' | 'medium' | 'large',
+        technology: ['primitive', 'industrial', 'advanced'][Math.floor(Math.random() * 3)] as 'primitive' | 'industrial' | 'advanced',
+        affiliation: this.generateAffiliation()
       };
 
       features.push(feature);
@@ -113,5 +117,21 @@ export class PlanetGenerator {
       default:
         return 'An interesting location.';
     }
+  }
+
+  static generateAffiliation(): string {
+    const affiliations = [
+      'Terran Federation',
+      'Independent Colony',
+      'Mining Consortium',
+      'Trade Union',
+      'Scientific Outpost',
+      'Frontier Settlement',
+      'Corporate Territory',
+      'Free State',
+      'Research Station',
+      'Colonial Administration'
+    ];
+    return affiliations[Math.floor(Math.random() * affiliations.length)];
   }
 }

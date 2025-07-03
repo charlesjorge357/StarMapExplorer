@@ -96,6 +96,7 @@ export interface SurfaceFeature {
   population?: number; // For cities - affects light intensity
   size?: "small" | "medium" | "large"; // Affects light cluster size
   technology?: "primitive" | "industrial" | "advanced"; // Affects light color
+  affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
 }
 
 export type PlanetType =

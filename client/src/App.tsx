@@ -830,6 +830,38 @@ function App() {
               </div>
             </div>
           )}
+
+          {/* Planetary view - surface feature information */}
+          {currentView === 'planetary' && selectedFeature && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>{selectedFeature.name}</h3>
+              <p className="text-sm text-gray-300 mb-2 capitalize">{selectedFeature.type.replace('_', ' ')}</p>
+              <div className="space-y-1 text-sm">
+                {selectedFeature.population && (
+                  <p><span style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Population:</span> {selectedFeature.population.toLocaleString()}</p>
+                )}
+                {selectedFeature.size && (
+                  <p><span style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Size:</span> {selectedFeature.size}</p>
+                )}
+                {selectedFeature.technology && (
+                  <p><span style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Technology:</span> {selectedFeature.technology}</p>
+                )}
+                {selectedFeature.affiliation && (
+                  <p><span style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Affiliation:</span> {selectedFeature.affiliation}</p>
+                )}
+                <p><span style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Location:</span> {selectedFeature.position[0].toFixed(1)}°, {selectedFeature.position[1].toFixed(1)}°</p>
+                {selectedFeature.description && (
+                  <div className="mt-2">
+                    <p style={{ color: getPlanetColor(selectedPlanet?.type || 'arid_world') }}>Description:</p>
+                    <p className="text-xs text-gray-400">{selectedFeature.description}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Escape to deselect</p>
+              </div>
+            </div>
+          )}
         </>
       )}
 
