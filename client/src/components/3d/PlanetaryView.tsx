@@ -302,37 +302,56 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
   }, [gl, camera, planetRadius, isFeatureTracking]);
 
   // Handle feature tracking camera positioning
-  useFrame((state) => {
+  useFrame((state, delta) => {
     // Handle feature tracking camera positioning
-    if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current) {
+    if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current && groupRef.current) {
       const feature = featureTrackingRef.current;
 
-      // Convert lat/lng to spherical coordinates on planet surface
+      // Convert lat/lng to spherical coordinates on planet surface (in local space)
       const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians
       const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians
 
-      // Calculate feature position on planet surface (accounting for planet rotation)
-      const planetRotation = planetMeshRef.current.rotation.y;
-      const featureX = planetRadius * Math.cos(lat) * Math.sin(lng + planetRotation);
-      const featureY = planetRadius * Math.sin(lat);
-      const featureZ = planetRadius * Math.cos(lat) * Math.cos(lng + planetRotation);
+      // Calculate feature position on planet surface in local coordinates
+      const localFeaturePosition = new THREE.Vector3(
+        planetRadius * Math.cos(lat) * Math.sin(lng),
+        planetRadius * Math.sin(lat),
+        planetRadius * Math.cos(lat) * Math.cos(lng)
+      );
 
-      // Create feature position vector
-      const featurePosition = new THREE.Vector3(featureX, featureY, featureZ);
+      // Apply planet's rotation quaternion to get world-space position
+      const planetQuaternion = new THREE.Quaternion();
+      planetMeshRef.current.getWorldQuaternion(planetQuaternion);
+      
+      // Apply group transformations (mouse rotation) as well
+      const groupQuaternion = new THREE.Quaternion();
+      groupRef.current.getWorldQuaternion(groupQuaternion);
+      
+      // Combine rotations
+      const combinedQuaternion = new THREE.Quaternion().multiplyQuaternions(groupQuaternion, planetQuaternion);
+      
+      // Transform feature position to world space
+      const worldFeaturePosition = localFeaturePosition.clone().applyQuaternion(combinedQuaternion);
 
-      // Position camera above the feature looking down
+      // Calculate camera position - offset above the feature
       const distance = trackingDistanceRef.current;
+      
+      // Direction from planet center to feature (surface normal)
+      const surfaceNormal = worldFeaturePosition.clone().normalize();
+      
+      // Position camera above the feature
+      const targetCameraPosition = worldFeaturePosition.clone().add(
+        surfaceNormal.multiplyScalar(distance * 0.6)
+      );
 
-      // Create a "look down" direction - offset upward from the feature position
-      const upDirection = featurePosition.clone().normalize(); // Direction from planet center to feature
-      const cameraPosition = featurePosition.clone().add(upDirection.multiplyScalar(distance * 0.8));
+      // Add slight tangential offset for better viewing angle
+      const tangent = new THREE.Vector3(-surfaceNormal.z, 0, surfaceNormal.x).normalize();
+      targetCameraPosition.add(tangent.multiplyScalar(distance * 0.2));
 
-      // Add slight offset to avoid looking straight down (for better visual perspective)
-      const tangentOffset = new THREE.Vector3(-upDirection.z, 0, upDirection.x).normalize();
-      cameraPosition.add(tangentOffset.multiplyScalar(distance * 0.3));
-
-      camera.position.copy(cameraPosition);
-      camera.lookAt(featurePosition); // Look AT the feature
+      // Smoothly interpolate camera position for smooth movement
+      camera.position.lerp(targetCameraPosition, delta * 3);
+      
+      // Look at the feature position
+      camera.lookAt(worldFeaturePosition);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
     }
