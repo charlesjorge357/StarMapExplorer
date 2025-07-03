@@ -407,7 +407,16 @@ export class SystemGenerator {
       ocean_world: [210, 80, 55]
     };
     let [h, s, l] = baseColors[type];
-    h = (h + variation * 360 + 360) % 360;
+    
+    // Special handling for frost giants to keep them in blue/cyan range
+    if (type === 'frost_giant') {
+      // Limit hue variation to stay in blue/cyan range (180-240 degrees)
+      const limitedVariation = variation * 0.2; // Reduce variation strength
+      h = Math.max(180, Math.min(240, h + limitedVariation * 60)); // Keep in blue range
+    } else {
+      h = (h + variation * 360 + 360) % 360;
+    }
+    
     return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
   }
 

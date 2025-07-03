@@ -30,7 +30,12 @@ export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps
         blending: THREE.AdditiveBlending
       });
 
-      return { geometry, material, ring, index };
+      // Generate random rotation angles for ring variety
+      const rotationX = (Math.random() - 0.5) * 0.4; // Random tilt up to ±0.2 radians
+      const rotationY = Math.random() * Math.PI * 2; // Random rotation around Y axis  
+      const rotationZ = (Math.random() - 0.5) * 0.4; // Random tilt around Z axis
+
+      return { geometry, material, ring, index, rotationX, rotationY, rotationZ };
     });
   }, [rings, planetRadius]);
 
@@ -44,12 +49,12 @@ export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps
 
   return (
     <group ref={groupRef}>
-      {ringMeshes.map(({ geometry, material, ring, index }) => (
+      {ringMeshes.map(({ geometry, material, ring, index, rotationX, rotationY, rotationZ }) => (
         <mesh
           key={ring.id}
           geometry={geometry}
           material={material}
-          rotation={[Math.PI / 2, 0, 0]} // Rotate to be horizontal around planet
+          rotation={[Math.PI / 2 + rotationX, rotationY, rotationZ]} // Base horizontal rotation plus random angles
         />
       ))}
     </group>
