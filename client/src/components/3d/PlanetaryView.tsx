@@ -316,12 +316,16 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       const featureY = planetRadius * Math.sin(lat);
       const featureZ = planetRadius * Math.cos(lat) * Math.cos(lng + planetRotation);
       
-      // Position camera at a distance from feature but looking toward planet center
-      const distance = trackingDistanceRef.current;
-      const cameraOffset = new THREE.Vector3(featureX, featureY, featureZ).normalize().multiplyScalar(distance);
+      // Create feature position vector
+      const featurePosition = new THREE.Vector3(featureX, featureY, featureZ);
       
-      camera.position.copy(cameraOffset);
-      camera.lookAt(0, 0, 0); // Always look at planet center
+      // Position camera at a distance from the feature, but offset outward from planet center
+      const distance = trackingDistanceRef.current;
+      const cameraDirection = featurePosition.clone().normalize();
+      const cameraPosition = featurePosition.clone().add(cameraDirection.multiplyScalar(distance));
+      
+      camera.position.copy(cameraPosition);
+      camera.lookAt(featurePosition); // Look AT the feature, not planet center
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
     }
