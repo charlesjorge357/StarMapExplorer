@@ -13,6 +13,31 @@ interface PlanetaryViewProps {
   onFeatureClick: (feature: any) => void;
 }
 
+// Component for planet rings in planetary view
+function PlanetaryRings({ rings, planetRadius }: { rings: any[]; planetRadius: number }) {
+  return (
+    <group>
+      {rings.map((ring: any, index: number) => (
+        <mesh key={`ring-${index}`} rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
+          <ringGeometry 
+            args={[
+              planetRadius * ring.innerRadius * 1.2, 
+              planetRadius * ring.outerRadius * 1.2, 
+              64
+            ]} 
+          />
+          <meshBasicMaterial 
+            color={ring.color}
+            transparent 
+            opacity={ring.density * 0.6}
+            side={2} // THREE.DoubleSide
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: PlanetaryViewProps) {
   // Early return if planet is not provided or invalid
   if (!planet || !planet.type) {
@@ -291,6 +316,11 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         ))}
       </group>
 
+      {/* Planet Rings - render around this planet */}
+      {planet.rings && planet.rings.length > 0 && (
+        <PlanetaryRings rings={planet.rings} planetRadius={planetRadius} />
+      )}
+
       {/* Moons orbiting the planet */}
       {planet.moons && planet.moons.length > 0 && planet.moons.map((moon: any, moonIndex: number) => (
         <PlanetaryMoon
@@ -415,28 +445,28 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
       });
     });
     
-    // Add asteroid belts as dust clouds
+    // Add asteroid belts as visible clusters
     const beltPositions = [
-      [skyboxRadius * 0.5, 0, skyboxRadius * 0.5],
-      [-skyboxRadius * 0.7, skyboxRadius * 0.2, -skyboxRadius * 0.4],
-      [skyboxRadius * 0.3, -skyboxRadius * 0.4, skyboxRadius * 0.8]
+      [skyboxRadius * 0.3, 0, skyboxRadius * 0.3],
+      [-skyboxRadius * 0.5, skyboxRadius * 0.1, -skyboxRadius * 0.4],
+      [skyboxRadius * 0.4, -skyboxRadius * 0.2, skyboxRadius * 0.6]
     ];
     
     beltPositions.forEach((pos, index) => {
       // Create multiple asteroids in each belt
-      for (let i = 0; i < 15; i++) {
-        const spread = skyboxRadius * 0.1;
+      for (let i = 0; i < 25; i++) {
+        const spread = skyboxRadius * 0.15;
         const offsetX = (Math.random() - 0.5) * spread;
-        const offsetY = (Math.random() - 0.5) * spread * 0.3;
+        const offsetY = (Math.random() - 0.5) * spread * 0.2;
         const offsetZ = (Math.random() - 0.5) * spread;
         
         objects.push({
           id: `asteroid-${index}-${i}`,
           type: 'asteroid',
           position: [pos[0] + offsetX, pos[1] + offsetY, pos[2] + offsetZ] as [number, number, number],
-          size: Math.random() * 0.15 + 0.05,
+          size: Math.random() * 0.8 + 0.3, // Much larger asteroids
           color: '#8B7355', // Rocky brown
-          brightness: 0.4,
+          brightness: 0.8, // Brighter
           emissive: false
         });
       }

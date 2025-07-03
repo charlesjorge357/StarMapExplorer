@@ -585,8 +585,8 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <group>
-      {/* Nebula screen tint - only if star is inside a nebula */}
-      {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />}
+      {/* Nebula screen tint disabled due to visual issues */}
+      {/* {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />} */}
 
       {/* Distant nebula skybox */}
       <SystemNebulaSkybox 
