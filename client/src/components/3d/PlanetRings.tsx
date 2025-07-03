@@ -26,7 +26,7 @@ export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps
         color: ring.color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: ring.density * 0.8, // Use density to control opacity
+        opacity: ring.density * 0.15, // Substantially reduced glow
         blending: THREE.AdditiveBlending
       });
 
@@ -34,14 +34,11 @@ export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps
     });
   }, [rings, planetRadius]);
 
-  // Sync ring position with planet and animate rotation
+  // Sync ring position with planet (no rotation)
   useFrame((state) => {
     if (groupRef.current && planetRef.current) {
       // Match the planet's position exactly
       groupRef.current.position.copy(planetRef.current.position);
-      
-      // Rotate rings slowly around their axis
-      groupRef.current.rotation.z += 0.001;
     }
   });
 
