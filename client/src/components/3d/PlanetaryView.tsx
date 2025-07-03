@@ -277,6 +277,19 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         ))}
       </group>
 
+      {/* Moons orbiting the planet */}
+      {planet.moons && planet.moons.length > 0 && planet.moons.map((moon: any, moonIndex: number) => (
+        <PlanetaryMoon
+          key={`moon-${moonIndex}`}
+          moon={moon}
+          planetRadius={planetRadius}
+          moonIndex={moonIndex}
+        />
+      ))}
+
+      {/* Cosmic neighbors starfield background */}
+      <CosmicNeighbors planetRadius={planetRadius} />
+
       {/* Subtle additional lighting for planetary detail (matches SystemView brightness) */}
       <ambientLight intensity={0.05} />
       <directionalLight 
@@ -285,6 +298,158 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         castShadow
       />
       
+    </group>
+  );
+}
+
+// Component for individual moons orbiting the planet
+function PlanetaryMoon({ moon, planetRadius, moonIndex }: { moon: any; planetRadius: number; moonIndex: number }) {
+  const moonRef = useRef<any>();
+  
+  // Moon visual properties based on index for variety
+  const moonColors = ['#C0C0C0', '#D2B48C', '#8B7D6B', '#A0A0A0', '#B8860B'];
+  const moonColor = moonColors[moonIndex % moonColors.length];
+  
+  useFrame((state) => {
+    if (moonRef.current) {
+      const time = state.clock.getElapsedTime();
+      // Stagger moon phases and vary orbital speeds
+      const baseSpeed = (moon.orbitSpeed || 0.5) * (0.8 + moonIndex * 0.3);
+      const angle = time * baseSpeed + moonIndex * (Math.PI * 2 / Math.max(1, moonIndex + 1));
+      
+      // Scale orbit distance based on moon properties and add spacing between moons
+      const baseOrbitDistance = planetRadius * 1.5;
+      const moonOrbitMultiplier = (moon.orbitRadius || 2) + moonIndex * 0.8;
+      const orbitDistance = baseOrbitDistance + moonOrbitMultiplier * planetRadius * 0.4;
+      
+      moonRef.current.position.x = Math.cos(angle) * orbitDistance;
+      moonRef.current.position.z = Math.sin(angle) * orbitDistance;
+      // Add slight orbital inclination for visual interest
+      moonRef.current.position.y = Math.sin(angle * 0.2 + moonIndex) * orbitDistance * 0.05;
+      
+      // Rotate the moon
+      moonRef.current.rotation.y = time * 0.1;
+    }
+  });
+
+  const moonRadius = Math.max(0.3, (moon.radius || 0.3) * planetRadius * 0.08);
+
+  return (
+    <group>
+      {/* Moon body */}
+      <mesh ref={moonRef} raycast={() => null}>
+        <sphereGeometry args={[moonRadius, 12, 12]} />
+        <meshStandardMaterial 
+          color={moonColor}
+          roughness={0.9}
+          metalness={0.05}
+        />
+      </mesh>
+      
+      {/* Subtle moon glow */}
+      <mesh ref={moonRef} raycast={() => null}>
+        <sphereGeometry args={[moonRadius * 1.1, 8, 8]} />
+        <meshBasicMaterial 
+          color={moonColor}
+          transparent
+          opacity={0.1}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// Component for distant cosmic neighbors (parent star, other planets, distant stars)
+function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
+  const cosmicObjects = useMemo(() => {
+    const objects = [];
+    const skyboxRadius = planetRadius * 50;
+    
+    // Add the parent star (sun) - positioned at a realistic distance
+    objects.push({
+      id: 'parent-star',
+      type: 'star',
+      position: [skyboxRadius * 0.7, skyboxRadius * 0.2, skyboxRadius * 0.3] as [number, number, number],
+      size: planetRadius * 0.8,
+      color: '#FDB813', // Solar yellow
+      brightness: 1.0,
+      emissive: true
+    });
+    
+    // Add other planets in the system as distant points
+    const planetPositions = [
+      [-skyboxRadius * 0.4, skyboxRadius * 0.1, skyboxRadius * 0.8],
+      [skyboxRadius * 0.6, -skyboxRadius * 0.3, skyboxRadius * 0.7],
+      [-skyboxRadius * 0.8, skyboxRadius * 0.5, -skyboxRadius * 0.2],
+      [skyboxRadius * 0.3, skyboxRadius * 0.8, -skyboxRadius * 0.5]
+    ];
+    
+    planetPositions.forEach((pos, index) => {
+      objects.push({
+        id: `planet-${index}`,
+        type: 'planet',
+        position: pos as [number, number, number],
+        size: Math.random() * 0.3 + 0.1,
+        color: ['#FF7043', '#81C784', '#D4A574', '#9ACD32'][index % 4],
+        brightness: 0.6,
+        emissive: false
+      });
+    });
+    
+    // Add distant stars
+    for (let i = 0; i < 150; i++) {
+      const phi = Math.random() * Math.PI * 2;
+      const theta = Math.acos(2 * Math.random() - 1);
+      
+      const x = skyboxRadius * Math.sin(theta) * Math.cos(phi);
+      const y = skyboxRadius * Math.sin(theta) * Math.sin(phi);
+      const z = skyboxRadius * Math.cos(theta);
+      
+      objects.push({
+        id: `star-${i}`,
+        type: 'distant-star',
+        position: [x, y, z] as [number, number, number],
+        size: Math.random() * 0.2 + 0.05,
+        brightness: Math.random() * 0.4 + 0.1,
+        color: ['#ffffff', '#ffffcc', '#ffcccc', '#ccccff'][Math.floor(Math.random() * 4)],
+        emissive: false
+      });
+    }
+    
+    return objects;
+  }, [planetRadius]);
+
+  return (
+    <group>
+      {cosmicObjects.map((obj) => (
+        <mesh key={obj.id} position={obj.position} raycast={() => null}>
+          <sphereGeometry args={[obj.size, obj.type === 'star' ? 16 : 8, obj.type === 'star' ? 16 : 8]} />
+          {obj.emissive ? (
+            <meshStandardMaterial 
+              color={obj.color}
+              emissive={obj.color}
+              emissiveIntensity={0.5}
+            />
+          ) : (
+            <meshBasicMaterial 
+              color={obj.color}
+              transparent
+              opacity={obj.brightness}
+            />
+          )}
+          {/* Add corona effect for the parent star */}
+          {obj.type === 'star' && (
+            <mesh raycast={() => null}>
+              <sphereGeometry args={[obj.size * 1.5, 12, 12]} />
+              <meshBasicMaterial 
+                color={obj.color}
+                transparent
+                opacity={0.2}
+              />
+            </mesh>
+          )}
+        </mesh>
+      ))}
     </group>
   );
 }
