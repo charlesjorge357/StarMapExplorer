@@ -338,14 +338,25 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       // Direction from planet center to feature (surface normal)
       const surfaceNormal = worldFeaturePosition.clone().normalize();
       
-      // Position camera above the feature
-      const targetCameraPosition = worldFeaturePosition.clone().add(
-        surfaceNormal.multiplyScalar(distance * 0.6)
-      );
+      // Create a 190-degree rotation around the surface normal
+      const rotationAngle = (190 * Math.PI) / 180; // Convert to radians
+      
+      // Create rotation matrix around the surface normal
+      const rotationMatrix = new THREE.Matrix4().makeRotationAxis(surfaceNormal, rotationAngle);
+      
+      // Calculate initial camera direction (above the feature)
+      const initialDirection = surfaceNormal.clone().multiplyScalar(distance * 0.6);
+      
+      // Apply 190-degree rotation to the camera direction
+      const rotatedDirection = initialDirection.clone().applyMatrix4(rotationMatrix);
+      
+      // Position camera with rotated direction
+      const targetCameraPosition = worldFeaturePosition.clone().add(rotatedDirection);
 
-      // Add slight tangential offset for better viewing angle
+      // Add slight tangential offset for better viewing angle (also rotated)
       const tangent = new THREE.Vector3(-surfaceNormal.z, 0, surfaceNormal.x).normalize();
-      targetCameraPosition.add(tangent.multiplyScalar(distance * 0.2));
+      const rotatedTangent = tangent.clone().applyMatrix4(rotationMatrix);
+      targetCameraPosition.add(rotatedTangent.multiplyScalar(distance * 0.2));
 
       // Smoothly interpolate camera position for smooth movement
       camera.position.lerp(targetCameraPosition, delta * 3);
