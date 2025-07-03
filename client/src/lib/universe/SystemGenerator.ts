@@ -549,8 +549,12 @@ export class SystemGenerator {
       return rings; // No rings
     }
     
-    // Generate 1-3 ring systems
-    const numRingSystems = Math.floor(this.seededRandom(seed + 100) * 3) + 1;
+    // Generate ring systems based on planet type
+    let maxRings = 3; // Gas/frost giants can have up to 3 rings
+    if (type !== 'gas_giant' && type !== 'frost_giant') {
+      maxRings = 2; // Terrestrial planets limited to 2 rings max
+    }
+    const numRingSystems = Math.floor(this.seededRandom(seed + 100) * maxRings) + 1;
     
     for (let i = 0; i < numRingSystems; i++) {
       const systemSeed = seed + i * 200;
