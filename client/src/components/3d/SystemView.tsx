@@ -659,7 +659,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
       {/* Planet Rings */}
       {planets.map((planet) => {
+        console.log(`Planet ${planet.name}: rings=${planet.rings?.length || 0}`);
         if (!planet.rings || planet.rings.length === 0) return null;
+        
+        console.log(`Rendering rings for ${planet.name}:`, planet.rings);
         
         // Calculate planet position (matching orbital mechanics from PlanetMesh)
         const time = Date.now() * 0.001;

@@ -213,6 +213,7 @@ function App() {
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
+    console.log("System cache cleared - new systems will include rings");
   }, []);
 
   // Force re-render when system view state changes
