@@ -656,6 +656,7 @@ function App() {
                     planet={selectedPlanet}
                     selectedFeature={selectedFeature}
                     onFeatureClick={setSelectedFeature}
+                    system={currentSystem}
                   />
                 </>
               )}
