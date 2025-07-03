@@ -528,9 +528,9 @@ export class SystemGenerator {
     // Determine ring probability based on planet type and size
     let ringChance = 0;
     if (type === 'gas_giant' || type === 'frost_giant') {
-      ringChance = 0.8; // 80% chance (temporarily increased for testing)
+      ringChance = 0.4; // 40% chance
     } else if (radius > 1.0) { // Terrestrial planets larger than Earth
-      ringChance = 0.6; // 60% chance (temporarily increased for testing)
+      ringChance = 0.3; // 30% chance
     }
     
     console.log(`Ring generation for ${planetName} (${type}, radius: ${radius}): chance=${ringChance}, random=${random}, hasRings=${random <= ringChance}`);

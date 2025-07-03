@@ -6,10 +6,10 @@ import { PlanetRing } from 'shared/schema';
 interface PlanetRingsProps {
   rings: PlanetRing[];
   planetRadius: number;
-  planetPosition: [number, number, number];
+  planetRef: React.RefObject<THREE.Mesh>;
 }
 
-export function PlanetRings({ rings, planetRadius, planetPosition }: PlanetRingsProps) {
+export function PlanetRings({ rings, planetRadius, planetRef }: PlanetRingsProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   // Create ring geometries and materials
@@ -34,16 +34,19 @@ export function PlanetRings({ rings, planetRadius, planetPosition }: PlanetRings
     });
   }, [rings, planetRadius]);
 
-  // Animate ring rotation
+  // Sync ring position with planet and animate rotation
   useFrame((state) => {
-    if (groupRef.current) {
+    if (groupRef.current && planetRef.current) {
+      // Match the planet's position exactly
+      groupRef.current.position.copy(planetRef.current.position);
+      
       // Rotate rings slowly around their axis
       groupRef.current.rotation.z += 0.001;
     }
   });
 
   return (
-    <group ref={groupRef} position={planetPosition}>
+    <group ref={groupRef}>
       {ringMeshes.map(({ geometry, material, ring, index }) => (
         <mesh
           key={ring.id}

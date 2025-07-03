@@ -333,6 +333,15 @@ function PlanetMesh({
           moonIndex={moonIndex}
         />
       ))}
+      
+      {/* Render planet rings directly following the planet */}
+      {planet.rings && planet.rings.length > 0 && (
+        <PlanetRings
+          rings={planet.rings}
+          planetRadius={planetRadius}
+          planetRef={planetRef}
+        />
+      )}
     </>
   );
 }
@@ -657,31 +666,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         />
       ))}
 
-      {/* Planet Rings */}
-      {planets.map((planet) => {
-        console.log(`Planet ${planet.name}: rings=${planet.rings?.length || 0}`);
-        if (!planet.rings || planet.rings.length === 0) return null;
-        
-        console.log(`Rendering rings for ${planet.name}:`, planet.rings);
-        
-        // Calculate planet position (matching orbital mechanics from PlanetMesh)
-        const time = Date.now() * 0.001;
-        const angle = time * planet.orbitSpeed * 0.1;
-        const planetPosition: [number, number, number] = [
-          Math.cos(angle) * planet.orbitRadius * 30,
-          0,
-          Math.sin(angle) * planet.orbitRadius * 30
-        ];
-        
-        return (
-          <PlanetRings
-            key={`rings-${planet.id}`}
-            rings={planet.rings}
-            planetRadius={planet.radius * 0.6} // Same scaling as planets
-            planetPosition={planetPosition}
-          />
-        );
-      })}
+      {/* Rings are now rendered directly within each PlanetMesh component for proper tracking */}
 
       {/* Asteroid belts */}
       {asteroidBelts.map((belt) => (
