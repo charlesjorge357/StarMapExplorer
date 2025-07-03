@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
+import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 
 // Note: PlanetaryView deliberately does not include NebulaScreenTint
 
@@ -42,6 +43,37 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
     const path = getPlanetTexturePath(planet.type, planet.textureIndex || 0);
     return path || '/textures/Barren/Barren_01-1024x512.png';
   }, [planet?.type, planet?.textureIndex]);
+
+  // Generate consistent planet coloring using the same system as SystemView
+  const planetMaterial = useMemo(() => {
+    // Use computed values from SystemView if available, otherwise generate them
+    let color = planet?.computedColor;
+    let glow = planet?.computedGlow;
+    let emissiveIntensity = planet?.computedEmissiveIntensity;
+
+    // If no computed values exist (planet with features might be missing them), generate them
+    if (!color || color === '#ffffff' || color === '#000000') {
+      const planetSeed = (planet?.id || planet?.name || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      color = SystemGenerator.getPlanetColor(planet?.type, planetSeed);
+    }
+
+    // Generate glow and emissive intensity if missing
+    if (!glow) {
+      if (planet?.type === 'nuclear_world') {
+        glow = '#ff2200';
+        emissiveIntensity = 0.2;
+      } else {
+        glow = '#000000';
+        emissiveIntensity = 0.1;
+      }
+    }
+
+    return {
+      color: color || '#ffffff',
+      glow: glow || '#000000',
+      emissiveIntensity: emissiveIntensity !== undefined ? emissiveIntensity : 0.1
+    };
+  }, [planet?.computedColor, planet?.computedGlow, planet?.computedEmissiveIntensity, planet?.type, planet?.id, planet?.name]);
   
   console.log(`Loading texture for ${planet?.name}: ${texturePath}`);
   
@@ -210,18 +242,9 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick }: Plane
         >
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial
-          color={
-            // Always use computed values from SystemView when available
-            planet.computedColor || '#ffffff'
-          }
-          emissive={
-            // Always use computed glow from SystemView when available
-            planet.computedGlow || '#000000'
-          }
-          emissiveIntensity={
-            // Always use computed emissive intensity from SystemView when available
-            planet.computedEmissiveIntensity !== undefined ? planet.computedEmissiveIntensity : 0.1
-          }
+          color={planetMaterial.color}
+          emissive={planetMaterial.glow}
+          emissiveIntensity={planetMaterial.emissiveIntensity}
           map={texture || undefined}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
