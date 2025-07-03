@@ -58,7 +58,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
   const planetMeshRef = useRef<THREE.Mesh>(null);
   const featuresGroupRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
-  
+
   // Camera lock state for surface feature tracking
   const [isFeatureTracking, setIsFeatureTracking] = useState(false);
   const featureTrackingRef = useRef<any>(null);
@@ -66,7 +66,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 
   // Planet radius for close-up view
   const planetRadius = planet?.radius ? planet.radius * 15 : 10;
-  
+
   // Expose feature tracking function globally (similar to homeToPlanet in SystemView)
   useEffect(() => {
     (window as any).homeToFeature = (feature: any, distance: number) => {
@@ -86,13 +86,13 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       delete (window as any).homeToFeature;
     };
   }, [planetRadius]);
-  
+
   // Keyboard controls for feature tracking (Enter key)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && selectedFeature) {
         event.preventDefault();
-        
+
         if (isFeatureTracking) {
           // Disable tracking
           if ((window as any).homeToFeature) {
@@ -104,13 +104,14 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             (window as any).homeToFeature(selectedFeature, planetRadius * 1.8);
           }
         }
+        setIsFeatureTracking(!isFeatureTracking); // Toggle the state
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedFeature, isFeatureTracking, planetRadius]);
-  
+
   // Generate nebulas for atmospheric effect
   const nebulas = useMemo(() => {
     return [{
@@ -163,12 +164,12 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       emissiveIntensity: emissiveIntensity !== undefined ? emissiveIntensity : 0.1
     };
   }, [planet?.computedColor, planet?.computedGlow, planet?.computedEmissiveIntensity, planet?.type, planet?.id, planet?.name]);
-  
+
   console.log(`Loading texture for ${planet?.name}: ${texturePath}`);
-  
+
   // Always load a texture (with fallback)
   const texture = useTexture(texturePath);
-  
+
   // Validate texture loading
   useEffect(() => {
     if (texture) {
@@ -211,7 +212,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       console.warn('PlanetaryView: Missing gl.domElement or mouseState');
       return;
     }
-    
+
     const canvas = gl.domElement;
 
     const handleMouseDown = (event: MouseEvent) => {
@@ -300,37 +301,43 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     };
   }, [gl, camera, planetRadius, isFeatureTracking]);
 
-  // Planet and features rotation animation
+  // Handle feature tracking camera positioning
   useFrame((state) => {
     // Handle feature tracking camera positioning
     if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current) {
       const feature = featureTrackingRef.current;
-      
+
       // Convert lat/lng to spherical coordinates on planet surface
       const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians
       const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians
-      
+
       // Calculate feature position on planet surface (accounting for planet rotation)
       const planetRotation = planetMeshRef.current.rotation.y;
       const featureX = planetRadius * Math.cos(lat) * Math.sin(lng + planetRotation);
       const featureY = planetRadius * Math.sin(lat);
       const featureZ = planetRadius * Math.cos(lat) * Math.cos(lng + planetRotation);
-      
+
       // Create feature position vector
       const featurePosition = new THREE.Vector3(featureX, featureY, featureZ);
-      
-      // Position camera at a distance from the feature, but offset outward from planet center
+
+      // Position camera above the feature looking down
       const distance = trackingDistanceRef.current;
-      const cameraDirection = featurePosition.clone().normalize();
-      const cameraPosition = featurePosition.clone().add(cameraDirection.multiplyScalar(distance));
-      
+
+      // Create a "look down" direction - offset upward from the feature position
+      const upDirection = featurePosition.clone().normalize(); // Direction from planet center to feature
+      const cameraPosition = featurePosition.clone().add(upDirection.multiplyScalar(distance * 0.8));
+
+      // Add slight offset to avoid looking straight down (for better visual perspective)
+      const tangentOffset = new THREE.Vector3(-upDirection.z, 0, upDirection.x).normalize();
+      cameraPosition.add(tangentOffset.multiplyScalar(distance * 0.3));
+
       camera.position.copy(cameraPosition);
-      camera.lookAt(featurePosition); // Look AT the feature, not planet center
+      camera.lookAt(featurePosition); // Look AT the feature
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
     }
-    
-    // Planet and feature rotation (only if not being held by mouse)
+
+    // Planet and features rotation (only if not being held by mouse)
     if (!isHeld && !isFeatureTracking) {
       // Rotate planet mesh
       if (planetMeshRef.current) {
@@ -435,7 +442,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         intensity={0.15}
         castShadow
       />
-      
+
     </group>
   );
 }
@@ -443,28 +450,28 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 // Component for individual moons orbiting the planet
 function PlanetaryMoon({ moon, planetRadius, moonIndex }: { moon: any; planetRadius: number; moonIndex: number }) {
   const moonRef = useRef<any>();
-  
+
   // Moon visual properties based on index for variety
   const moonColors = ['#C0C0C0', '#D2B48C', '#8B7D6B', '#A0A0A0', '#B8860B'];
   const moonColor = moonColors[moonIndex % moonColors.length];
-  
+
   useFrame((state) => {
     if (moonRef.current) {
       const time = state.clock.getElapsedTime();
       // Stagger moon phases and vary orbital speeds
       const baseSpeed = (moon.orbitSpeed || 0.5) * (0.8 + moonIndex * 0.3);
       const angle = time * baseSpeed + moonIndex * (Math.PI * 2 / Math.max(1, moonIndex + 1));
-      
+
       // Scale orbit distance based on moon properties and add spacing between moons
       const baseOrbitDistance = planetRadius * 1.5;
       const moonOrbitMultiplier = (moon.orbitRadius || 2) + moonIndex * 0.8;
       const orbitDistance = baseOrbitDistance + moonOrbitMultiplier * planetRadius * 0.4;
-      
+
       moonRef.current.position.x = Math.cos(angle) * orbitDistance;
       moonRef.current.position.z = Math.sin(angle) * orbitDistance;
       // Add slight orbital inclination for visual interest
       moonRef.current.position.y = Math.sin(angle * 0.2 + moonIndex) * orbitDistance * 0.05;
-      
+
       // Rotate the moon
       moonRef.current.rotation.y = time * 0.1;
     }
@@ -483,7 +490,7 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex }: { moon: any; planetRad
           metalness={0.05}
         />
       </mesh>
-      
+
       {/* Subtle moon glow */}
       <mesh ref={moonRef} raycast={() => null}>
         <sphereGeometry args={[moonRadius * 1.1, 8, 8]} />
@@ -577,7 +584,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
   const cosmicObjects = useMemo(() => {
     const objects = [];
     const skyboxRadius = planetRadius * 50;
-    
+
     // Add the parent star (sun) - positioned at a realistic distance
     objects.push({
       id: 'parent-star',
@@ -588,7 +595,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
       brightness: 1.0,
       emissive: true
     });
-    
+
     // Add other planets in the system as distant points (larger and brighter)
     const planetPositions = [
       [-skyboxRadius * 0.4, skyboxRadius * 0.1, skyboxRadius * 0.8],
@@ -598,7 +605,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
       [-skyboxRadius * 0.2, -skyboxRadius * 0.6, skyboxRadius * 0.9],
       [skyboxRadius * 0.9, skyboxRadius * 0.1, -skyboxRadius * 0.3]
     ];
-    
+
     planetPositions.forEach((pos, index) => {
       objects.push({
         id: `planet-${index}`,
@@ -610,14 +617,14 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
         emissive: false
       });
     });
-    
+
     // Add asteroid belts as visible clusters
     const beltPositions = [
       [skyboxRadius * 0.3, 0, skyboxRadius * 0.3],
       [-skyboxRadius * 0.5, skyboxRadius * 0.1, -skyboxRadius * 0.4],
       [skyboxRadius * 0.4, -skyboxRadius * 0.2, skyboxRadius * 0.6]
     ];
-    
+
     beltPositions.forEach((pos, index) => {
       // Create multiple asteroids in each belt
       for (let i = 0; i < 25; i++) {
@@ -625,7 +632,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
         const offsetX = (Math.random() - 0.5) * spread;
         const offsetY = (Math.random() - 0.5) * spread * 0.2;
         const offsetZ = (Math.random() - 0.5) * spread;
-        
+
         objects.push({
           id: `asteroid-${index}-${i}`,
           type: 'asteroid',
@@ -637,16 +644,16 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
         });
       }
     });
-    
+
     // Add distant stars
     for (let i = 0; i < 150; i++) {
       const phi = Math.random() * Math.PI * 2;
       const theta = Math.acos(2 * Math.random() - 1);
-      
+
       const x = skyboxRadius * Math.sin(theta) * Math.cos(phi);
       const y = skyboxRadius * Math.sin(theta) * Math.sin(phi);
       const z = skyboxRadius * Math.cos(theta);
-      
+
       objects.push({
         id: `star-${i}`,
         type: 'distant-star',
@@ -657,7 +664,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
         emissive: false
       });
     }
-    
+
     return objects;
   }, [planetRadius]);
 
@@ -673,7 +680,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
 // Individual cosmic object component with animation
 function CosmicObject({ obj }: { obj: any }) {
   const meshRef = useRef<any>();
-  
+
   useFrame((state) => {
     if (meshRef.current) {
       // Subtle rotation for planets and asteroids
