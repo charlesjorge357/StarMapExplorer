@@ -94,63 +94,51 @@ export class SystemGenerator {
     return index < greekLetters.length ? `${starName} ${greekLetters[index]}` : `${starName} ${index + 1}`;
   }
 
-  static determinePlanetType(orbitAU: number, starTemp: number, seed: number): PlanetType {
+  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
     const random = this.seededRandom(seed);
-    
-    // Calculate stellar luminosity from temperature (Stefan-Boltzmann law)
-    const stellarLuminosity = Math.pow(starTemp / 5778, 4); // Relative to Sun
-    
-    // Calculate equilibrium temperature at this distance
-    const equilibriumTemp = 255 * Math.sqrt(stellarLuminosity / orbitAU); // Kelvin
-    
-    // Define temperature zones for planet formation
-    const veryHot = equilibriumTemp > 1000;   // > 1000K: Only refractory materials survive
-    const hot = equilibriumTemp > 600;       // 600-1000K: Hot terrestrial worlds
-    const warm = equilibriumTemp > 273;      // 273-600K: Potentially habitable
-    const cold = equilibriumTemp > 150;      // 150-273K: Cold terrestrial worlds
-    const frozen = equilibriumTemp <= 150;   // < 150K: Icy worlds and gas giants
-    
-    // Inner system (very hot) - only refractory materials survive
-    if (veryHot) {
-      if (random < 0.4) return 'barren_world';    // Airless rocks like Mercury
-      if (random < 0.7) return 'dusty_world';     // Hot dust-covered worlds
-      return 'nuclear_world';                     // Radioactive, tidally heated worlds
-    }
-    
-    // Hot zone - rocky worlds with some volatiles
-    else if (hot) {
-      if (random < 0.3) return 'arid_world';      // Venus-like hot worlds
-      if (random < 0.6) return 'sandy_world';     // Desert worlds
-      return 'martian_world';                     // Thin atmosphere rocky worlds
-    }
-    
-    // Habitable zone - liquid water possible
-    else if (warm) {
-      // Favor habitable worlds in the habitable zone
-      if (random < 0.25) return 'grassland_world'; // Temperate worlds
-      if (random < 0.45) return 'ocean_world';     // Water worlds
-      if (random < 0.65) return 'jungle_world';    // Tropical worlds
-      if (random < 0.8) return 'marshy_world';     // Wetland worlds
-      return 'arid_world';                         // Dry but habitable
-    }
-    
-    // Cold zone - ice possible, gas giants more likely
-    else if (cold) {
-      // Gas giants prefer this zone (like Jupiter/Saturn)
-      if (orbitAU > 3.0 && random < 0.4) return 'gas_giant';
-      if (random < 0.3) return 'tundra_world';     // Cold terrestrial
-      if (random < 0.6) return 'snowy_world';      // Ice-covered worlds
-      return 'martian_world';                      // Cold thin-atmosphere worlds
-    }
-    
-    // Frozen outer system - ice giants and frozen worlds
+    const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
+
+    // Hot inner zone - close to star
+    if (orbitRadius < 1.5) {
+      if (effectiveTemp > 800) {
+        const rand = random * 4;
+        if (rand < 1) return 'barren_world';
+        if (rand < 2) return 'dusty_world'; 
+        if (rand < 3) return 'martian_world';
+        return 'arid_world';
+      }
+      if (effectiveTemp > 400) {
+        const rand = random * 3;
+        if (rand < 1) return 'arid_world';
+        if (rand < 2) return 'sandy_world';
+        return 'dusty_world';
+      }
+      // Habitable zone
+      const rand = random * 4;
+      if (rand < 1) return 'grassland_world';
+      if (rand < 2) return 'jungle_world';
+      if (rand < 3) return 'marshy_world';
+      return 'ocean_world';
+    } 
+    // Mid zone
+    else if (orbitRadius < 4.0) {
+      if (random < 0.3) return 'gas_giant';
+      const terrestrialRand = random * 6;
+      if (terrestrialRand < 1) return 'arid_world';
+      if (terrestrialRand < 2) return 'barren_world';
+      if (terrestrialRand < 3) return 'dusty_world';
+      if (terrestrialRand < 4) return 'martian_world';
+      if (terrestrialRand < 5) return 'sandy_world';
+      return 'tundra_world';
+    } 
+    // Outer zone - cold
     else {
-      // Ice giants and gas giants dominate outer system
-      if (orbitAU > 10.0 && random < 0.5) return 'frost_giant'; // Uranus/Neptune-like
-      if (orbitAU > 5.0 && random < 0.3) return 'gas_giant';    // Distant gas giants
-      if (random < 0.4) return 'methane_world';    // Titan-like methane worlds
-      if (random < 0.7) return 'snowy_world';      // Frozen ice worlds
-      return 'tundra_world';                       // Cold barren worlds
+      if (random < 0.4) return 'gas_giant';
+      if (random < 0.7) return 'frost_giant';
+      const coldRand = random * 3;
+      if (coldRand < 1) return 'snowy_world';
+      if (coldRand < 2) return 'tundra_world';
+      return 'methane_world';
     }
   }
 
@@ -232,63 +220,160 @@ export class SystemGenerator {
   static generateSystem(star: any, seed: number): StarSystem {
     const planets = [];
 
-    // Realistic planet count based on stellar mass and type
+    // Legacy generation logic - identical to original App.tsx
+    // Fewer planets for larger stars (they're more disruptive to planet formation)
     let maxPlanets = 8;
-    if (star.mass > 2.0) maxPlanets = 3; // Massive stars disrupt planet formation
-    else if (star.mass > 1.5) maxPlanets = 5;
-    else if (star.mass < 0.5) maxPlanets = 6; // Red dwarfs can have more close planets
+    if (star.radius > 2) maxPlanets = 4;
+    if (star.radius > 5) maxPlanets = 2;
 
-    const systemSeed = seed + this.hashString(star.id);
-    const planetCount = Math.floor(this.seededRandom(systemSeed) * maxPlanets) + 1;
+    const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
 
-    // Calculate realistic orbital zones based on stellar luminosity
-    const stellarLuminosity = Math.pow(star.mass, 3.5); // Mass-luminosity relation
-    const habitableZoneInner = Math.sqrt(stellarLuminosity / 1.1); // Inner edge of habitable zone in AU
-    const habitableZoneOuter = Math.sqrt(stellarLuminosity / 0.53); // Outer edge of habitable zone in AU
-    const frostLine = 2.7 * Math.sqrt(stellarLuminosity); // Snow line where water freezes
-    
-    // Define realistic orbital zones (in AU)
+    const planetTypes: PlanetType[] = [
+      'gas_giant', 'frost_giant', 'arid_world', 'barren_world',
+      'dusty_world', 'grassland_world', 'jungle_world', 'marshy_world',
+      'martian_world', 'methane_world', 'sandy_world', 'snowy_world',
+      'tundra_world', 'nuclear_world', 'ocean_world'
+    ];
+
+    // Calculate orbital zones with proper spacing to prevent overlaps
+    const baseSpacing = 20 + star.radius * 6; // Increased base spacing
+    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
-    const baseDistance = 1.3 * Math.sqrt(stellarLuminosity); // Closest stable orbit
 
     for (let i = 0; i < planetCount; i++) {
-      let orbitDistance: number;
-      
       if (i === 0) {
-        // First planet: inner system (0.1-1.0 AU scaled by luminosity)
-        orbitDistance = baseDistance + this.seededRandom(systemSeed + i) * (habitableZoneInner * 0.7);
-      } else if (i === 1 && planetCount > 2) {
-        // Second planet: near habitable zone
-        const habitableCenter = (habitableZoneInner + habitableZoneOuter) / 2;
-        orbitDistance = habitableZoneInner + this.seededRandom(systemSeed + i) * (habitableZoneOuter - habitableZoneInner);
+        // First planet starts at base spacing from star
+        orbitZones.push(baseSpacing);
       } else {
-        // Outer planets: logarithmic spacing like real solar systems
         const prevOrbit = orbitZones[i - 1];
-        const spacingFactor = 1.3 + this.seededRandom(systemSeed + i + 100) * 0.7; // 1.3-2.0x spacing
-        orbitDistance = prevOrbit * spacingFactor;
         
-        // Cap maximum distance based on stellar mass
-        const maxDistance = 20 * Math.sqrt(stellarLuminosity);
-        if (orbitDistance > maxDistance) {
-          orbitDistance = maxDistance;
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
+        
+        //const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        //orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
+        let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
+          maxOrbitRadius= newOrbit + 20;
         }
+        orbitZones.push(newOrbit);
       }
-      
-      orbitZones.push(orbitDistance);
     }
 
     for (let i = 0; i < planetCount; i++) {
-      const orbitDistance = orbitZones[i]; // in AU
-      const orbitRadius = orbitDistance * 15; // Convert AU to game units (15 units per AU)
-      
-      // Determine planet type based on realistic orbital position
-      const type = this.determinePlanetType(orbitDistance, star.temperature, systemSeed + i);
-      
-      // Generate planet using the more realistic method
-      const planet = this.generatePlanet(star.name, star.temperature, i, orbitDistance, systemSeed);
-      
-      // Override the orbit radius with our calculated distance
-      planet.orbitRadius = orbitRadius;
+      const type = planetTypes[Math.floor(Math.random() * planetTypes.length)];
+      const orbitRadius = orbitZones[i];
+
+      // Earth radii scaling (realistic)
+      let radius: number;
+      switch (type) {
+        case 'gas_giant':
+          radius = 8 + Math.random() * 4; // 8–12 R⊕
+          break;
+        case 'frost_giant':
+          radius = 4 + Math.random() * 4; // 4–8 R⊕
+          break;
+        case 'grassland_world':
+        case 'jungle_world':
+        case 'ocean_world':
+        case 'arid_world':
+        case 'marshy_world':
+          radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
+          break;
+        case 'nuclear_world':
+        case 'barren_world':
+        case 'dusty_world':
+        case 'martian_world':
+        case 'methane_world':
+        case 'sandy_world':
+        case 'snowy_world':
+        case 'tundra_world':
+          radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
+          break;
+        default:
+          radius = 1.0;
+      }
+
+      // Mass = radius³ × density factor (gas giants less dense)
+      const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
+      const mass = Math.pow(radius, 3) * densityFactor;
+
+      // Simplified temperature model
+      const temperature = 200 + Math.random() * 600;
+
+      // Generate atmosphere
+      let atmosphere: string[] = [];
+      switch (type) {
+        case 'gas_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Methane'];
+          break;
+        case 'frost_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
+          break;
+        case 'grassland_world':
+        case 'jungle_world':
+        case 'ocean_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
+          break;
+        case 'arid_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen'];
+          break;
+        case 'barren_world':
+          atmosphere = [];
+          break;
+        case 'dusty_world':
+          atmosphere = ['Carbon Dioxide', 'Dust Particles'];
+          break;
+        case 'marshy_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor'];
+          break;
+        case 'martian_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide'];
+          break;
+        case 'methane_world':
+          atmosphere = ['Methane', 'Nitrogen', 'Ethane'];
+          break;
+        case 'sandy_world':
+          atmosphere = ['Carbon Dioxide', 'Silicon Particles'];
+          break;
+        case 'snowy_world':
+        case 'tundra_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
+          break;
+        case 'nuclear_world':
+          atmosphere = ['Helium-3', 'Argon', 'Tritium'];
+          break;
+      }
+
+      const angle = Math.random() * Math.PI * 2;
+      const inclination = (Math.random() - 0.5) * 0.3;
+      const position: [number, number, number] = [
+        Math.cos(angle) * orbitRadius * 10,
+        Math.sin(inclination) * orbitRadius * 2,
+        Math.sin(angle) * orbitRadius * 10
+      ];
+
+      const planet: Planet = {
+        id: `planet-${star.id}-${i}`,
+        name: `${star.name} ${String.fromCharCode(945 + i)}`,
+        position,
+        radius,
+        mass,
+        type,
+        orbitRadius,
+        orbitSpeed: 0.05 + Math.random() * 0.15,
+        rotationSpeed: 0.01 + Math.random() * 0.05,
+        temperature,
+        atmosphere,
+        moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
+        rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
+        textureIndex: this.generateTextureIndex(type, i, star.name),
+        surfaceFeatures: []
+      };
+
+      // Generate surface features using PlanetGenerator
+      planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet as any);
       
       planets.push(planet);
     }
