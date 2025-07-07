@@ -101,7 +101,7 @@ export class SystemGenerator {
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
     // Scale down orbital radius for realistic AU calculations (keeping 3D visuals unchanged)
-    const auScaledRadius = orbitRadius / 6; // Convert to realistic AU scale for planet type logic
+    const auScaledRadius = orbitRadius / 15; // Convert to realistic AU scale for planet type logic
     
     // 8 orbital zones with realistic AU boundaries
     const zones = {
@@ -121,7 +121,7 @@ export class SystemGenerator {
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, zone=${auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen'}`);
+    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
@@ -161,9 +161,8 @@ export class SystemGenerator {
       if (rand < 4) return 'marshy_world';
       return 'arid_world';
     }
-    // Zone 5: Temperate (2.0-3.5 AU) - Mars-like, some gas giants
+    // Zone 5: Temperate (2.0-3.5 AU) - Mars-like, NO gas giants (too close to star)
     else if (auScaledRadius < zones.temperate) {
-      if (this.seededRandom(dynamicSeed + 400) < 0.25) return 'gas_giant';
       const rand = this.seededRandom(dynamicSeed + 450) * 5;
       if (rand < 1) return 'martian_world';
       if (rand < 2) return 'tundra_world';
