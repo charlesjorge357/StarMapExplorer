@@ -104,7 +104,7 @@ export class SystemGenerator {
     // Base reference: Sun temperature ~5778K
     const tempFactor = Math.sqrt(starTemp / 5778);
     const luminosityFactor = Math.sqrt(luminosity); // L☉
-    const adjustedAU = scaledAU * tempFactor * luminosityFactor;
+    const adjustedAU = scaledAU * luminosityFactor * (0.1 * tempFactor);
     
     // Debug logging to understand the zone distribution
     
