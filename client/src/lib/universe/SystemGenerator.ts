@@ -102,8 +102,8 @@ export class SystemGenerator {
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
-    const tempFactor = Math.sqrt(starTemp / 5778);
-    const adjustedAU = scaledAU * tempFactor;
+    const luminosityFactor = Math.sqrt(luminosity); // L☉
+    const adjustedAU = scaledAU * tempFactor * luminosityFactor;
     
     // Debug logging to understand the zone distribution
     
