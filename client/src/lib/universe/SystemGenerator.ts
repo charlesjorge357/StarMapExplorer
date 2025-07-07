@@ -103,9 +103,17 @@ export class SystemGenerator {
     // Scale down orbital radius for realistic AU calculations (keeping 3D visuals unchanged)
     const auScaledRadius = orbitRadius / 6; // Convert to realistic AU scale for planet type logic
     
-    // Fixed orbital zones in realistic AU scale
-    const innerHotZone = 1.0; // Mercury to Venus range
-    const midZone = 3.0; // Mars to asteroid belt range
+    // 8 orbital zones with realistic AU boundaries
+    const zones = {
+      scorched: 0.3,    // Zone 1: Ultra-hot (closer than Mercury)
+      hot: 0.7,         // Zone 2: Hot (Mercury-Venus range)
+      warm: 1.2,        // Zone 3: Warm (Venus-Earth range)
+      habitable: 2.0,   // Zone 4: Habitable (Earth-Mars range)
+      temperate: 3.5,   // Zone 5: Temperate (Mars-Asteroid belt)
+      cool: 6.0,        // Zone 6: Cool (Jupiter region)
+      cold: 12.0,       // Zone 7: Cold (Saturn-Uranus range)
+      frozen: 25.0      // Zone 8: Frozen (Neptune+ range)
+    };
     
     // Calculate effective temperature at planet's orbit, accounting for stellar luminosity
     // Hotter stars emit more energy, so planets at same distance are hotter
@@ -115,48 +123,80 @@ export class SystemGenerator {
     
     console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
 
-    // Hot inner zone - close to star
-    if (auScaledRadius < innerHotZone) {
-      if (effectiveTemp > 800) {
-        const rand = this.seededRandom(dynamicSeed) * 4;
-        if (rand < 1) return 'arid_world';
-        if (rand < 2) return 'dusty_world'; 
-        if (rand < 3) return 'martian_world';
-        return 'barren_world';
-      }
-      if (effectiveTemp > 400) {
-        const rand = this.seededRandom(dynamicSeed + 100) * 3;
+    // Zone 1: Scorched (0-0.3 AU) - Extreme heat
+    if (auScaledRadius < zones.scorched) {
+      const rand = this.seededRandom(dynamicSeed) * 3;
+      if (rand < 1) return 'barren_world';
+      if (rand < 2) return 'dusty_world';
+      return 'nuclear_world'; // Tidally locked, extreme radiation
+    }
+    // Zone 2: Hot (0.3-0.7 AU) - Very hot, Mercury-like
+    else if (auScaledRadius < zones.hot) {
+      const rand = this.seededRandom(dynamicSeed + 100) * 4;
+      if (rand < 1) return 'barren_world';
+      if (rand < 2) return 'dusty_world';
+      if (rand < 3) return 'arid_world';
+      return 'martian_world';
+    }
+    // Zone 3: Warm (0.7-1.2 AU) - Hot but potentially habitable
+    else if (auScaledRadius < zones.warm) {
+      if (effectiveTemp > 600) {
+        const rand = this.seededRandom(dynamicSeed + 200) * 3;
         if (rand < 1) return 'arid_world';
         if (rand < 2) return 'sandy_world';
-        return 'barren_world';
+        return 'dusty_world';
       }
-      // Habitable zone
+      const rand = this.seededRandom(dynamicSeed + 250) * 4;
+      if (rand < 1) return 'grassland_world';
+      if (rand < 2) return 'arid_world';
+      if (rand < 3) return 'sandy_world';
+      return 'jungle_world';
+    }
+    // Zone 4: Habitable (1.2-2.0 AU) - Earth-like conditions
+    else if (auScaledRadius < zones.habitable) {
       const rand = this.seededRandom(dynamicSeed + 300) * 5;
       if (rand < 1) return 'grassland_world';
       if (rand < 2) return 'jungle_world';
-      if (rand < 3) return 'marshy_world';
-      if (rand < 4) return 'ocean_world';
-      return 'barren_world';
-    } 
-    // Mid zone - scaled by stellar temperature
-    else if (auScaledRadius < midZone) {
-      if (this.seededRandom(dynamicSeed + 300) < 0.3) return 'gas_giant';
-      const terrestrialRand = this.seededRandom(dynamicSeed + 400) * 6;
-      if (terrestrialRand < 1) return 'arid_world';
-      if (terrestrialRand < 2) return 'barren_world';
-      if (terrestrialRand < 3) return 'dusty_world';
-      if (terrestrialRand < 4) return 'martian_world';
-      if (terrestrialRand < 5) return 'sandy_world';
-      return 'barren_world';
-    } 
-    // Outer zone - cold
-    else {
-      if (this.seededRandom(dynamicSeed + 500) < 0.4) return 'gas_giant';
-      if (this.seededRandom(dynamicSeed + 600) < 0.7) return 'frost_giant';
-      const coldRand = this.seededRandom(dynamicSeed + 700) * 3;
-      if (coldRand < 1) return 'snowy_world';
-      if (coldRand < 2) return 'tundra_world';
+      if (rand < 3) return 'ocean_world';
+      if (rand < 4) return 'marshy_world';
+      return 'arid_world';
+    }
+    // Zone 5: Temperate (2.0-3.5 AU) - Mars-like, some gas giants
+    else if (auScaledRadius < zones.temperate) {
+      if (this.seededRandom(dynamicSeed + 400) < 0.25) return 'gas_giant';
+      const rand = this.seededRandom(dynamicSeed + 450) * 5;
+      if (rand < 1) return 'martian_world';
+      if (rand < 2) return 'tundra_world';
+      if (rand < 3) return 'arid_world';
+      if (rand < 4) return 'barren_world';
+      return 'snowy_world';
+    }
+    // Zone 6: Cool (3.5-6.0 AU) - Gas giants and cold terrestrials
+    else if (auScaledRadius < zones.cool) {
+      if (this.seededRandom(dynamicSeed + 500) < 0.5) return 'gas_giant';
+      const rand = this.seededRandom(dynamicSeed + 550) * 4;
+      if (rand < 1) return 'tundra_world';
+      if (rand < 2) return 'snowy_world';
+      if (rand < 3) return 'barren_world';
+      return 'martian_world';
+    }
+    // Zone 7: Cold (6.0-12.0 AU) - Gas/frost giants, frozen worlds
+    else if (auScaledRadius < zones.cold) {
+      if (this.seededRandom(dynamicSeed + 600) < 0.4) return 'gas_giant';
+      if (this.seededRandom(dynamicSeed + 650) < 0.6) return 'frost_giant';
+      const rand = this.seededRandom(dynamicSeed + 700) * 3;
+      if (rand < 1) return 'snowy_world';
+      if (rand < 2) return 'tundra_world';
       return 'methane_world';
+    }
+    // Zone 8: Frozen (12.0+ AU) - Outer system, mostly giants and ice worlds
+    else {
+      if (this.seededRandom(dynamicSeed + 800) < 0.3) return 'gas_giant';
+      if (this.seededRandom(dynamicSeed + 850) < 0.7) return 'frost_giant';
+      const rand = this.seededRandom(dynamicSeed + 900) * 3;
+      if (rand < 1) return 'snowy_world';
+      if (rand < 2) return 'methane_world';
+      return 'tundra_world';
     }
   }
 
