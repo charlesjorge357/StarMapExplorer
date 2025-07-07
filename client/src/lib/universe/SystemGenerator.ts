@@ -105,10 +105,14 @@ export class SystemGenerator {
     const tempFactor = starTemp / 5778;
     const adjustedAU = scaledAU / tempFactor;
     
+    // Debug logging to understand the zone distribution
+    console.log(`Planet generation: orbitRadius=${orbitRadius.toFixed(1)}, scaledAU=${scaledAU.toFixed(2)}, starTemp=${starTemp}K, tempFactor=${tempFactor.toFixed(2)}, adjustedAU=${adjustedAU.toFixed(2)}`);
+    
     // Define planet zones based on distance (nuclear/barren/arid closest, then sandy/jungle/marshy, etc.)
     
     // Zone 1: Very Close (< 0.5 AU adjusted) - Nuclear, Barren, Arid worlds
     if (adjustedAU < 0.5) {
+      console.log(`→ Zone 1 (Very Close): Nuclear/Barren/Arid worlds`);
       const rand = random * 3;
       if (rand < 1) return 'nuclear_world';
       if (rand < 2) return 'barren_world';
@@ -117,6 +121,7 @@ export class SystemGenerator {
     
     // Zone 2: Close (0.5 - 1.2 AU adjusted) - Sandy, Dusty, Martian worlds  
     else if (adjustedAU < 1.2) {
+      console.log(`→ Zone 2 (Close): Sandy/Dusty/Martian worlds`);
       const rand = random * 3;
       if (rand < 1) return 'sandy_world';
       if (rand < 2) return 'dusty_world';
@@ -135,7 +140,7 @@ export class SystemGenerator {
     // Zone 4: Cold Terrestrial (2.5 - 5.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
     else if (adjustedAU < 5.0) {
       // 25% chance for gas giants in this zone
-      if (random < 0.25) return 'gas_giant';
+      if (random < 0.1) return 'gas_giant';
       
       const terrestrialRand = random * 3;
       if (terrestrialRand < 1) return 'tundra_world';
@@ -146,7 +151,7 @@ export class SystemGenerator {
     // Zone 5: Far Cold (5.0 - 8.0 AU adjusted) - More terrestrial worlds, some giants
     else if (adjustedAU < 8.0) {
       const rand = random * 5;
-      if (rand < 1) return 'gas_giant';
+      if (rand < 1) return 'barren_world';
       if (rand < 2) return 'frost_giant';
       if (rand < 3) return 'methane_world';
       if (rand < 4) return 'snowy_world';
@@ -156,8 +161,9 @@ export class SystemGenerator {
     // Zone 6: Outer System (> 8.0 AU adjusted) - Mostly giants, some methane worlds
     else {
       const rand = random * 4;
-      if (rand < 1.5) return 'gas_giant';
-      if (rand < 2.5) return 'frost_giant';
+      if (rand < 1) return 'tundra_world';
+      if (rand < 2) return 'frost_giant';
+      if (rand < 3) return 'snowy_world';
       return 'methane_world';
     }
   }
@@ -224,7 +230,7 @@ export class SystemGenerator {
       mass,
       type,
       orbitRadius,
-      displayOrbit: orbitRadius / 6,
+      displayOrbit: orbitRadius / 10,
       orbitSpeed,
       rotationSpeed: this.seededRandom(planetSeed + 12) * 0.1,
       temperature,
