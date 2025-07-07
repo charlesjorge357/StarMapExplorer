@@ -132,21 +132,32 @@ export class SystemGenerator {
       return 'ocean_world';
     }
     
-    // Zone 4: Cold Terrestrial (2.5 - 4.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
-    else if (adjustedAU < 4.0) {
-      // 30% chance for gas giants in this zone
-      if (random < 0.3) return 'gas_giant';
+    // Zone 4: Cold Terrestrial (2.5 - 5.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
+    else if (adjustedAU < 5.0) {
+      // 25% chance for gas giants in this zone
+      if (random < 0.25) return 'gas_giant';
       
-      const terrestrialRand = random * 2;
+      const terrestrialRand = random * 3;
       if (terrestrialRand < 1) return 'tundra_world';
-      return 'snowy_world';
+      if (terrestrialRand < 2) return 'snowy_world';
+      return 'methane_world';
     }
     
-    // Zone 5: Outer System (> 4.0 AU adjusted) - Gas giants, Frost giants, Methane worlds
-    else {
-      const rand = random * 3;
+    // Zone 5: Far Cold (5.0 - 8.0 AU adjusted) - More terrestrial worlds, some giants
+    else if (adjustedAU < 8.0) {
+      const rand = random * 5;
       if (rand < 1) return 'gas_giant';
       if (rand < 2) return 'frost_giant';
+      if (rand < 3) return 'methane_world';
+      if (rand < 4) return 'snowy_world';
+      return 'tundra_world';
+    }
+    
+    // Zone 6: Outer System (> 8.0 AU adjusted) - Mostly giants, some methane worlds
+    else {
+      const rand = random * 4;
+      if (rand < 1.5) return 'gas_giant';
+      if (rand < 2.5) return 'frost_giant';
       return 'methane_world';
     }
   }
