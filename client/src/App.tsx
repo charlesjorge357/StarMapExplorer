@@ -209,7 +209,8 @@ function App() {
   // Generate stars when app loads and clear system cache
   useEffect(() => {
     console.log("Generating stars...");
-    const generatedStars = StarGenerator.generateStars(12345, 4000);
+    const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
+    const generatedStars = StarGenerator.generateStars(dynamicSeed, 4000);
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
@@ -816,7 +817,7 @@ function App() {
               <div className="space-y-1 text-sm">
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {(selectedPlanet.orbitRadius / 6).toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 {selectedPlanet.atmosphere.length >0 && (
@@ -840,7 +841,7 @@ function App() {
               <div className="space-y-1 text-sm">
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {(selectedPlanet.orbitRadius / 6).toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Surface Features:</span> {selectedPlanet.surfaceFeatures?.length || 0}</p>

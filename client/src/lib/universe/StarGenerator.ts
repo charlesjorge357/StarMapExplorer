@@ -109,29 +109,19 @@ export class StarGenerator {
     let mass: number;
     let temperature: number;
     
-    // Mass distribution (most stars are M-class) with realistic temperature correlation
-    if (massRand < 0.76) {
-      // M-class red dwarfs (76% of all stars)
-      mass = 0.08 + random() * 0.37; // 0.08-0.45 solar masses
-      // Temperature more tightly correlated with mass for M-dwarfs
-      temperature = 2300 + (mass / 0.45) * 1400 + random() * 200; // 2300-3900K with correlation
-    } else if (massRand < 0.88) {
-      // K-class orange dwarfs (12% of all stars)
-      mass = 0.45 + random() * 0.35; // 0.45-0.8 solar masses
-      temperature = 3700 + (mass / 0.8) * 1300 + random() * 300; // 3700-5200K with correlation
-    } else if (massRand < 0.96) {
-      // G-class yellow dwarfs like our Sun (8% of all stars)
-      mass = 0.8 + random() * 0.3; // 0.8-1.1 solar masses
-      temperature = 5200 + (mass / 1.1) * 800 + random() * 200; // 5200-6200K with correlation
-    } else if (massRand < 0.99) {
-      // F-class stars (3% of all stars)
-      mass = 1.04 + random() * 0.36; // 1.04-1.4 solar masses
-      temperature = 6000 + (mass / 1.4) * 1500 + random() * 200; // 6000-7700K with correlation
+    // Mass distribution (most stars are M-class)
+    if (massRand < 0.7) {
+      mass = 0.1 + random() * 0.4; // M-class: 0.1-0.5 solar masses
+      temperature = 2500 + random() * 1200; // 2500-3700K
+    } else if (massRand < 0.9) {
+      mass = 0.5 + random() * 0.8; // K-class: 0.5-1.3 solar masses
+      temperature = 3700 + random() * 1500; // 3700-5200K
+    } else if (massRand < 0.97) {
+      mass = 0.8 + random() * 1.2; // G-F class: 0.8-2.0 solar masses
+      temperature = 5200 + random() * 2300; // 5200-7500K
     } else {
-      // A, B, and rare O-class stars (1% of all stars)
-      mass = 1.4 + random() * 3.6; // 1.4-5.0 solar masses (capped for realism)
-      // More conservative temperature range to avoid extremes
-      temperature = 7500 + (mass / 5.0) * 5000 + random() * 500; // 7500-13000K with correlation
+      mass = 2 + random() * 8; // A-B-O class: 2-10 solar masses
+      temperature = 7500 + random() * 12500; // 7500-20000K
     }
 
     // More realistic radius calculation with extreme stellar variations
@@ -149,32 +139,7 @@ export class StarGenerator {
     const luminosity = Math.pow(mass, 3.5); // Mass-luminosity relationship
     const age = 1 + random() * 10; // 1-11 billion years
     const spectralClass = this.getSpectralClass(temperature);
-    
-    // Realistic planet count distribution based on stellar class and research
-    let planetCount: number;
-    if (spectralClass === 'M') {
-      // Red dwarfs: typically 1-4 planets, some up to 7 (TRAPPIST-1)
-      const rand = random();
-      if (rand < 0.3) planetCount = 1 + Math.floor(random() * 2); // 1-2 planets (30%)
-      else if (rand < 0.6) planetCount = 3 + Math.floor(random() * 2); // 3-4 planets (30%) 
-      else if (rand < 0.85) planetCount = 5 + Math.floor(random() * 2); // 5-6 planets (25%)
-      else planetCount = 7; // 7 planets like TRAPPIST-1 (15%)
-    } else if (spectralClass === 'K') {
-      // Orange dwarfs: similar to G-class but slightly fewer
-      planetCount = 4 + Math.floor(random() * 5); // 4-8 planets
-    } else if (spectralClass === 'G') {
-      // Sun-like stars: should have at least 8 planets like our Solar System
-      planetCount = 8 + Math.floor(random() * 3); // 8-10 planets
-    } else if (spectralClass === 'F') {
-      // F-class stars: can have many planets
-      planetCount = 6 + Math.floor(random() * 4); // 6-9 planets
-    } else {
-      // A, B, O-class: large stars can still have up to 8 planets
-      const rand = random();
-      if (rand < 0.4) planetCount = 3 + Math.floor(random() * 3); // 3-5 planets (40%)
-      else if (rand < 0.7) planetCount = 6 + Math.floor(random() * 2); // 6-7 planets (30%)
-      else planetCount = 8; // 8 planets (30%)
-    }
+    const planetCount = Math.floor(random() * 12); // 0-11 planets
 
     return {
       id: `star-${index}`,

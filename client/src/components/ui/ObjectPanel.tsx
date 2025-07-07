@@ -82,7 +82,6 @@ export function ObjectPanel() {
           </div>
           <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
             <div>Type: {selectedPlanet?.type?.replace('_', ' ') || '---'}</div>
-            <div>Distance: {selectedPlanet?.orbitRadius ? (selectedPlanet.orbitRadius / 6).toFixed(2) + ' AU' : '---'}</div>
             <div>Radius: {selectedPlanet?.radius ? selectedPlanet.radius.toFixed(2) + ' Earth radii' : '---'}</div>
             <div>Mass: {selectedPlanet?.mass ? selectedPlanet.mass.toFixed(2) + ' Earth masses' : '---'}</div>
             <div>Temperature: {selectedPlanet?.temperature ? Math.round(selectedPlanet.temperature) + 'K' : '---'}</div>
