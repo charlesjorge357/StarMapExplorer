@@ -177,8 +177,18 @@ export class SystemGenerator {
     const zones = this.getPlanetTypeZones(starTemp);
     const suitableZones = zones[planetType];
     
+    // Calculate zone scaling for reference
+    const tempFactor = starTemp / 5778;
+    const zoneScaling = Math.sqrt(tempFactor);
+    
+    console.log(`🎯 Finding orbit for ${planetType}:`);
+    console.log(`   Star temp: ${starTemp}K, zone scaling: ${zoneScaling.toFixed(2)}`);
+    console.log(`   Suitable AU zones: [${suitableZones.map(z => z.toFixed(2)).join(', ')}]`);
+    
     // Convert zones to orbital distances (multiply by 6 to get visual distance)
     const suitableOrbits = suitableZones.map(zone => zone * 6);
+    console.log(`   Suitable visual orbits: [${suitableOrbits.map(o => o.toFixed(1)).join(', ')}]`);
+    console.log(`   Already taken orbits: [${takenOrbits.map(o => o.toFixed(1)).join(', ')}]`);
     
     // Find the closest available orbit that doesn't conflict with existing planets
     for (const targetOrbit of suitableOrbits) {
@@ -192,6 +202,7 @@ export class SystemGenerator {
         );
         
         if (!tooClose) {
+          console.log(`   ✅ Selected orbit: ${actualOrbit.toFixed(1)} (${(actualOrbit/6).toFixed(2)} AU)`);
           return actualOrbit;
         }
         
@@ -207,6 +218,7 @@ export class SystemGenerator {
       fallbackOrbit += 20;
     }
     
+    console.log(`   ⚠️ Using fallback orbit: ${fallbackOrbit.toFixed(1)} (${(fallbackOrbit/6).toFixed(2)} AU)`);
     return fallbackOrbit;
   }
 
@@ -389,6 +401,10 @@ export class SystemGenerator {
     };
 
     console.log(`🌌 System generated with ${system.planets.length} planets:`, system.planets.map(p => `${p.name} (${p.type})`));
+    
+    // Validate planet placement
+    this.validatePlanetPlacement(system.planets, star.temperature);
+    
     return system;
   }
 
@@ -425,6 +441,37 @@ export class SystemGenerator {
       case 'nuclear_world': return ['Helium-3', 'Argon', 'Tritium'];
       default: return ['Nitrogen', 'Oxygen'];
     }
+  }
+
+  static validatePlanetPlacement(planets: Planet[], starTemp: number): void {
+    console.log(`🔍 Validating planet placement for ${starTemp}K star:`);
+    
+    const zones = this.getPlanetTypeZones(starTemp);
+    let validPlacements = 0;
+    let totalPlacements = 0;
+    
+    for (const planet of planets) {
+      totalPlacements++;
+      const planetAU = planet.orbitRadius / 6; // Convert back to AU
+      const validZones = zones[planet.type];
+      
+      // Check if planet is within any of its valid zones (with some tolerance)
+      const isInValidZone = validZones.some(zone => {
+        const tolerance = zone * 0.3; // 30% tolerance
+        return Math.abs(planetAU - zone) <= tolerance;
+      });
+      
+      if (isInValidZone) {
+        validPlacements++;
+        console.log(`   ✅ ${planet.name} (${planet.type}) at ${planetAU.toFixed(2)} AU - VALID`);
+      } else {
+        console.log(`   ❌ ${planet.name} (${planet.type}) at ${planetAU.toFixed(2)} AU - INVALID`);
+        console.log(`      Should be in zones: [${validZones.map(z => z.toFixed(2)).join(', ')}] AU`);
+      }
+    }
+    
+    const validationRate = (validPlacements / totalPlacements * 100).toFixed(1);
+    console.log(`📊 Placement validation: ${validPlacements}/${totalPlacements} planets correctly placed (${validationRate}%)`);
   }
 
   static generateMoons(planetRadius: number, orbitRadius: number, seed: number): Moon[] {
