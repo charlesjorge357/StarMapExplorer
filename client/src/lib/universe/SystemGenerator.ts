@@ -237,7 +237,9 @@ export class SystemGenerator {
     ];
 
     // Calculate orbital zones with proper spacing to prevent overlaps
-    const baseSpacing = 20 + star.radius * 6; // Increased base spacing
+    // Randomize the base distance from the star (±50% variation)
+    const baseSpacingMultiplier = 0.5 + Math.random(); // 0.5 to 1.5 multiplier
+    const baseSpacing = (20 + star.radius * 6) * baseSpacingMultiplier;
     let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
