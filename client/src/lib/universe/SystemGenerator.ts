@@ -94,7 +94,7 @@ export class SystemGenerator {
     return index < greekLetters.length ? `${starName} ${greekLetters[index]}` : `${starName} ${index + 1}`;
   }
 
-  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
+  static determinePlanetType(orbitRadius: number, starTemp: number, luminosity: number, seed: number): PlanetType {
     const random = this.seededRandom(seed);
     
     // Convert orbit radius to scaled AU (orbitRadius / 6)
@@ -102,6 +102,7 @@ export class SystemGenerator {
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
+    const tempFactor = Math.sqrt(starTemp / 5778);
     const luminosityFactor = Math.sqrt(luminosity); // L☉
     const adjustedAU = scaledAU * tempFactor * luminosityFactor;
     
@@ -170,7 +171,7 @@ export class SystemGenerator {
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
     const planetSeed = seed + index * 1000;
     const name = this.generatePlanetName(starName, index);
-    const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed);
+    const type = this.determinePlanetType(orbitRadius, starTemp, 1.0, planetSeed); // Default luminosity for generatePlanet method
 
     const radiusRange = this.PLANET_RADII[type];
     
@@ -293,7 +294,7 @@ export class SystemGenerator {
       const orbitRadius = orbitZones[i];
       // Use deterministic planet type based on orbit distance and star temperature
       const planetSeed = this.hashString(star.name) + i * 1000;
-      const type = this.determinePlanetType(orbitRadius, star.temperature, planetSeed);
+      const type = this.determinePlanetType(orbitRadius, star.temperature, star.luminosity, planetSeed);
 
       // Earth radii scaling (realistic)
       let radius: number;
