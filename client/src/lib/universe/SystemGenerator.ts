@@ -289,9 +289,9 @@ export class SystemGenerator {
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
     const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
     const position: [number, number, number] = [
-      Math.cos(angle) * orbitRadius * 10,
+      Math.cos(angle) * orbitRadius * 60,
       Math.sin(inclination) * orbitRadius * 2,
-      Math.sin(angle) * orbitRadius * 10
+      Math.sin(angle) * orbitRadius * 60
     ];
 
     return {
