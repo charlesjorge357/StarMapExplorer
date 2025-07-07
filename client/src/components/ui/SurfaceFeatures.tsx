@@ -150,6 +150,7 @@ export function SurfaceFeatureMarker({
       position={position}
       rotation={rotation}
       onClick={() => onFeatureClick(feature)}
+      userData={{ feature: feature, featureId: feature.id }}
     >
       {renderFeatureModel()}
     </group>

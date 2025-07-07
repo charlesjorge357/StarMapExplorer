@@ -304,77 +304,57 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
   // Handle feature tracking camera positioning
   useFrame((state, delta) => {
     // Handle feature tracking camera positioning
-    if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current && groupRef.current) {
+    if (isFeatureTracking && featureTrackingRef.current && featuresGroupRef.current) {
       const feature = featureTrackingRef.current;
-
-      // Use EXACT same coordinate conversion as SurfaceFeatureMarker
-      // Note: feature.position[0] = latitude, feature.position[1] = longitude
-      const [lat, lon] = feature.position;
-      const phi = (90 - lat) * (Math.PI / 180);    // colatitude
-      const theta = (lon + 180) * (Math.PI / 180); // longitude with offset
       
-      // Same positioning formula as SurfaceFeatureMarker
-      const x = -planetRadius * Math.sin(phi) * Math.cos(theta);
-      const y = planetRadius * Math.cos(phi);
-      const z = planetRadius * Math.sin(phi) * Math.sin(theta);
+      // Find the actual rendered SurfaceFeatureMarker mesh in the scene
+      let featureMesh = null;
+      featuresGroupRef.current.traverse((child: any) => {
+        // Look for mesh with matching feature data
+        if (child.userData?.featureId === feature.id || 
+            (child.type === 'Mesh' && child.userData?.feature?.id === feature.id)) {
+          featureMesh = child;
+        }
+      });
       
-      const localFeaturePosition = new THREE.Vector3(x, y, z);
-
-      // Apply transformations step by step for better debugging
-      // First apply planet's own rotation
-      const planetQuaternion = new THREE.Quaternion();
-      planetMeshRef.current.getWorldQuaternion(planetQuaternion);
-      
-      // Apply group transformations (mouse rotation) 
-      const groupQuaternion = new THREE.Quaternion();
-      groupRef.current.getWorldQuaternion(groupQuaternion);
-      
-      // Transform feature position: first by planet rotation, then by group rotation
-      const featureAfterPlanetRotation = localFeaturePosition.clone().applyQuaternion(planetQuaternion);
-      const worldFeaturePosition = featureAfterPlanetRotation.clone().applyQuaternion(groupQuaternion);
-
-      // Calculate camera position - offset above the feature
-      const distance = trackingDistanceRef.current;
-      
-      // Direction from planet center to feature (surface normal)
-      const surfaceNormal = worldFeaturePosition.clone().normalize();
-      
-      // Create a 270-degree rotation around the surface normal for better viewing angle
-      const rotationAngle = (270 * Math.PI) / 180; // Convert to radians
-      
-      // Create rotation matrix around the surface normal
-      const rotationMatrix = new THREE.Matrix4().makeRotationAxis(surfaceNormal, rotationAngle);
-      
-      // Calculate initial camera direction (above the feature)
-      const initialDirection = surfaceNormal.clone().multiplyScalar(distance * 0.6);
-      
-      // Apply rotation to the camera direction
-      const rotatedDirection = initialDirection.clone().applyMatrix4(rotationMatrix);
-      
-      // Position camera with rotated direction - centered on feature
-      const targetCameraPosition = worldFeaturePosition.clone().add(rotatedDirection);
-
-      // Smoothly interpolate camera position for smooth movement
-      camera.position.lerp(targetCameraPosition, delta * 3);
-      
-      // Look at the feature position
-      camera.lookAt(worldFeaturePosition);
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
-      
-      // Debug logging (occasional)
-      if (Math.random() < 0.005) { // Very occasionally to avoid spam
-        console.log('Feature tracking debug (using SurfaceFeatureMarker coordinates):', {
-          featureName: feature.name,
-          originalLatLng: feature.position,
-          phi: phi * 180 / Math.PI, // colatitude in degrees
-          theta: theta * 180 / Math.PI, // longitude in degrees  
-          localFeaturePos: localFeaturePosition,
-          worldFeaturePos: worldFeaturePosition,
-          cameraPos: camera.position,
-          distance: worldFeaturePosition.distanceTo(camera.position),
-          planetRotationY: planetMeshRef.current?.rotation.y * 180 / Math.PI
-        });
+      if (featureMesh) {
+        // Get the actual world position of the rendered feature
+        const worldFeaturePosition = new THREE.Vector3();
+        featureMesh.getWorldPosition(worldFeaturePosition);
+        
+        // Calculate camera position - offset from the feature
+        const distance = trackingDistanceRef.current;
+        
+        // Direction from planet center to feature (surface normal)
+        const surfaceNormal = worldFeaturePosition.clone().normalize();
+        
+        // Position camera offset from the feature looking at it
+        const cameraOffset = surfaceNormal.clone().multiplyScalar(distance);
+        const targetCameraPosition = worldFeaturePosition.clone().add(cameraOffset);
+        
+        // Smoothly interpolate camera position
+        camera.position.lerp(targetCameraPosition, delta * 3);
+        
+        // Look directly at the feature
+        camera.lookAt(worldFeaturePosition);
+        camera.updateMatrix();
+        camera.updateMatrixWorld(true);
+        
+        // Debug logging (occasional)
+        if (Math.random() < 0.005) {
+          console.log('Feature tracking debug (using actual rendered mesh position):', {
+            featureName: feature.name,
+            featureId: feature.id,
+            worldFeaturePos: worldFeaturePosition,
+            cameraPos: camera.position,
+            distance: worldFeaturePosition.distanceTo(camera.position)
+          });
+        }
+      } else {
+        console.warn('Could not find rendered feature mesh for tracking:', feature.name, feature.id);
+        // Fallback: disable tracking if we can't find the mesh
+        setIsFeatureTracking(false);
+        featureTrackingRef.current = null;
       }
     }
 
