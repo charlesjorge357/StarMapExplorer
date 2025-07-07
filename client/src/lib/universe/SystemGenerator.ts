@@ -392,70 +392,7 @@ export class SystemGenerator {
     return system;
   }
 
-  // Keep original generatePlanet method but update the type determination
-  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number, overrideType?: PlanetType): Planet {
-    const planetSeed = seed + index * 1000;
-    const name = this.generatePlanetName(starName, index);
-    const type = overrideType || this.determinePlanetType(orbitRadius, starTemp, planetSeed, index);
-
-    const radiusRange = this.PLANET_RADII[type];
-    
-    // For habitable worlds, bias toward smaller sizes using power distribution
-    let radiusRand = this.seededRandom(planetSeed + 1);
-    if (['grassland_world', 'jungle_world', 'ocean_world', 'marshy_world'].includes(type)) {
-      radiusRand = Math.pow(radiusRand, 2); // Bias toward smaller values
-    }
-    
-    const radius = radiusRange[0] + radiusRand * (radiusRange[1] - radiusRange[0]);
-    
-    // Calculate mass with realistic density factors by planet type
-    const densityFactors: { [key in PlanetType]: number } = {
-      'gas_giant': 0.25,      // Jupiter-like
-      'frost_giant': 0.3,     // Neptune-like  
-      'nuclear_world': 1.8,   // Heavy elements
-      'snowy_world': 0.6,     // Ice worlds
-      'ocean_world': 0.9,     // Water worlds
-      'grassland_world': 1.0, // Earth-like
-      'jungle_world': 1.0,    // Earth-like
-      'marshy_world': 1.0,    // Earth-like
-      'arid_world': 0.7,      // Mars-like
-      'barren_world': 0.7,    // Mars-like
-      'dusty_world': 0.7,     // Mars-like
-      'martian_world': 0.7,   // Mars-like
-      'sandy_world': 0.7,     // Mars-like
-      'tundra_world': 0.7,    // Mars-like
-      'methane_world': 0.5    // Low density
-    };
-    
-    const density = densityFactors[type];
-    const mass = Math.pow(radius, 3) * density;
-    
-    // Calculate temperature using inverse square law
-    const baseTemp = Math.sqrt(starTemp / 5778) * 288 * Math.pow(1 / (orbitRadius / 150), 0.5);
-    const tempVariation = (this.seededRandom(planetSeed + 2) - 0.5) * 100;
-    const temperature = Math.max(50, baseTemp + tempVariation);
-    
-    const atmosphere = this.generateAtmosphere(type, planetSeed + 3);
-    const moons = this.generateMoons(radius, orbitRadius, planetSeed + 4);
-    
-    return {
-      id: `${starName.toLowerCase().replace(/\s+/g, '-')}-${index + 1}`,
-      name,
-      position: [orbitRadius, 0, 0],
-      radius,
-      mass,
-      type,
-      orbitRadius,
-      orbitSpeed: 0.1 / Math.sqrt(orbitRadius),
-      rotationSpeed: 0.01 + this.seededRandom(planetSeed + 5) * 0.02,
-      temperature,
-      atmosphere,
-      moons,
-      rings: this.generatePlanetRings(type, radius, name, planetSeed + 1000),
-      textureIndex: this.generateTextureIndex(type, index, starName),
-      surfaceFeatures: []
-    };
-  }
+  
 
   // Legacy compatibility method - just returns a fallback type
   static determinePlanetType(orbitRadius: number, starTemp: number, seed: number, planetIndex: number = 0): PlanetType {
@@ -548,29 +485,7 @@ export class SystemGenerator {
 
 
 
-  // Generate moons for planets
-  private static generateMoons(planetRadius: number, planetName: string, seed: number) {
-    const moons = [];
-    let moonCount = 0;
-    
-    // Determine moon count based on planet size
-    if (planetRadius > 6) moonCount = Math.floor(this.seededRandom(seed) * 8) + 2; // 2-9 moons for gas giants
-    else if (planetRadius > 3) moonCount = Math.floor(this.seededRandom(seed + 1) * 4) + 1; // 1-4 moons for large planets
-    else if (planetRadius > 1.5) moonCount = Math.floor(this.seededRandom(seed + 2) * 2); // 0-1 moons for medium planets
-
-    for (let j = 0; j < moonCount; j++) {
-      const moonName = `${planetName} ${String.fromCharCode(97 + j)}`; // a, b, c, etc.
-      moons.push({
-        id: `${planetName}-moon-${j}`,
-        name: moonName,
-        radius: 0.1 + this.seededRandom(seed + j + 10) * 0.4, // Small moons
-        orbitRadius: 1.5 + j * 0.8, // Much tighter orbits
-        orbitSpeed: 0.3 + this.seededRandom(seed + j + 20) * 0.35 // Moon speed relative to planet timing
-      });
-    }
-    
-    return moons;
-  }
+  
 
 
 
