@@ -817,7 +817,7 @@ function App() {
               <div className="space-y-1 text-sm">
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.displayOrbit.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 {selectedPlanet.atmosphere.length >0 && (
@@ -841,7 +841,7 @@ function App() {
               <div className="space-y-1 text-sm">
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Radius:</span> {selectedPlanet.radius.toFixed(2)} R⊕</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Mass:</span> {selectedPlanet.mass.toFixed(2)} M⊕</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.orbitRadius.toFixed(2)} AU</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.displayOrbit.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Surface Features:</span> {selectedPlanet.surfaceFeatures?.length || 0}</p>

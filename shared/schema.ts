@@ -58,6 +58,7 @@ export interface Planet {
   mass: number;
   type: PlanetType;
   orbitRadius: number;
+  displayOrbit: number;
   orbitSpeed: number;
   rotationSpeed: number;
   temperature: number;
