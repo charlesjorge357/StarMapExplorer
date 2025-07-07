@@ -103,10 +103,12 @@ export class SystemGenerator {
     // Calculate temperature-scaled zones based on stellar temperature
     // Sun-like star (5778K) as baseline, scale zones by temperature ratio
     const tempFactor = starTemp / 5778; // Solar temperature baseline
-    const innerHotZone = 1.5 * Math.sqrt(tempFactor); // Hot zone scales with sqrt of temp
-    const midZone = 4.0 * Math.sqrt(tempFactor); // Mid zone scales with sqrt of temp
+    const innerHotZone = 30 * Math.sqrt(tempFactor); // Hot zone scales with sqrt of temp (scaled for our orbit system)
+    const midZone = 80 * Math.sqrt(tempFactor); // Mid zone scales with sqrt of temp (scaled for our orbit system)
     
-    const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
+    console.log(`Planet at orbit ${orbitRadius.toFixed(1)}: innerZone=${innerHotZone.toFixed(1)}, midZone=${midZone.toFixed(1)}, starTemp=${starTemp}K`);
+    
+    const effectiveTemp = 1.5*starTemp / (orbitRadius * orbitRadius);
 
     // Hot inner zone - close to star
     if (orbitRadius < innerHotZone) {
@@ -121,7 +123,7 @@ export class SystemGenerator {
         const rand = this.seededRandom(dynamicSeed + 100) * 3;
         if (rand < 1) return 'arid_world';
         if (rand < 2) return 'sandy_world';
-        return 'dusty_world';
+        return 'martian_world';
       }
       // Habitable zone
       const rand = this.seededRandom(dynamicSeed + 200) * 4;
