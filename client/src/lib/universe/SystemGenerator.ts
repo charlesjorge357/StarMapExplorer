@@ -109,117 +109,105 @@ export class SystemGenerator {
     }
   }
 
-  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number, planetIndex: number = 0): PlanetType {
-    // Create unique random seed for each planet by combining with timestamp and orbit position
-    const sessionSeed = Date.now();
-    const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
-    const dynamicSeed = seed + sessionSeed + orbitSeed;
-    
-    // Use the actual orbital radius (scaled down to realistic AU) for zone classification
-    const auScaledRadius = orbitRadius / 6; // Convert visual distance to realistic AU scale
-    
-    // Calculate zone scaling factor based on stellar class deviation from G-class
-    // G-class (Sun-like, ~5778K) = 1.0x scaling (baseline)
-    // Hotter stars (A, B, O) = zones pushed outward (>1.0x)
-    // Cooler stars (K, M) = zones pulled inward (<1.0x)
+  static getPlanetTypeZones(starTemp: number): { [key in PlanetType]: number[] } {
+    // Calculate zone scaling factor based on stellar class
     const tempFactor = starTemp / 5778; // Solar temperature baseline
     const zoneScaling = Math.sqrt(tempFactor); // Square root for realistic luminosity scaling
     
-    // 8 orbital zones with stellar-class scaled boundaries
-    const zones = {
-      scorched: 0.3 * zoneScaling,    // Zone 1: Ultra-hot (closer than Mercury)
-      hot: 0.7 * zoneScaling,         // Zone 2: Hot (Mercury-Venus range)
-      warm: 1.2 * zoneScaling,        // Zone 3: Warm (Venus-Earth range)
-      habitable: 2.0 * zoneScaling,   // Zone 4: Habitable (Earth-Mars range)
-      temperate: 3.5 * zoneScaling,   // Zone 5: Temperate (Mars-Asteroid belt)
-      cool: 6.0 * zoneScaling,        // Zone 6: Cool (Jupiter region)
-      cold: 12.0 * zoneScaling,       // Zone 7: Cold (Saturn-Uranus range)
-      frozen: 25.0 * zoneScaling      // Zone 8: Frozen (Neptune+ range)
+    // Define which zones each planet type can appear in (scaled by stellar class)
+    return {
+      // Hot inner zones
+      'nuclear_world': [0.3 * zoneScaling], // Only scorched zone
+      'barren_world': [0.3 * zoneScaling, 0.7 * zoneScaling, 3.5 * zoneScaling], // Scorched, hot, temperate
+      'dusty_world': [0.3 * zoneScaling, 0.7 * zoneScaling, 1.2 * zoneScaling], // Scorched, hot, warm
+      'arid_world': [0.7 * zoneScaling, 1.2 * zoneScaling, 2.0 * zoneScaling, 3.5 * zoneScaling], // Hot through temperate
+      'sandy_world': [0.7 * zoneScaling, 1.2 * zoneScaling], // Hot, warm
+      'martian_world': [0.7 * zoneScaling, 3.5 * zoneScaling, 6.0 * zoneScaling], // Hot, temperate, cool
+      
+      // Habitable zones
+      'grassland_world': [1.2 * zoneScaling, 2.0 * zoneScaling], // Warm, habitable
+      'jungle_world': [1.2 * zoneScaling, 2.0 * zoneScaling], // Warm, habitable
+      'ocean_world': [2.0 * zoneScaling], // Habitable only
+      'marshy_world': [2.0 * zoneScaling], // Habitable only
+      
+      // Cold zones
+      'tundra_world': [3.5 * zoneScaling, 6.0 * zoneScaling, 12.0 * zoneScaling], // Temperate, cool, cold
+      'snowy_world': [3.5 * zoneScaling, 6.0 * zoneScaling, 12.0 * zoneScaling], // Temperate, cool, cold
+      'methane_world': [12.0 * zoneScaling, 25.0 * zoneScaling], // Cold, frozen
+      
+      // Giants (outer zones only)
+      'gas_giant': [6.0 * zoneScaling, 12.0 * zoneScaling, 25.0 * zoneScaling], // Cool, cold, frozen
+      'frost_giant': [12.0 * zoneScaling, 25.0 * zoneScaling] // Cold, frozen
     };
-    
-    // Calculate effective temperature at planet's orbit, accounting for stellar luminosity
-    // Hotter stars emit more energy, so planets at same distance are hotter
-    const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
-    const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
-    
-    const zoneName = auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen';
-    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): zone=${zoneName}, starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
-    console.log(`Zone boundaries: Scorched=${zones.scorched.toFixed(2)}, Hot=${zones.hot.toFixed(2)}, Warm=${zones.warm.toFixed(2)}, Habitable=${zones.habitable.toFixed(2)}, Temperate=${zones.temperate.toFixed(2)}, Cool=${zones.cool.toFixed(2)}`);
+  }
 
-    // Zone 1: Scorched (0-0.3 AU) - Extreme heat
-    if (auScaledRadius < zones.scorched) {
-      const rand = this.seededRandom(dynamicSeed) * 3;
-      if (rand < 1) return 'barren_world';
-      if (rand < 2) return 'dusty_world';
-      return 'nuclear_world'; // Tidally locked, extreme radiation
-    }
-    // Zone 2: Hot (0.3-0.7 AU) - Very hot, Mercury-like
-    else if (auScaledRadius < zones.hot) {
-      const rand = this.seededRandom(dynamicSeed + 100) * 4;
-      if (rand < 1) return 'barren_world';
-      if (rand < 2) return 'dusty_world';
-      if (rand < 3) return 'arid_world';
-      return 'martian_world';
-    }
-    // Zone 3: Warm (0.7-1.2 AU) - Hot but potentially habitable
-    else if (auScaledRadius < zones.warm) {
-      if (effectiveTemp > 600) {
-        const rand = this.seededRandom(dynamicSeed + 200) * 3;
-        if (rand < 1) return 'arid_world';
-        if (rand < 2) return 'sandy_world';
-        return 'dusty_world';
+  static generateRandomPlanetTypes(planetCount: number, seed: number): PlanetType[] {
+    const availableTypes: PlanetType[] = [
+      'arid_world', 'barren_world', 'dusty_world', 'grassland_world', 'jungle_world',
+      'marshy_world', 'martian_world', 'methane_world', 'sandy_world', 'snowy_world',
+      'tundra_world', 'nuclear_world', 'ocean_world', 'gas_giant', 'frost_giant'
+    ];
+    
+    const planetTypes: PlanetType[] = [];
+    const usedTypes = new Set<PlanetType>();
+    
+    for (let i = 0; i < planetCount; i++) {
+      const randSeed = seed + i * 100 + Date.now();
+      
+      // Bias against duplicate types
+      const availableUnused = availableTypes.filter(type => !usedTypes.has(type));
+      const typePool = availableUnused.length > 0 ? availableUnused : availableTypes;
+      
+      const typeIndex = Math.floor(this.seededRandom(randSeed) * typePool.length);
+      const selectedType = typePool[typeIndex];
+      
+      planetTypes.push(selectedType);
+      usedTypes.add(selectedType);
+      
+      // Reset used types occasionally for larger systems
+      if (usedTypes.size >= Math.min(8, availableTypes.length)) {
+        usedTypes.clear();
       }
-      const rand = this.seededRandom(dynamicSeed + 250) * 4;
-      if (rand < 1) return 'grassland_world';
-      if (rand < 2) return 'arid_world';
-      if (rand < 3) return 'sandy_world';
-      return 'jungle_world';
     }
-    // Zone 4: Habitable (1.2-2.0 AU) - Earth-like conditions
-    else if (auScaledRadius < zones.habitable) {
-      const rand = this.seededRandom(dynamicSeed + 300) * 5;
-      if (rand < 1) return 'grassland_world';
-      if (rand < 2) return 'jungle_world';
-      if (rand < 3) return 'ocean_world';
-      if (rand < 4) return 'marshy_world';
-      return 'arid_world';
+    
+    return planetTypes;
+  }
+
+  static findSuitableOrbit(planetType: PlanetType, starTemp: number, takenOrbits: number[]): number {
+    const zones = this.getPlanetTypeZones(starTemp);
+    const suitableZones = zones[planetType];
+    
+    // Convert zones to orbital distances (multiply by 6 to get visual distance)
+    const suitableOrbits = suitableZones.map(zone => zone * 6);
+    
+    // Find the closest available orbit that doesn't conflict with existing planets
+    for (const targetOrbit of suitableOrbits) {
+      let actualOrbit = targetOrbit;
+      let attempts = 0;
+      
+      // Adjust orbit if too close to existing planets
+      while (attempts < 20) {
+        const tooClose = takenOrbits.some(existingOrbit => 
+          Math.abs(actualOrbit - existingOrbit) < 15 // Minimum 15 unit separation
+        );
+        
+        if (!tooClose) {
+          return actualOrbit;
+        }
+        
+        // Try slightly farther out
+        actualOrbit += 5 + (attempts * 2);
+        attempts++;
+      }
     }
-    // Zone 5: Temperate (2.0-3.5 AU) - Mars-like, NO gas giants (too close to star)
-    else if (auScaledRadius < zones.temperate) {
-      const rand = this.seededRandom(dynamicSeed + 450) * 5;
-      if (rand < 1) return 'martian_world';
-      if (rand < 2) return 'tundra_world';
-      if (rand < 3) return 'arid_world';
-      if (rand < 4) return 'barren_world';
-      return 'snowy_world';
+    
+    // Fallback: find any available orbit far enough from others
+    let fallbackOrbit = suitableOrbits[0] || 30;
+    while (takenOrbits.some(orbit => Math.abs(fallbackOrbit - orbit) < 15)) {
+      fallbackOrbit += 20;
     }
-    // Zone 6: Cool (3.5-6.0 AU) - Gas giants and cold terrestrials
-    else if (auScaledRadius < zones.cool) {
-      if (this.seededRandom(dynamicSeed + 500) < 0.5) return 'gas_giant';
-      const rand = this.seededRandom(dynamicSeed + 550) * 4;
-      if (rand < 1) return 'tundra_world';
-      if (rand < 2) return 'snowy_world';
-      if (rand < 3) return 'barren_world';
-      return 'martian_world';
-    }
-    // Zone 7: Cold (6.0-12.0 AU) - Gas/frost giants, frozen worlds
-    else if (auScaledRadius < zones.cold) {
-      if (this.seededRandom(dynamicSeed + 600) < 0.4) return 'gas_giant';
-      if (this.seededRandom(dynamicSeed + 650) < 0.6) return 'frost_giant';
-      const rand = this.seededRandom(dynamicSeed + 700) * 3;
-      if (rand < 1) return 'snowy_world';
-      if (rand < 2) return 'tundra_world';
-      return 'methane_world';
-    }
-    // Zone 8: Frozen (12.0+ AU) - Outer system, mostly giants and ice worlds
-    else {
-      if (this.seededRandom(dynamicSeed + 800) < 0.3) return 'gas_giant';
-      if (this.seededRandom(dynamicSeed + 850) < 0.7) return 'frost_giant';
-      const rand = this.seededRandom(dynamicSeed + 900) * 3;
-      if (rand < 1) return 'snowy_world';
-      if (rand < 2) return 'methane_world';
-      return 'tundra_world';
-    }
+    
+    return fallbackOrbit;
   }
 
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
@@ -340,173 +328,178 @@ export class SystemGenerator {
   static generateSystem(star: any, seed: number): StarSystem {
     const planets = [];
 
-    // Legacy generation logic - identical to original App.tsx
-    // Fewer planets for larger stars (they're more disruptive to planet formation)
-    let maxPlanets = 8;
-    if (star.radius > 2) maxPlanets = 4;
-    if (star.radius > 5) maxPlanets = 2;
-
-    const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
-
-    const planetTypes: PlanetType[] = [
-      'gas_giant', 'frost_giant', 'arid_world', 'barren_world',
-      'dusty_world', 'grassland_world', 'jungle_world', 'marshy_world',
-      'martian_world', 'methane_world', 'sandy_world', 'snowy_world',
-      'tundra_world', 'nuclear_world', 'ocean_world'
-    ];
-
-    // Calculate orbital zones with proper spacing to prevent overlaps (for 3D visuals)
-    const baseSpacing = 20 + star.radius * 6; // Increased base spacing for visual separation
-    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
-    const orbitZones: number[] = [];
-
-    for (let i = 0; i < planetCount; i++) {
-      if (i === 0) {
-        // First planet starts at base spacing from star
-        orbitZones.push(baseSpacing);
-      } else {
-        const prevOrbit = orbitZones[i - 1];
-        
-        // Use conservative spacing that accounts for largest possible planets
-        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
-        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
-        
-        let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
-        if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
-          maxOrbitRadius = newOrbit + 20;
-        }
-        orbitZones.push(newOrbit);
-      }
+    // Determine planet count based on stellar class (from previous work)
+    let planetCount: number;
+    const spectralClass = this.getSpectralClass(star.temperature);
+    
+    switch (spectralClass) {
+      case 'M': // Red dwarfs
+        const trappistChance = this.seededRandom(seed) < 0.15;
+        planetCount = trappistChance ? 7 : Math.floor(this.seededRandom(seed + 10) * 7) + 1;
+        break;
+      case 'K': // Orange dwarfs
+        planetCount = Math.floor(this.seededRandom(seed + 20) * 5) + 4; // 4-8 planets
+        break;
+      case 'G': // Sun-like stars
+        planetCount = Math.floor(this.seededRandom(seed + 30) * 3) + 8; // 8-10 planets minimum
+        break;
+      case 'F': // Hot stars
+        planetCount = Math.floor(this.seededRandom(seed + 40) * 4) + 6; // 6-9 planets
+        break;
+      default: // A, B, O class (hot massive stars)
+        planetCount = Math.floor(this.seededRandom(seed + 50) * 5) + 4; // 4-8 planets
+        break;
     }
 
+    // Generate random planet types with bias against duplicates
+    const planetTypes = this.generateRandomPlanetTypes(planetCount, seed);
+    
+    // Place each planet in appropriate orbital zone based on its type
+    const takenOrbits: number[] = [];
+    
     for (let i = 0; i < planetCount; i++) {
-      const type = planetTypes[Math.floor(Math.random() * planetTypes.length)];
-      const orbitRadius = orbitZones[i];
-
-      // Earth radii scaling (realistic)
-      let radius: number;
-      switch (type) {
-        case 'gas_giant':
-          radius = 8 + Math.random() * 4; // 8–12 R⊕
-          break;
-        case 'frost_giant':
-          radius = 4 + Math.random() * 4; // 4–8 R⊕
-          break;
-        case 'grassland_world':
-        case 'jungle_world':
-        case 'ocean_world':
-        case 'arid_world':
-        case 'marshy_world':
-          radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
-          break;
-        case 'nuclear_world':
-        case 'barren_world':
-        case 'dusty_world':
-        case 'martian_world':
-        case 'methane_world':
-        case 'sandy_world':
-        case 'snowy_world':
-        case 'tundra_world':
-          radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
-          break;
-        default:
-          radius = 1.0;
-      }
-
-      // Mass = radius³ × density factor (gas giants less dense)
-      const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
-      const mass = Math.pow(radius, 3) * densityFactor;
-
-      // Simplified temperature model
-      const temperature = 200 + Math.random() * 600;
-
-      // Generate atmosphere
-      let atmosphere: string[] = [];
-      switch (type) {
-        case 'gas_giant':
-          atmosphere = ['Hydrogen', 'Helium', 'Methane'];
-          break;
-        case 'frost_giant':
-          atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
-          break;
-        case 'grassland_world':
-        case 'jungle_world':
-        case 'ocean_world':
-          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
-          break;
-        case 'arid_world':
-          atmosphere = ['Carbon Dioxide', 'Nitrogen'];
-          break;
-        case 'barren_world':
-          atmosphere = [];
-          break;
-        case 'dusty_world':
-          atmosphere = ['Carbon Dioxide', 'Dust Particles'];
-          break;
-        case 'marshy_world':
-          atmosphere = ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor'];
-          break;
-        case 'martian_world':
-          atmosphere = ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide'];
-          break;
-        case 'methane_world':
-          atmosphere = ['Methane', 'Nitrogen', 'Ethane'];
-          break;
-        case 'sandy_world':
-          atmosphere = ['Carbon Dioxide', 'Silicon Particles'];
-          break;
-        case 'snowy_world':
-        case 'tundra_world':
-          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
-          break;
-        case 'nuclear_world':
-          atmosphere = ['Helium-3', 'Argon', 'Tritium'];
-          break;
-      }
-
-      const angle = Math.random() * Math.PI * 2;
-      const inclination = (Math.random() - 0.5) * 0.3;
-      const position: [number, number, number] = [
-        Math.cos(angle) * orbitRadius * 10,
-        Math.sin(inclination) * orbitRadius * 2,
-        Math.sin(angle) * orbitRadius * 10
-      ];
-
-      const planet: Planet = {
-        id: `planet-${star.id}-${i}`,
-        name: `${star.name} ${String.fromCharCode(945 + i)}`,
-        position,
-        radius,
-        mass,
-        type,
-        orbitRadius,
-        orbitSpeed: 0.05 + Math.random() * 0.15,
-        rotationSpeed: 0.01 + Math.random() * 0.05,
-        temperature,
-        atmosphere,
-        moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
-        rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
-        textureIndex: this.generateTextureIndex(type, i, star.name),
-        surfaceFeatures: []
-      };
-
-      // Generate surface features using PlanetGenerator
-      planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet as any);
+      const planetType = planetTypes[i];
+      const orbitRadius = this.findSuitableOrbit(planetType, star.temperature, takenOrbits);
+      takenOrbits.push(orbitRadius);
       
+      console.log(`Generated ${planetType} at orbit ${orbitRadius.toFixed(1)} (${(orbitRadius/6).toFixed(2)} AU) for ${spectralClass}-class star`);
+
+      // Generate the actual planet using existing method with override type
+      const planet = this.generatePlanet(star.name, star.temperature, i, orbitRadius, seed + i, planetType);
       planets.push(planet);
     }
-
-    // Generate asteroid belts in orbital gaps
-    const asteroidBelts = this.generateAsteroidBelts(planets, star);
-    console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
 
     return {
       id: `system-${star.id}`,
       starId: star.id,
-      star,
-      planets,
-      asteroidBelts
+      planets: planets.sort((a, b) => a.orbitRadius - b.orbitRadius), // Sort by orbital distance
+      asteroidBelts: [] // Can add asteroid belt generation later
     };
+  }
+
+  // Keep original generatePlanet method but update the type determination
+  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number, overrideType?: PlanetType): Planet {
+    const planetSeed = seed + index * 1000;
+    const name = this.generatePlanetName(starName, index);
+    const type = overrideType || this.determinePlanetType(orbitRadius, starTemp, planetSeed, index);
+
+    const radiusRange = this.PLANET_RADII[type];
+    
+    // For habitable worlds, bias toward smaller sizes using power distribution
+    let radiusRand = this.seededRandom(planetSeed + 1);
+    if (['grassland_world', 'jungle_world', 'ocean_world', 'marshy_world'].includes(type)) {
+      radiusRand = Math.pow(radiusRand, 2); // Bias toward smaller values
+    }
+    
+    const radius = radiusRange[0] + radiusRand * (radiusRange[1] - radiusRange[0]);
+    
+    // Calculate mass with realistic density factors by planet type
+    const densityFactors: { [key in PlanetType]: number } = {
+      'gas_giant': 0.25,      // Jupiter-like
+      'frost_giant': 0.3,     // Neptune-like  
+      'nuclear_world': 1.8,   // Heavy elements
+      'snowy_world': 0.6,     // Ice worlds
+      'ocean_world': 0.9,     // Water worlds
+      'grassland_world': 1.0, // Earth-like
+      'jungle_world': 1.0,    // Earth-like
+      'marshy_world': 1.0,    // Earth-like
+      'arid_world': 0.7,      // Mars-like
+      'barren_world': 0.7,    // Mars-like
+      'dusty_world': 0.7,     // Mars-like
+      'martian_world': 0.7,   // Mars-like
+      'sandy_world': 0.7,     // Mars-like
+      'tundra_world': 0.7,    // Mars-like
+      'methane_world': 0.5    // Low density
+    };
+    
+    const density = densityFactors[type];
+    const mass = Math.pow(radius, 3) * density;
+    
+    // Calculate temperature using inverse square law
+    const baseTemp = Math.sqrt(starTemp / 5778) * 288 * Math.pow(1 / (orbitRadius / 150), 0.5);
+    const tempVariation = (this.seededRandom(planetSeed + 2) - 0.5) * 100;
+    const temperature = Math.max(50, baseTemp + tempVariation);
+    
+    const atmosphere = this.generateAtmosphere(type, planetSeed + 3);
+    const moons = this.generateMoons(radius, orbitRadius, planetSeed + 4);
+    
+    return {
+      id: `${starName.toLowerCase().replace(/\s+/g, '-')}-${index + 1}`,
+      name,
+      position: [orbitRadius, 0, 0],
+      radius,
+      mass,
+      type,
+      orbitRadius,
+      orbitSpeed: 0.1 / Math.sqrt(orbitRadius),
+      rotationSpeed: 0.01 + this.seededRandom(planetSeed + 5) * 0.02,
+      temperature,
+      atmosphere,
+      moons,
+      rings: this.generatePlanetRings(type, radius, name, planetSeed + 1000),
+      textureIndex: this.generateTextureIndex(type, index, starName),
+      surfaceFeatures: []
+    };
+  }
+
+  // Legacy compatibility method - just returns a fallback type
+  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number, planetIndex: number = 0): PlanetType {
+    return 'arid_world'; // Fallback type for legacy compatibility
+  }
+
+  static getSpectralClass(temperature: number): string {
+    if (temperature >= 30000) return 'O';
+    if (temperature >= 10000) return 'B';
+    if (temperature >= 7500) return 'A';
+    if (temperature >= 6000) return 'F';
+    if (temperature >= 5200) return 'G';
+    if (temperature >= 3700) return 'K';
+    return 'M';
+  }
+
+  static generateAtmosphere(type: PlanetType, seed: number): string[] {
+    switch (type) {
+      case 'gas_giant': return ['Hydrogen', 'Helium', 'Methane'];
+      case 'frost_giant': return ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
+      case 'arid_world': return ['Carbon Dioxide', 'Nitrogen'];
+      case 'barren_world': return [];
+      case 'dusty_world': return ['Carbon Dioxide', 'Dust Particles'];
+      case 'grassland_world': case 'jungle_world': case 'ocean_world': return ['Nitrogen', 'Oxygen', 'Water Vapor'];
+      case 'marshy_world': return ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor'];
+      case 'martian_world': return ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide'];
+      case 'methane_world': return ['Methane', 'Nitrogen', 'Ethane'];
+      case 'sandy_world': return ['Carbon Dioxide', 'Silicon Particles'];
+      case 'snowy_world': case 'tundra_world': return ['Nitrogen', 'Oxygen', 'Water Vapor'];
+      case 'nuclear_world': return ['Helium-3', 'Argon', 'Tritium'];
+      default: return ['Nitrogen', 'Oxygen'];
+    }
+  }
+
+  static generateMoons(planetRadius: number, orbitRadius: number, seed: number): Moon[] {
+    const moons: Moon[] = [];
+    
+    // Small planets less likely to have moons
+    if (planetRadius < 0.5) return moons;
+    
+    // More moons for larger planets and outer planets
+    const maxMoons = Math.min(4, Math.floor(planetRadius * 2) + (orbitRadius > 100 ? 2 : 0));
+    const moonCount = Math.floor(this.seededRandom(seed) * maxMoons);
+    
+    for (let i = 0; i < moonCount; i++) {
+      const moonSeed = seed + i * 100;
+      const moonRadius = planetRadius * (0.1 + this.seededRandom(moonSeed) * 0.3); // 10-40% of planet size
+      const moonOrbitRadius = planetRadius * (3 + i * 2 + this.seededRandom(moonSeed + 1) * 2); // Varied spacing
+      
+      moons.push({
+        id: `moon-${i}`,
+        name: `Moon ${String.fromCharCode(65 + i)}`, // Moon A, Moon B, etc.
+        radius: moonRadius,
+        orbitRadius: moonOrbitRadius,
+        orbitSpeed: 0.2 + this.seededRandom(moonSeed + 2) * 0.3 // Faster than planets
+      });
+    }
+    
+    return moons;
   }
 
   static getPlanetColor(type: PlanetType, seed: number): string {
