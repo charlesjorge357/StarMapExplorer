@@ -96,48 +96,57 @@ export class SystemGenerator {
 
   static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
     const random = this.seededRandom(seed);
-    const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
-
-    // Hot inner zone - close to star
-    if (orbitRadius < 1.5) {
-      if (effectiveTemp > 800) {
-        const rand = random * 4;
-        if (rand < 1) return 'barren_world';
-        if (rand < 2) return 'dusty_world'; 
-        if (rand < 3) return 'martian_world';
-        return 'arid_world';
-      }
-      if (effectiveTemp > 400) {
-        const rand = random * 3;
-        if (rand < 1) return 'arid_world';
-        if (rand < 2) return 'sandy_world';
-        return 'dusty_world';
-      }
-      // Habitable zone
+    
+    // Convert orbit radius to scaled AU (orbitRadius / 6)
+    const scaledAU = orbitRadius / 6;
+    
+    // Factor in star temperature - hotter stars push zones outward, colder pull inward
+    // Base reference: Sun temperature ~5778K
+    const tempFactor = starTemp / 5778;
+    const adjustedAU = scaledAU / tempFactor;
+    
+    // Define planet zones based on distance (nuclear/barren/arid closest, then sandy/jungle/marshy, etc.)
+    
+    // Zone 1: Very Close (< 0.5 AU adjusted) - Nuclear, Barren, Arid worlds
+    if (adjustedAU < 0.5) {
+      const rand = random * 3;
+      if (rand < 1) return 'nuclear_world';
+      if (rand < 2) return 'barren_world';
+      return 'arid_world';
+    }
+    
+    // Zone 2: Close (0.5 - 1.2 AU adjusted) - Sandy, Dusty, Martian worlds  
+    else if (adjustedAU < 1.2) {
+      const rand = random * 3;
+      if (rand < 1) return 'sandy_world';
+      if (rand < 2) return 'dusty_world';
+      return 'martian_world';
+    }
+    
+    // Zone 3: Habitable (1.2 - 2.5 AU adjusted) - Jungle, Marshy, Grassland, Ocean worlds
+    else if (adjustedAU < 2.5) {
       const rand = random * 4;
-      if (rand < 1) return 'grassland_world';
-      if (rand < 2) return 'jungle_world';
-      if (rand < 3) return 'marshy_world';
+      if (rand < 1) return 'jungle_world';
+      if (rand < 2) return 'marshy_world';
+      if (rand < 3) return 'grassland_world';
       return 'ocean_world';
-    } 
-    // Mid zone
-    else if (orbitRadius < 4.0) {
+    }
+    
+    // Zone 4: Cold Terrestrial (2.5 - 4.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
+    else if (adjustedAU < 4.0) {
+      // 30% chance for gas giants in this zone
       if (random < 0.3) return 'gas_giant';
-      const terrestrialRand = random * 6;
-      if (terrestrialRand < 1) return 'arid_world';
-      if (terrestrialRand < 2) return 'barren_world';
-      if (terrestrialRand < 3) return 'dusty_world';
-      if (terrestrialRand < 4) return 'martian_world';
-      if (terrestrialRand < 5) return 'sandy_world';
-      return 'tundra_world';
-    } 
-    // Outer zone - cold
+      
+      const terrestrialRand = random * 2;
+      if (terrestrialRand < 1) return 'tundra_world';
+      return 'snowy_world';
+    }
+    
+    // Zone 5: Outer System (> 4.0 AU adjusted) - Gas giants, Frost giants, Methane worlds
     else {
-      if (random < 0.4) return 'gas_giant';
-      if (random < 0.7) return 'frost_giant';
-      const coldRand = random * 3;
-      if (coldRand < 1) return 'snowy_world';
-      if (coldRand < 2) return 'tundra_world';
+      const rand = random * 3;
+      if (rand < 1) return 'gas_giant';
+      if (rand < 2) return 'frost_giant';
       return 'methane_world';
     }
   }
@@ -265,8 +274,10 @@ export class SystemGenerator {
     }
 
     for (let i = 0; i < planetCount; i++) {
-      const type = planetTypes[Math.floor(Math.random() * planetTypes.length)];
       const orbitRadius = orbitZones[i];
+      // Use deterministic planet type based on orbit distance and star temperature
+      const planetSeed = this.hashString(star.name) + i * 1000;
+      const type = this.determinePlanetType(orbitRadius, star.temperature, planetSeed);
 
       // Earth radii scaling (realistic)
       let radius: number;
