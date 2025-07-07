@@ -149,7 +149,32 @@ export class StarGenerator {
     const luminosity = Math.pow(mass, 3.5); // Mass-luminosity relationship
     const age = 1 + random() * 10; // 1-11 billion years
     const spectralClass = this.getSpectralClass(temperature);
-    const planetCount = Math.floor(random() * 12); // 0-11 planets
+    
+    // Realistic planet count distribution based on stellar class and research
+    let planetCount: number;
+    if (spectralClass === 'M') {
+      // Red dwarfs: typically 1-4 planets, some up to 7 (TRAPPIST-1)
+      const rand = random();
+      if (rand < 0.3) planetCount = 1 + Math.floor(random() * 2); // 1-2 planets (30%)
+      else if (rand < 0.6) planetCount = 3 + Math.floor(random() * 2); // 3-4 planets (30%) 
+      else if (rand < 0.85) planetCount = 5 + Math.floor(random() * 2); // 5-6 planets (25%)
+      else planetCount = 7; // 7 planets like TRAPPIST-1 (15%)
+    } else if (spectralClass === 'K') {
+      // Orange dwarfs: similar to G-class but slightly fewer
+      planetCount = 4 + Math.floor(random() * 5); // 4-8 planets
+    } else if (spectralClass === 'G') {
+      // Sun-like stars: should have at least 8 planets like our Solar System
+      planetCount = 8 + Math.floor(random() * 3); // 8-10 planets
+    } else if (spectralClass === 'F') {
+      // F-class stars: can have many planets
+      planetCount = 6 + Math.floor(random() * 4); // 6-9 planets
+    } else {
+      // A, B, O-class: large stars can still have up to 8 planets
+      const rand = random();
+      if (rand < 0.4) planetCount = 3 + Math.floor(random() * 3); // 3-5 planets (40%)
+      else if (rand < 0.7) planetCount = 6 + Math.floor(random() * 2); // 6-7 planets (30%)
+      else planetCount = 8; // 8 planets (30%)
+    }
 
     return {
       id: `star-${index}`,
