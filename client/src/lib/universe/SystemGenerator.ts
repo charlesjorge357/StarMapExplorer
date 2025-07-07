@@ -109,35 +109,34 @@ export class SystemGenerator {
     }
   }
 
-  static getPlanetTypeZones(starTemp: number): { [key in PlanetType]: number[] } {
-    // Calculate zone scaling factor based on stellar class
-    const tempFactor = starTemp / 5778; // Solar temperature baseline
-    const zoneScaling = Math.sqrt(tempFactor); // Square root for realistic luminosity scaling
-    
-    // Define which zones each planet type can appear in (scaled by stellar class)
+  static getPlanetTypeOrbits(): { [key in PlanetType]: number[] } {
+    // Hardcoded orbital distances in AU for each planet type
+    // Multiple options per type allow for variety in system generation
     return {
-      // Hot inner zones
-      'nuclear_world': [0.3 * zoneScaling], // Only scorched zone
-      'barren_world': [0.3 * zoneScaling, 0.7 * zoneScaling, 3.5 * zoneScaling], // Scorched, hot, temperate
-      'dusty_world': [0.3 * zoneScaling, 0.7 * zoneScaling, 1.2 * zoneScaling], // Scorched, hot, warm
-      'arid_world': [0.7 * zoneScaling, 1.2 * zoneScaling, 2.0 * zoneScaling, 3.5 * zoneScaling], // Hot through temperate
-      'sandy_world': [0.7 * zoneScaling, 1.2 * zoneScaling], // Hot, warm
-      'martian_world': [0.7 * zoneScaling, 3.5 * zoneScaling, 6.0 * zoneScaling], // Hot, temperate, cool
+      // Hot inner planets (0.3-1.0 AU)
+      'nuclear_world': [0.3, 0.4, 0.5], // Very close to star
+      'barren_world': [0.4, 0.6, 0.8, 1.5, 2.5], // Mercury to Mars-like
+      'dusty_world': [0.5, 0.7, 0.9], // Hot dusty worlds
       
-      // Habitable zones
-      'grassland_world': [1.2 * zoneScaling, 2.0 * zoneScaling], // Warm, habitable
-      'jungle_world': [1.2 * zoneScaling, 2.0 * zoneScaling], // Warm, habitable
-      'ocean_world': [2.0 * zoneScaling], // Habitable only
-      'marshy_world': [2.0 * zoneScaling], // Habitable only
+      // Warm zone planets (0.7-2.0 AU)
+      'arid_world': [0.8, 1.2, 1.6, 2.0], // Desert worlds
+      'sandy_world': [0.9, 1.1], // Hot sandy planets
+      'martian_world': [1.3, 1.8, 2.2], // Mars-like worlds
       
-      // Cold zones
-      'tundra_world': [3.5 * zoneScaling, 6.0 * zoneScaling, 12.0 * zoneScaling], // Temperate, cool, cold
-      'snowy_world': [3.5 * zoneScaling, 6.0 * zoneScaling, 12.0 * zoneScaling], // Temperate, cool, cold
-      'methane_world': [12.0 * zoneScaling, 25.0 * zoneScaling], // Cold, frozen
+      // Habitable zone planets (1.0-2.5 AU)
+      'grassland_world': [1.0, 1.4, 1.8], // Earth-like temperate
+      'jungle_world': [1.1, 1.5, 1.9], // Warm humid worlds
+      'ocean_world': [1.2, 1.6, 2.0], // Water worlds
+      'marshy_world': [1.3, 1.7, 2.1], // Swamp worlds
       
-      // Giants (outer zones only)
-      'gas_giant': [6.0 * zoneScaling, 12.0 * zoneScaling, 25.0 * zoneScaling], // Cool, cold, frozen
-      'frost_giant': [12.0 * zoneScaling, 25.0 * zoneScaling] // Cold, frozen
+      // Cold outer planets (2.5-12 AU)
+      'tundra_world': [2.5, 3.2, 4.0], // Cold terrestrial
+      'snowy_world': [3.0, 3.8, 4.5], // Frozen terrestrial
+      'methane_world': [8.0, 10.0, 12.0], // Outer ice worlds
+      
+      // Gas giants (4-20 AU)
+      'gas_giant': [4.5, 6.0, 8.0, 11.0], // Jupiter to outer gas giants
+      'frost_giant': [12.0, 16.0, 20.0] // Neptune-like ice giants
     };
   }
 
@@ -173,53 +172,46 @@ export class SystemGenerator {
     return planetTypes;
   }
 
-  static findSuitableOrbit(planetType: PlanetType, starTemp: number, takenOrbits: number[]): number {
-    const zones = this.getPlanetTypeZones(starTemp);
-    const suitableZones = zones[planetType];
-    
-    // Calculate zone scaling for reference
-    const tempFactor = starTemp / 5778;
-    const zoneScaling = Math.sqrt(tempFactor);
+  static findSuitableOrbit(planetType: PlanetType, seed: number, takenOrbits: number[]): number {
+    const orbitalOptions = this.getPlanetTypeOrbits()[planetType];
     
     console.log(`🎯 Finding orbit for ${planetType}:`);
-    console.log(`   Star temp: ${starTemp}K, zone scaling: ${zoneScaling.toFixed(2)}`);
-    console.log(`   Suitable AU zones: [${suitableZones.map(z => z.toFixed(2)).join(', ')}]`);
+    console.log(`   Available AU options: [${orbitalOptions.map(o => o.toFixed(2)).join(', ')}]`);
     
-    // Convert zones to orbital distances (multiply by 6 to get visual distance)
-    const suitableOrbits = suitableZones.map(zone => zone * 6);
-    console.log(`   Suitable visual orbits: [${suitableOrbits.map(o => o.toFixed(1)).join(', ')}]`);
+    // Convert AU to visual distances (multiply by 6)
+    const visualOrbits = orbitalOptions.map(au => au * 6);
+    console.log(`   Visual orbit options: [${visualOrbits.map(o => o.toFixed(1)).join(', ')}]`);
     console.log(`   Already taken orbits: [${takenOrbits.map(o => o.toFixed(1)).join(', ')}]`);
     
-    // Find the closest available orbit that doesn't conflict with existing planets
-    for (const targetOrbit of suitableOrbits) {
-      let actualOrbit = targetOrbit;
-      let attempts = 0;
+    // Use seed to pick from available options
+    const seededRandom = this.seededRandom(seed + planetType.length);
+    const selectedIndex = Math.floor(seededRandom * orbitalOptions.length);
+    let selectedOrbit = visualOrbits[selectedIndex];
+    
+    // Check if orbit conflicts with existing planets
+    let attempts = 0;
+    while (attempts < 10) {
+      const tooClose = takenOrbits.some(existingOrbit => 
+        Math.abs(selectedOrbit - existingOrbit) < 12 // Minimum 12 unit separation
+      );
       
-      // Adjust orbit if too close to existing planets
-      while (attempts < 20) {
-        const tooClose = takenOrbits.some(existingOrbit => 
-          Math.abs(actualOrbit - existingOrbit) < 15 // Minimum 15 unit separation
-        );
-        
-        if (!tooClose) {
-          console.log(`   ✅ Selected orbit: ${actualOrbit.toFixed(1)} (${(actualOrbit/6).toFixed(2)} AU)`);
-          return actualOrbit;
-        }
-        
-        // Try slightly farther out
-        actualOrbit += 5 + (attempts * 2);
-        attempts++;
+      if (!tooClose) {
+        console.log(`   ✅ Selected orbit: ${selectedOrbit.toFixed(1)} (${(selectedOrbit/6).toFixed(2)} AU)`);
+        return selectedOrbit;
       }
+      
+      // Try next available option or adjust slightly
+      if (attempts < orbitalOptions.length - 1) {
+        const nextIndex = (selectedIndex + attempts + 1) % orbitalOptions.length;
+        selectedOrbit = visualOrbits[nextIndex];
+      } else {
+        selectedOrbit += 8 + (attempts * 4); // Move farther out
+      }
+      attempts++;
     }
     
-    // Fallback: find any available orbit far enough from others
-    let fallbackOrbit = suitableOrbits[0] || 30;
-    while (takenOrbits.some(orbit => Math.abs(fallbackOrbit - orbit) < 15)) {
-      fallbackOrbit += 20;
-    }
-    
-    console.log(`   ⚠️ Using fallback orbit: ${fallbackOrbit.toFixed(1)} (${(fallbackOrbit/6).toFixed(2)} AU)`);
-    return fallbackOrbit;
+    console.log(`   ✅ Final orbit: ${selectedOrbit.toFixed(1)} (${(selectedOrbit/6).toFixed(2)} AU)`);
+    return selectedOrbit;
   }
 
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number, overrideType?: PlanetType): Planet {
@@ -376,7 +368,7 @@ export class SystemGenerator {
     
     for (let i = 0; i < planetCount; i++) {
       const planetType = planetTypes[i];
-      const orbitRadius = this.findSuitableOrbit(planetType, star.temperature, takenOrbits);
+      const orbitRadius = this.findSuitableOrbit(planetType, seed + i, takenOrbits);
       takenOrbits.push(orbitRadius);
       
       console.log(`🪐 Generated ${planetType} at orbit ${orbitRadius.toFixed(1)} (${(orbitRadius/6).toFixed(2)} AU) for ${spectralClass}-class star`);
@@ -403,7 +395,7 @@ export class SystemGenerator {
     console.log(`🌌 System generated with ${system.planets.length} planets:`, system.planets.map(p => `${p.name} (${p.type})`));
     
     // Validate planet placement
-    this.validatePlanetPlacement(system.planets, star.temperature);
+    this.validatePlanetPlacement(system.planets);
     
     return system;
   }
@@ -443,30 +435,30 @@ export class SystemGenerator {
     }
   }
 
-  static validatePlanetPlacement(planets: Planet[], starTemp: number): void {
-    console.log(`🔍 Validating planet placement for ${starTemp}K star:`);
+  static validatePlanetPlacement(planets: Planet[]): void {
+    console.log(`🔍 Validating planet placement:`);
     
-    const zones = this.getPlanetTypeZones(starTemp);
+    const validOrbits = this.getPlanetTypeOrbits();
     let validPlacements = 0;
     let totalPlacements = 0;
     
     for (const planet of planets) {
       totalPlacements++;
       const planetAU = planet.orbitRadius / 6; // Convert back to AU
-      const validZones = zones[planet.type];
+      const allowedOrbits = validOrbits[planet.type];
       
-      // Check if planet is within any of its valid zones (with some tolerance)
-      const isInValidZone = validZones.some(zone => {
-        const tolerance = zone * 0.3; // 30% tolerance
-        return Math.abs(planetAU - zone) <= tolerance;
+      // Check if planet is close to any of its allowed orbital distances (within 50% tolerance)
+      const isInValidOrbit = allowedOrbits.some(allowedAU => {
+        const tolerance = allowedAU * 0.5; // 50% tolerance for flexibility
+        return Math.abs(planetAU - allowedAU) <= tolerance;
       });
       
-      if (isInValidZone) {
+      if (isInValidOrbit) {
         validPlacements++;
         console.log(`   ✅ ${planet.name} (${planet.type}) at ${planetAU.toFixed(2)} AU - VALID`);
       } else {
         console.log(`   ❌ ${planet.name} (${planet.type}) at ${planetAU.toFixed(2)} AU - INVALID`);
-        console.log(`      Should be in zones: [${validZones.map(z => z.toFixed(2)).join(', ')}] AU`);
+        console.log(`      Should be near: [${allowedOrbits.map(o => o.toFixed(2)).join(', ')}] AU`);
       }
     }
     
