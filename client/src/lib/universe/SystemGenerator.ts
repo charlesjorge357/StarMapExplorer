@@ -100,20 +100,23 @@ export class SystemGenerator {
     const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
-    // Fixed orbital zones scaled to match realistic AU system
-    const innerHotZone = 6; // ~1.0 AU hot zone (Mercury to Venus range)
-    const midZone = 18; // ~3.0 AU mid zone (Mars to asteroid belt range)
+    // Scale down orbital radius for realistic AU calculations (keeping 3D visuals unchanged)
+    const auScaledRadius = orbitRadius / 6; // Convert to realistic AU scale for planet type logic
+    
+    // Fixed orbital zones in realistic AU scale
+    const innerHotZone = 1.0; // Mercury to Venus range
+    const midZone = 3.0; // Mars to asteroid belt range
     
     // Calculate effective temperature at planet's orbit, accounting for stellar luminosity
     // Hotter stars emit more energy, so planets at same distance are hotter
     const tempFactor = starTemp / 5778; // Solar temperature baseline
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
-    const effectiveTemp = 1.5 * starTemp * luminosityFactor / (orbitRadius * orbitRadius);
+    const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet at orbit ${orbitRadius.toFixed(1)}: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, luminosity=${luminosityFactor.toFixed(2)}x`);
+    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
 
     // Hot inner zone - close to star
-    if (orbitRadius < innerHotZone) {
+    if (auScaledRadius < innerHotZone) {
       if (effectiveTemp > 800) {
         const rand = this.seededRandom(dynamicSeed) * 4;
         if (rand < 1) return 'arid_world';
@@ -136,7 +139,7 @@ export class SystemGenerator {
       return 'barren_world';
     } 
     // Mid zone - scaled by stellar temperature
-    else if (orbitRadius < midZone) {
+    else if (auScaledRadius < midZone) {
       if (this.seededRandom(dynamicSeed + 300) < 0.3) return 'gas_giant';
       const terrestrialRand = this.seededRandom(dynamicSeed + 400) * 6;
       if (terrestrialRand < 1) return 'arid_world';
@@ -290,25 +293,25 @@ export class SystemGenerator {
       'tundra_world', 'nuclear_world', 'ocean_world'
     ];
 
-    // Calculate orbital zones with realistic AU scaling (Mercury starts at ~0.4 AU)
-    const baseSpacing = 2.4 + Math.random() * 1.2; // 0.4-0.6 AU for innermost planet (divided by 6 for display)
-    let maxOrbitRadius = baseSpacing * 25; // Allow systems up to ~60 AU max
+    // Calculate orbital zones with proper spacing to prevent overlaps (for 3D visuals)
+    const baseSpacing = 20 + star.radius * 6; // Increased base spacing for visual separation
+    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
     for (let i = 0; i < planetCount; i++) {
       if (i === 0) {
-        // First planet starts at Mercury-like distance
+        // First planet starts at base spacing from star
         orbitZones.push(baseSpacing);
       } else {
         const prevOrbit = orbitZones[i - 1];
         
-        // Realistic orbital spacing progression (Titius-Bode-like)
-        const minSpacingBetweenOrbits = 1.4 + (i * 0.8); // Progressive spacing in AU scale
-        const randomVariation = Math.random() * 1.5 + 0.5; // 0.5-2.0 AU additional spacing
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
         
         let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
         if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
-          maxOrbitRadius = newOrbit + 6; // Less aggressive expansion
+          maxOrbitRadius = newOrbit + 20;
         }
         orbitZones.push(newOrbit);
       }
