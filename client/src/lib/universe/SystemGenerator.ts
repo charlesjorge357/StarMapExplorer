@@ -326,6 +326,8 @@ export class SystemGenerator {
   }
 
   static generateSystem(star: any, seed: number): StarSystem {
+    console.log(`🌟 Generating system for ${star.name} (${star.temperature}K, ${this.getSpectralClass(star.temperature)}-class)`);
+    
     const planets = [];
 
     // Determine planet count based on stellar class (from previous work)
@@ -351,8 +353,11 @@ export class SystemGenerator {
         break;
     }
 
+    console.log(`🪐 Planning ${planetCount} planets for ${spectralClass}-class star`);
+
     // Generate random planet types with bias against duplicates
     const planetTypes = this.generateRandomPlanetTypes(planetCount, seed);
+    console.log(`🎲 Planet types selected:`, planetTypes);
     
     // Place each planet in appropriate orbital zone based on its type
     const takenOrbits: number[] = [];
@@ -362,19 +367,29 @@ export class SystemGenerator {
       const orbitRadius = this.findSuitableOrbit(planetType, star.temperature, takenOrbits);
       takenOrbits.push(orbitRadius);
       
-      console.log(`Generated ${planetType} at orbit ${orbitRadius.toFixed(1)} (${(orbitRadius/6).toFixed(2)} AU) for ${spectralClass}-class star`);
+      console.log(`🪐 Generated ${planetType} at orbit ${orbitRadius.toFixed(1)} (${(orbitRadius/6).toFixed(2)} AU) for ${spectralClass}-class star`);
 
       // Generate the actual planet using existing method with override type
       const planet = this.generatePlanet(star.name, star.temperature, i, orbitRadius, seed + i, planetType);
+      console.log(`✅ Planet created:`, {
+        name: planet.name,
+        type: planet.type,
+        radius: planet.radius,
+        orbitRadius: planet.orbitRadius,
+        position: planet.position
+      });
       planets.push(planet);
     }
 
-    return {
+    const system = {
       id: `system-${star.id}`,
       starId: star.id,
       planets: planets.sort((a, b) => a.orbitRadius - b.orbitRadius), // Sort by orbital distance
       asteroidBelts: [] // Can add asteroid belt generation later
     };
+
+    console.log(`🌌 System generated with ${system.planets.length} planets:`, system.planets.map(p => `${p.name} (${p.type})`));
+    return system;
   }
 
   // Keep original generatePlanet method but update the type determination
