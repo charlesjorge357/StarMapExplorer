@@ -167,8 +167,48 @@ export class SystemGenerator {
     }
 
     const orbitSpeed = Math.sqrt(1 / orbitRadius) * 0.15;
-    let mass = Math.pow(radius, 3);
-    if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
+    
+    // Calculate realistic mass based on planet type and composition
+    // Using Earth as baseline (mass = 1, radius = 1, density = 1)
+    let densityFactor: number;
+    switch (type) {
+      case 'gas_giant':
+        densityFactor = 0.25; // Very low density (Jupiter = 0.24 Earth density)
+        break;
+      case 'frost_giant':
+        densityFactor = 0.3; // Low density (Neptune = 0.3 Earth density)
+        break;
+      case 'nuclear_world':
+        densityFactor = 1.8; // Very dense due to heavy elements
+        break;
+      case 'barren_world':
+      case 'dusty_world':
+      case 'martian_world':
+        densityFactor = 0.7; // Lower density like Mars (0.71 Earth density)
+        break;
+      case 'methane_world':
+      case 'snowy_world':
+      case 'tundra_world':
+        densityFactor = 0.6; // Lower density due to ice content
+        break;
+      case 'ocean_world':
+        densityFactor = 0.9; // Slightly lower due to water content
+        break;
+      case 'grassland_world':
+      case 'jungle_world':
+      case 'marshy_world':
+        densityFactor = 1.0; // Earth-like density
+        break;
+      case 'arid_world':
+      case 'sandy_world':
+        densityFactor = 0.8; // Slightly lower density due to composition
+        break;
+      default:
+        densityFactor = 1.0; // Default Earth-like
+    }
+    
+    // Mass = Volume × Density = radius³ × density factor
+    const mass = Math.pow(radius, 3) * densityFactor;
 
     const baseTemp = starTemp / (orbitRadius * orbitRadius * 16);
     let temperature = baseTemp;
