@@ -433,7 +433,7 @@ function App() {
             surfaceFeatures: selectedPlanet.surfaceFeatures,
             featureCount: selectedPlanet.surfaceFeatures?.length
           });
-          
+
 
           // Allow planetary view for all terrestrial planets (non-gas giants)
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
@@ -444,7 +444,7 @@ function App() {
             if ((window as any).homeToPlanet) {
               (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
             }
-            
+
             // Disable galactic and system view keyboard controls
             (window as any).disableGalacticSystemControls = true;
           } else {
