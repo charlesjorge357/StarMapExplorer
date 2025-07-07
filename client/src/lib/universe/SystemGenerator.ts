@@ -100,8 +100,8 @@ export class SystemGenerator {
     const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
-    // orbitRadius is now already in AU scale, no conversion needed
-    const auScaledRadius = orbitRadius; // Use direct AU values for planet type logic
+    // Scale down orbital radius for realistic AU calculations (keeping 3D visuals unchanged)
+    const auScaledRadius = orbitRadius / 6; // Convert to realistic AU scale for planet type logic
     
     // 8 orbital zones with realistic AU boundaries
     const zones = {
@@ -288,12 +288,10 @@ export class SystemGenerator {
 
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
     const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
-    // Apply 6x scaling factor only for 3D visual positioning
-    const visualOrbitRadius = orbitRadius * 6;
     const position: [number, number, number] = [
-      Math.cos(angle) * visualOrbitRadius * 10,
-      Math.sin(inclination) * visualOrbitRadius * 2,
-      Math.sin(angle) * visualOrbitRadius * 10
+      Math.cos(angle) * orbitRadius * 10,
+      Math.sin(inclination) * orbitRadius * 2,
+      Math.sin(angle) * orbitRadius * 10
     ];
 
     return {
