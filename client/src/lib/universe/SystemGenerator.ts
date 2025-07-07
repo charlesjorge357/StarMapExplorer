@@ -115,8 +115,8 @@ export class SystemGenerator {
     const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
-    // Use realistic AU progression based on planet index, independent of visual distances
-    const auScaledRadius = this.calculateRealisticAU(planetIndex);
+    // Use the actual orbital radius (scaled down to realistic AU) for zone classification
+    const auScaledRadius = orbitRadius / 6; // Convert visual distance to realistic AU scale
     
     // Calculate zone scaling factor based on stellar class deviation from G-class
     // G-class (Sun-like, ~5778K) = 1.0x scaling (baseline)
@@ -143,7 +143,7 @@ export class SystemGenerator {
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
     const zoneName = auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen';
-    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: zone=${zoneName}, starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
+    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): zone=${zoneName}, starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
     console.log(`Zone boundaries: Scorched=${zones.scorched.toFixed(2)}, Hot=${zones.hot.toFixed(2)}, Warm=${zones.warm.toFixed(2)}, Habitable=${zones.habitable.toFixed(2)}, Temperate=${zones.temperate.toFixed(2)}, Cool=${zones.cool.toFixed(2)}`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
