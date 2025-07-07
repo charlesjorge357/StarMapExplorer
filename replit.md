@@ -163,6 +163,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - July 7, 2025: Fixed ring angle consistency between system and planetary views by implementing exact same deterministic rotation calculation based on ring ID hash. Planetary view rings now match SystemView angles perfectly using identical mathematical formulas.
 - July 7, 2025: Implemented proper dynamic planet type seeding with orbital zone randomization. Each planet gets unique seeding based on session timestamp + orbital position, ensuring planets at the same distance have different types between sessions while maintaining distance-appropriate classifications (hot inner zone, mid zone, cold outer zone). Stars remain deterministic for consistent galactic layout.
 - July 7, 2025: Added stellar temperature-based zone scaling to planet type determination. Orbital zones now scale with stellar temperature using square root factor (hotter stars have habitable zones farther out, cooler stars closer in). Uses Solar temperature (5778K) as baseline for realistic habitable zone positioning based on stellar luminosity.
+- July 7, 2025: Fixed stellar temperature distribution extremes in StarGenerator. Replaced unrealistic temperature ranges with proper mass-temperature correlation, realistic stellar population percentages (76% M-class, 12% K-class, 8% G-class, 3% F-class, 1% A/B-class), and capped maximum temperatures at 13000K to prevent skewing towards extreme hot stars.
 
 ## User Preferences
 

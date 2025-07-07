@@ -109,19 +109,29 @@ export class StarGenerator {
     let mass: number;
     let temperature: number;
     
-    // Mass distribution (most stars are M-class)
-    if (massRand < 0.7) {
-      mass = 0.1 + random() * 0.4; // M-class: 0.1-0.5 solar masses
-      temperature = 2500 + random() * 1200; // 2500-3700K
-    } else if (massRand < 0.9) {
-      mass = 0.5 + random() * 0.8; // K-class: 0.5-1.3 solar masses
-      temperature = 3700 + random() * 1500; // 3700-5200K
-    } else if (massRand < 0.97) {
-      mass = 0.8 + random() * 1.2; // G-F class: 0.8-2.0 solar masses
-      temperature = 5200 + random() * 2300; // 5200-7500K
+    // Mass distribution (most stars are M-class) with realistic temperature correlation
+    if (massRand < 0.76) {
+      // M-class red dwarfs (76% of all stars)
+      mass = 0.08 + random() * 0.37; // 0.08-0.45 solar masses
+      // Temperature more tightly correlated with mass for M-dwarfs
+      temperature = 2300 + (mass / 0.45) * 1400 + random() * 200; // 2300-3900K with correlation
+    } else if (massRand < 0.88) {
+      // K-class orange dwarfs (12% of all stars)
+      mass = 0.45 + random() * 0.35; // 0.45-0.8 solar masses
+      temperature = 3700 + (mass / 0.8) * 1300 + random() * 300; // 3700-5200K with correlation
+    } else if (massRand < 0.96) {
+      // G-class yellow dwarfs like our Sun (8% of all stars)
+      mass = 0.8 + random() * 0.3; // 0.8-1.1 solar masses
+      temperature = 5200 + (mass / 1.1) * 800 + random() * 200; // 5200-6200K with correlation
+    } else if (massRand < 0.99) {
+      // F-class stars (3% of all stars)
+      mass = 1.04 + random() * 0.36; // 1.04-1.4 solar masses
+      temperature = 6000 + (mass / 1.4) * 1500 + random() * 200; // 6000-7700K with correlation
     } else {
-      mass = 2 + random() * 8; // A-B-O class: 2-10 solar masses
-      temperature = 7500 + random() * 12500; // 7500-20000K
+      // A, B, and rare O-class stars (1% of all stars)
+      mass = 1.4 + random() * 3.6; // 1.4-5.0 solar masses (capped for realism)
+      // More conservative temperature range to avoid extremes
+      temperature = 7500 + (mass / 5.0) * 5000 + random() * 500; // 7500-13000K with correlation
     }
 
     // More realistic radius calculation with extreme stellar variations
