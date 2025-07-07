@@ -98,12 +98,12 @@ export class SystemGenerator {
     const random = this.seededRandom(seed);
     
     // Convert orbit radius to scaled AU (orbitRadius / 6)
-    const scaledAU = orbitRadius / 6;
+    const scaledAU = orbitRadius / 70;
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
     const tempFactor = starTemp / 5778;
-    const adjustedAU = scaledAU / tempFactor;
+    const adjustedAU = scaledAU * tempFactor;
     
     // Debug logging to understand the zone distribution
     console.log(`Planet generation: orbitRadius=${orbitRadius.toFixed(1)}, scaledAU=${scaledAU.toFixed(2)}, starTemp=${starTemp}K, tempFactor=${tempFactor.toFixed(2)}, adjustedAU=${adjustedAU.toFixed(2)}`);
@@ -160,10 +160,9 @@ export class SystemGenerator {
     
     // Zone 6: Outer System (> 8.0 AU adjusted) - Mostly giants, some methane worlds
     else {
-      const rand = random * 4;
-      if (rand < 1) return 'tundra_world';
-      if (rand < 2) return 'frost_giant';
-      if (rand < 3) return 'snowy_world';
+      const rand = random * 3;
+      if (rand < 1) return 'frost_giant';
+      if (rand < 2) return 'barren_world';
       return 'methane_world';
     }
   }
@@ -230,7 +229,7 @@ export class SystemGenerator {
       mass,
       type,
       orbitRadius,
-      displayOrbit: orbitRadius / 10,
+      displayOrbit: orbitRadius / 70,
       orbitSpeed,
       rotationSpeed: this.seededRandom(planetSeed + 12) * 0.1,
       temperature,
