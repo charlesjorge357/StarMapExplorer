@@ -178,7 +178,7 @@ export class SystemGenerator {
       if (rand < 1) return 'tundra_world';
       if (rand < 2) return 'snowy_world';
       if (rand < 3) return 'barren_world';
-      return 'methane_world';
+      return 'martian_world';
     }
     // Zone 7: Cold (6.0-12.0 AU) - Gas/frost giants, frozen worlds
     else if (auScaledRadius < zones.cold) {
@@ -289,9 +289,9 @@ export class SystemGenerator {
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
     const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
     const position: [number, number, number] = [
-      Math.cos(angle) * orbitRadius * 60,
+      Math.cos(angle) * orbitRadius * 10,
       Math.sin(inclination) * orbitRadius * 2,
-      Math.sin(angle) * orbitRadius * 60
+      Math.sin(angle) * orbitRadius * 10
     ];
 
     return {
@@ -334,27 +334,24 @@ export class SystemGenerator {
     ];
 
     // Calculate orbital zones with proper spacing to prevent overlaps (for 3D visuals)
-    // Allow for very close orbits (Zone 1&2) by starting much closer
-    const minBaseSpacing = 1.8; // 0.3 AU minimum (scorched zone)
-    const maxBaseSpacing = 4.8; // 0.8 AU maximum (hot zone)
-    const baseSpacing = minBaseSpacing + Math.random() * (maxBaseSpacing - minBaseSpacing);
-    let maxOrbitRadius = baseSpacing * 35; // Allow larger systems
+    const baseSpacing = 20 + star.radius * 6; // Increased base spacing for visual separation
+    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
     for (let i = 0; i < planetCount; i++) {
       if (i === 0) {
-        // First planet can start very close to star (zones 1-2)
+        // First planet starts at base spacing from star
         orbitZones.push(baseSpacing);
       } else {
         const prevOrbit = orbitZones[i - 1];
         
-        // Progressive spacing that grows with distance
-        const minSpacingBetweenOrbits = 3 + (i * 2); // Smaller initial spacing
-        const randomVariation = Math.random() * (5 + i * 2) + 2; // Growing variation
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
         
         let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
         if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
-          maxOrbitRadius = newOrbit + 15;
+          maxOrbitRadius = newOrbit + 20;
         }
         orbitZones.push(newOrbit);
       }
