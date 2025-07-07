@@ -210,10 +210,10 @@ export class SystemGenerator {
     return fallbackOrbit;
   }
 
-  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
+  static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number, overrideType?: PlanetType): Planet {
     const planetSeed = seed + index * 1000;
     const name = this.generatePlanetName(starName, index);
-    const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed, index);
+    const type = overrideType || this.determinePlanetType(orbitRadius, starTemp, planetSeed, index);
 
     const radiusRange = this.PLANET_RADII[type];
     
