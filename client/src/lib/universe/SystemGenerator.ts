@@ -192,7 +192,7 @@ export class SystemGenerator {
     let attempts = 0;
     while (attempts < 10) {
       const tooClose = takenOrbits.some(existingOrbit => 
-        Math.abs(selectedOrbit - existingOrbit) < 12 // Minimum 12 unit separation
+        Math.abs(selectedOrbit - existingOrbit) < 18 // Minimum 18 unit separation
       );
       
       if (!tooClose) {
@@ -340,20 +340,20 @@ export class SystemGenerator {
     
     switch (spectralClass) {
       case 'M': // Red dwarfs
-        const trappistChance = this.seededRandom(seed) < 0.15;
-        planetCount = trappistChance ? 7 : Math.floor(this.seededRandom(seed + 10) * 7) + 1;
+        const trappistChance = this.seededRandom(seed) < 0.1; // Reduced chance
+        planetCount = trappistChance ? 5 : Math.floor(this.seededRandom(seed + 10) * 4) + 1; // 1-4 planets, rarely 5
         break;
       case 'K': // Orange dwarfs
-        planetCount = Math.floor(this.seededRandom(seed + 20) * 5) + 4; // 4-8 planets
+        planetCount = Math.floor(this.seededRandom(seed + 20) * 4) + 2; // 2-5 planets
         break;
       case 'G': // Sun-like stars
-        planetCount = Math.floor(this.seededRandom(seed + 30) * 3) + 8; // 8-10 planets minimum
+        planetCount = Math.floor(this.seededRandom(seed + 30) * 4) + 3; // 3-6 planets
         break;
       case 'F': // Hot stars
-        planetCount = Math.floor(this.seededRandom(seed + 40) * 4) + 6; // 6-9 planets
+        planetCount = Math.floor(this.seededRandom(seed + 40) * 3) + 3; // 3-5 planets
         break;
       default: // A, B, O class (hot massive stars)
-        planetCount = Math.floor(this.seededRandom(seed + 50) * 5) + 4; // 4-8 planets
+        planetCount = Math.floor(this.seededRandom(seed + 50) * 3) + 2; // 2-4 planets
         break;
     }
 
