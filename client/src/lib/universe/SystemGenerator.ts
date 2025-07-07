@@ -102,11 +102,10 @@ export class SystemGenerator {
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
-    const tempFactor = starTemp / 5778;
-    const adjustedAU = scaledAU * tempFactor;
+    const adjustedAU = scaledAU * Math.sqrt();
     
     // Debug logging to understand the zone distribution
-    console.log(`Planet generation: orbitRadius=${orbitRadius.toFixed(1)}, scaledAU=${scaledAU.toFixed(2)}, starTemp=${starTemp}K, tempFactor=${tempFactor.toFixed(2)}, adjustedAU=${adjustedAU.toFixed(2)}`);
+    
     
     // Define planet zones based on distance (nuclear/barren/arid closest, then sandy/jungle/marshy, etc.)
     
