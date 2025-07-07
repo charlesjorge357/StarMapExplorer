@@ -97,7 +97,7 @@ export class SystemGenerator {
   static calculateRealisticAU(planetIndex: number): number {
     // Realistic AU progression based on our solar system pattern
     // Mercury=0.39, Venus=0.72, Earth=1.0, Mars=1.52, Jupiter=5.2, Saturn=9.5, Uranus=19.2, Neptune=30.1
-    const baseDistances = [0.39, 0.72, 1.0, 1.52, 3.2, 5.2, 9.5, 19.2, 30.1];
+    const baseDistances = [0.39, 0.72, 1.0, 1.52, 5.2, 9.5, 19.2, 30.1];
     
     if (planetIndex < baseDistances.length) {
       return baseDistances[planetIndex];
@@ -142,7 +142,8 @@ export class SystemGenerator {
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, zoneScaling=${zoneScaling.toFixed(2)}x`);
+    const zoneName = auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen';
+    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: zone=${zoneName} (boundary=${zoneName === 'Cool' ? zones.cool.toFixed(2) : zoneName === 'Temperate' ? zones.temperate.toFixed(2) : 'N/A'}), starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
