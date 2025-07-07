@@ -307,20 +307,18 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     if (isFeatureTracking && featureTrackingRef.current && planetMeshRef.current && groupRef.current) {
       const feature = featureTrackingRef.current;
 
-      // Convert lat/lng to proper spherical coordinates
+      // Use EXACT same coordinate conversion as SurfaceFeatureMarker
       // Note: feature.position[0] = latitude, feature.position[1] = longitude
-      const lat = (feature.position[0] * Math.PI) / 180; // latitude in radians (-π/2 to π/2)
-      const lng = (feature.position[1] * Math.PI) / 180; // longitude in radians (-π to π)
-
-      // Standard spherical to Cartesian conversion:
-      // x = r * cos(lat) * cos(lng)
-      // y = r * sin(lat)  
-      // z = r * cos(lat) * sin(lng)
-      const localFeaturePosition = new THREE.Vector3(
-        planetRadius * Math.cos(lat) * Math.cos(lng),  // x
-        planetRadius * Math.sin(lat),                   // y
-        planetRadius * Math.cos(lat) * Math.sin(lng)   // z
-      );
+      const [lat, lon] = feature.position;
+      const phi = (90 - lat) * (Math.PI / 180);    // colatitude
+      const theta = (lon + 180) * (Math.PI / 180); // longitude with offset
+      
+      // Same positioning formula as SurfaceFeatureMarker
+      const x = -planetRadius * Math.sin(phi) * Math.cos(theta);
+      const y = planetRadius * Math.cos(phi);
+      const z = planetRadius * Math.sin(phi) * Math.sin(theta);
+      
+      const localFeaturePosition = new THREE.Vector3(x, y, z);
 
       // Apply transformations step by step for better debugging
       // First apply planet's own rotation
@@ -366,15 +364,16 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       
       // Debug logging (occasional)
       if (Math.random() < 0.005) { // Very occasionally to avoid spam
-        console.log('Feature tracking debug:', {
+        console.log('Feature tracking debug (using SurfaceFeatureMarker coordinates):', {
           featureName: feature.name,
-          lat: feature.position[0],
-          lng: feature.position[1],
-          planetRotationY: planetMeshRef.current?.rotation.y * 180 / Math.PI,
+          originalLatLng: feature.position,
+          phi: phi * 180 / Math.PI, // colatitude in degrees
+          theta: theta * 180 / Math.PI, // longitude in degrees  
           localFeaturePos: localFeaturePosition,
           worldFeaturePos: worldFeaturePosition,
           cameraPos: camera.position,
-          distance: worldFeaturePosition.distanceTo(camera.position)
+          distance: worldFeaturePosition.distanceTo(camera.position),
+          planetRotationY: planetMeshRef.current?.rotation.y * 180 / Math.PI
         });
       }
     }
