@@ -322,19 +322,18 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         planetRadius * Math.cos(lat) * Math.sin(lng)   // z
       );
 
-      // Apply planet's rotation quaternion to get world-space position
+      // Apply transformations step by step for better debugging
+      // First apply planet's own rotation
       const planetQuaternion = new THREE.Quaternion();
       planetMeshRef.current.getWorldQuaternion(planetQuaternion);
       
-      // Apply group transformations (mouse rotation) as well
+      // Apply group transformations (mouse rotation) 
       const groupQuaternion = new THREE.Quaternion();
       groupRef.current.getWorldQuaternion(groupQuaternion);
       
-      // Combine rotations
-      const combinedQuaternion = new THREE.Quaternion().multiplyQuaternions(groupQuaternion, planetQuaternion);
-      
-      // Transform feature position to world space
-      const worldFeaturePosition = localFeaturePosition.clone().applyQuaternion(combinedQuaternion);
+      // Transform feature position: first by planet rotation, then by group rotation
+      const featureAfterPlanetRotation = localFeaturePosition.clone().applyQuaternion(planetQuaternion);
+      const worldFeaturePosition = featureAfterPlanetRotation.clone().applyQuaternion(groupQuaternion);
 
       // Calculate camera position - offset above the feature
       const distance = trackingDistanceRef.current;
@@ -364,6 +363,20 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       camera.lookAt(worldFeaturePosition);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
+      
+      // Debug logging (occasional)
+      if (Math.random() < 0.005) { // Very occasionally to avoid spam
+        console.log('Feature tracking debug:', {
+          featureName: feature.name,
+          lat: feature.position[0],
+          lng: feature.position[1],
+          planetRotationY: planetMeshRef.current?.rotation.y * 180 / Math.PI,
+          localFeaturePos: localFeaturePosition,
+          worldFeaturePos: worldFeaturePosition,
+          cameraPos: camera.position,
+          distance: worldFeaturePosition.distanceTo(camera.position)
+        });
+      }
     }
 
     // Planet and features rotation (only if not being held by mouse)
