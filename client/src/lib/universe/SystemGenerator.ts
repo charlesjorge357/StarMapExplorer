@@ -100,37 +100,40 @@ export class SystemGenerator {
     const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
-    // Calculate temperature-scaled zones based on stellar temperature
-    // Sun-like star (5778K) as baseline, scale zones by temperature ratio
+    // Fixed orbital zones (not scaled by star temperature)
+    const innerHotZone = 30; // Fixed inner zone
+    const midZone = 80; // Fixed mid zone
+    
+    // Calculate effective temperature at planet's orbit, accounting for stellar luminosity
+    // Hotter stars emit more energy, so planets at same distance are hotter
     const tempFactor = starTemp / 5778; // Solar temperature baseline
-    const innerHotZone = 30 * Math.sqrt(tempFactor); // Hot zone scales with sqrt of temp (scaled for our orbit system)
-    const midZone = 80 * Math.sqrt(tempFactor); // Mid zone scales with sqrt of temp (scaled for our orbit system)
+    const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
+    const effectiveTemp = 1.5 * starTemp * luminosityFactor / (orbitRadius * orbitRadius);
     
-    console.log(`Planet at orbit ${orbitRadius.toFixed(1)}: innerZone=${innerHotZone.toFixed(1)}, midZone=${midZone.toFixed(1)}, starTemp=${starTemp}K`);
-    
-    const effectiveTemp = 1.5*starTemp / (orbitRadius * orbitRadius);
+    console.log(`Planet at orbit ${orbitRadius.toFixed(1)}: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, luminosity=${luminosityFactor.toFixed(2)}x`);
 
     // Hot inner zone - close to star
     if (orbitRadius < innerHotZone) {
       if (effectiveTemp > 800) {
         const rand = this.seededRandom(dynamicSeed) * 4;
-        if (rand < 1) return 'barren_world';
+        if (rand < 1) return 'arid_world';
         if (rand < 2) return 'dusty_world'; 
         if (rand < 3) return 'martian_world';
-        return 'arid_world';
+        return 'barren_world';
       }
       if (effectiveTemp > 400) {
         const rand = this.seededRandom(dynamicSeed + 100) * 3;
         if (rand < 1) return 'arid_world';
         if (rand < 2) return 'sandy_world';
-        return 'martian_world';
+        return 'barren_world';
       }
       // Habitable zone
-      const rand = this.seededRandom(dynamicSeed + 200) * 4;
+      const rand = this.seededRandom(dynamicSeed + 300) * 5;
       if (rand < 1) return 'grassland_world';
       if (rand < 2) return 'jungle_world';
       if (rand < 3) return 'marshy_world';
-      return 'ocean_world';
+      if (rand < 4) return 'ocean_world';
+      return 'barren_world';
     } 
     // Mid zone - scaled by stellar temperature
     else if (orbitRadius < midZone) {
@@ -141,7 +144,7 @@ export class SystemGenerator {
       if (terrestrialRand < 3) return 'dusty_world';
       if (terrestrialRand < 4) return 'martian_world';
       if (terrestrialRand < 5) return 'sandy_world';
-      return 'tundra_world';
+      return 'barren_world';
     } 
     // Outer zone - cold
     else {
