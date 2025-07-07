@@ -143,7 +143,8 @@ export class SystemGenerator {
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
     const zoneName = auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen';
-    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: zone=${zoneName} (boundary=${zoneName === 'Cool' ? zones.cool.toFixed(2) : zoneName === 'Temperate' ? zones.temperate.toFixed(2) : 'N/A'}), starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
+    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: zone=${zoneName}, starTemp=${starTemp}K, scaling=${zoneScaling.toFixed(2)}x`);
+    console.log(`Zone boundaries: Scorched=${zones.scorched.toFixed(2)}, Hot=${zones.hot.toFixed(2)}, Warm=${zones.warm.toFixed(2)}, Habitable=${zones.habitable.toFixed(2)}, Temperate=${zones.temperate.toFixed(2)}, Cool=${zones.cool.toFixed(2)}`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
