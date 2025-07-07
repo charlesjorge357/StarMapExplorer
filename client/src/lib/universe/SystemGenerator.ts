@@ -94,14 +94,29 @@ export class SystemGenerator {
     return index < greekLetters.length ? `${starName} ${greekLetters[index]}` : `${starName} ${index + 1}`;
   }
 
-  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
+  static calculateRealisticAU(planetIndex: number): number {
+    // Realistic AU progression based on our solar system pattern
+    // Mercury=0.39, Venus=0.72, Earth=1.0, Mars=1.52, Jupiter=5.2, Saturn=9.5, Uranus=19.2, Neptune=30.1
+    const baseDistances = [0.39, 0.72, 1.0, 1.52, 3.2, 5.2, 9.5, 19.2, 30.1];
+    
+    if (planetIndex < baseDistances.length) {
+      return baseDistances[planetIndex];
+    } else {
+      // For planets beyond Neptune, use exponential progression
+      const lastDistance = baseDistances[baseDistances.length - 1];
+      const additionalIndex = planetIndex - baseDistances.length + 1;
+      return lastDistance * Math.pow(1.6, additionalIndex); // Exponential growth
+    }
+  }
+
+  static determinePlanetType(orbitRadius: number, starTemp: number, seed: number, planetIndex: number = 0): PlanetType {
     // Create unique random seed for each planet by combining with timestamp and orbit position
     const sessionSeed = Date.now();
     const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
     const dynamicSeed = seed + sessionSeed + orbitSeed;
     
-    // Scale down orbital radius for realistic AU calculations (keeping 3D visuals unchanged)
-    const auScaledRadius = orbitRadius / 15; // Convert to realistic AU scale for planet type logic
+    // Use realistic AU progression based on planet index, independent of visual distances
+    const auScaledRadius = this.calculateRealisticAU(planetIndex);
     
     // 8 orbital zones with realistic AU boundaries
     const zones = {
@@ -121,7 +136,7 @@ export class SystemGenerator {
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
+    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
@@ -202,7 +217,7 @@ export class SystemGenerator {
   static generatePlanet(starName: string, starTemp: number, index: number, orbitRadius: number, seed: number): Planet {
     const planetSeed = seed + index * 1000;
     const name = this.generatePlanetName(starName, index);
-    const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed);
+    const type = this.determinePlanetType(orbitRadius, starTemp, planetSeed, index);
 
     const radiusRange = this.PLANET_RADII[type];
     
