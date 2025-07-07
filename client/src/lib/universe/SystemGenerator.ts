@@ -249,7 +249,7 @@ export class SystemGenerator {
     
     // Define realistic orbital zones (in AU)
     const orbitZones: number[] = [];
-    const baseDistance = 0.3 * Math.sqrt(stellarLuminosity); // Closest stable orbit
+    const baseDistance = 1.3 * Math.sqrt(stellarLuminosity); // Closest stable orbit
 
     for (let i = 0; i < planetCount; i++) {
       let orbitDistance: number;
