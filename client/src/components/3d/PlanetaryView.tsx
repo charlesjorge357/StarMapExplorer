@@ -73,7 +73,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       if (feature) {
         setIsFeatureTracking(true);
         featureTrackingRef.current = feature;
-        trackingDistanceRef.current = distance || planetRadius * 1.8;
+        trackingDistanceRef.current = distance || planetRadius * 0.9;
         console.log(`Starting feature tracking for ${feature.name}`);
       } else {
         setIsFeatureTracking(false);
@@ -101,7 +101,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         } else {
           // Enable tracking for selected feature
           if ((window as any).homeToFeature) {
-            (window as any).homeToFeature(selectedFeature, planetRadius * 1.8);
+            (window as any).homeToFeature(selectedFeature, planetRadius * 0.9);
           }
         }
         setIsFeatureTracking(!isFeatureTracking); // Toggle the state
