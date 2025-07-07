@@ -121,7 +121,7 @@ export class SystemGenerator {
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
+    console.log(`Planet at orbit ${orbitRadius.toFixed(1)} (${auScaledRadius.toFixed(2)} AU): effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, zone=${auScaledRadius < zones.scorched ? 'Scorched' : auScaledRadius < zones.hot ? 'Hot' : auScaledRadius < zones.warm ? 'Warm' : auScaledRadius < zones.habitable ? 'Habitable' : auScaledRadius < zones.temperate ? 'Temperate' : auScaledRadius < zones.cool ? 'Cool' : auScaledRadius < zones.cold ? 'Cold' : 'Frozen'}`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
