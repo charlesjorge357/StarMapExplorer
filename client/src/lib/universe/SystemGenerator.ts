@@ -118,25 +118,31 @@ export class SystemGenerator {
     // Use realistic AU progression based on planet index, independent of visual distances
     const auScaledRadius = this.calculateRealisticAU(planetIndex);
     
-    // 8 orbital zones with realistic AU boundaries
+    // Calculate zone scaling factor based on stellar class deviation from G-class
+    // G-class (Sun-like, ~5778K) = 1.0x scaling (baseline)
+    // Hotter stars (A, B, O) = zones pushed outward (>1.0x)
+    // Cooler stars (K, M) = zones pulled inward (<1.0x)
+    const tempFactor = starTemp / 5778; // Solar temperature baseline
+    const zoneScaling = Math.sqrt(tempFactor); // Square root for realistic luminosity scaling
+    
+    // 8 orbital zones with stellar-class scaled boundaries
     const zones = {
-      scorched: 0.3,    // Zone 1: Ultra-hot (closer than Mercury)
-      hot: 0.7,         // Zone 2: Hot (Mercury-Venus range)
-      warm: 1.2,        // Zone 3: Warm (Venus-Earth range)
-      habitable: 2.0,   // Zone 4: Habitable (Earth-Mars range)
-      temperate: 3.5,   // Zone 5: Temperate (Mars-Asteroid belt)
-      cool: 6.0,        // Zone 6: Cool (Jupiter region)
-      cold: 12.0,       // Zone 7: Cold (Saturn-Uranus range)
-      frozen: 25.0      // Zone 8: Frozen (Neptune+ range)
+      scorched: 0.3 * zoneScaling,    // Zone 1: Ultra-hot (closer than Mercury)
+      hot: 0.7 * zoneScaling,         // Zone 2: Hot (Mercury-Venus range)
+      warm: 1.2 * zoneScaling,        // Zone 3: Warm (Venus-Earth range)
+      habitable: 2.0 * zoneScaling,   // Zone 4: Habitable (Earth-Mars range)
+      temperate: 3.5 * zoneScaling,   // Zone 5: Temperate (Mars-Asteroid belt)
+      cool: 6.0 * zoneScaling,        // Zone 6: Cool (Jupiter region)
+      cold: 12.0 * zoneScaling,       // Zone 7: Cold (Saturn-Uranus range)
+      frozen: 25.0 * zoneScaling      // Zone 8: Frozen (Neptune+ range)
     };
     
     // Calculate effective temperature at planet's orbit, accounting for stellar luminosity
     // Hotter stars emit more energy, so planets at same distance are hotter
-    const tempFactor = starTemp / 5778; // Solar temperature baseline
     const luminosityFactor = Math.pow(tempFactor, 4); // Stefan-Boltzmann law: L ∝ T^4
     const effectiveTemp = 1.5 * starTemp * luminosityFactor / (auScaledRadius * auScaledRadius);
     
-    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K`);
+    console.log(`Planet ${planetIndex} at visual orbit ${orbitRadius.toFixed(1)} using realistic ${auScaledRadius.toFixed(2)} AU: effectiveTemp=${effectiveTemp.toFixed(0)}K, starTemp=${starTemp}K, zoneScaling=${zoneScaling.toFixed(2)}x`);
 
     // Zone 1: Scorched (0-0.3 AU) - Extreme heat
     if (auScaledRadius < zones.scorched) {
