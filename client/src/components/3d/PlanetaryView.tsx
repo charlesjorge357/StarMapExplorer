@@ -18,23 +18,35 @@ interface PlanetaryViewProps {
 function PlanetaryRings({ rings, planetRadius }: { rings: any[]; planetRadius: number }) {
   return (
     <group>
-      {rings.map((ring: any, index: number) => (
-        <mesh key={`ring-${index}`} rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
-          <ringGeometry 
-            args={[
-              planetRadius * ring.innerRadius * 1.2, 
-              planetRadius * ring.outerRadius * 1.2, 
-              64
-            ]} 
-          />
-          <meshBasicMaterial 
-            color={ring.color}
-            transparent 
-            opacity={ring.density * 0.6}
-            side={2} // THREE.DoubleSide
-          />
-        </mesh>
-      ))}
+      {rings.map((ring: any, index: number) => {
+        // Generate EXACT same deterministic rotation angles as SystemView
+        const ringHash = ring.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const rotationX = ((ringHash % 100) / 100 - 0.5) * 0.4; // Deterministic tilt up to ±0.2 radians
+        const rotationY = ((ringHash * 7) % 360) * (Math.PI / 180); // Deterministic rotation around Y axis  
+        const rotationZ = (((ringHash * 13) % 100) / 100 - 0.5) * 0.4; // Deterministic tilt around Z axis
+        
+        return (
+          <mesh 
+            key={`ring-${index}`} 
+            rotation={[Math.PI / 2 + rotationX, rotationY, rotationZ]} // EXACT same formula as SystemView
+            raycast={() => null}
+          >
+            <ringGeometry 
+              args={[
+                planetRadius * ring.innerRadius * 1.2, 
+                planetRadius * ring.outerRadius * 1.2, 
+                64
+              ]} 
+            />
+            <meshBasicMaterial 
+              color={ring.color}
+              transparent 
+              opacity={ring.density * 0.6}
+              side={2} // THREE.DoubleSide
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
