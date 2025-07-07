@@ -95,28 +95,30 @@ export class SystemGenerator {
   }
 
   static determinePlanetType(orbitRadius: number, starTemp: number, seed: number): PlanetType {
-    // Use dynamic seeding by adding current timestamp to make planet types vary each session
-    const dynamicSeed = seed + Date.now();
-    const random = this.seededRandom(dynamicSeed);
+    // Create unique random seed for each planet by combining with timestamp and orbit position
+    const sessionSeed = Date.now();
+    const orbitSeed = Math.floor(orbitRadius * 1000); // Orbital position factor
+    const dynamicSeed = seed + sessionSeed + orbitSeed;
+    
     const effectiveTemp = starTemp / (orbitRadius * orbitRadius);
 
     // Hot inner zone - close to star
     if (orbitRadius < 1.5) {
       if (effectiveTemp > 800) {
-        const rand = this.seededRandom(dynamicSeed + 1) * 4;
+        const rand = this.seededRandom(dynamicSeed) * 4;
         if (rand < 1) return 'barren_world';
         if (rand < 2) return 'dusty_world'; 
         if (rand < 3) return 'martian_world';
         return 'arid_world';
       }
       if (effectiveTemp > 400) {
-        const rand = this.seededRandom(dynamicSeed + 2) * 3;
+        const rand = this.seededRandom(dynamicSeed + 100) * 3;
         if (rand < 1) return 'arid_world';
         if (rand < 2) return 'sandy_world';
         return 'dusty_world';
       }
       // Habitable zone
-      const rand = this.seededRandom(dynamicSeed + 3) * 4;
+      const rand = this.seededRandom(dynamicSeed + 200) * 4;
       if (rand < 1) return 'grassland_world';
       if (rand < 2) return 'jungle_world';
       if (rand < 3) return 'marshy_world';
@@ -124,8 +126,8 @@ export class SystemGenerator {
     } 
     // Mid zone
     else if (orbitRadius < 4.0) {
-      if (this.seededRandom(dynamicSeed + 4) < 0.3) return 'gas_giant';
-      const terrestrialRand = this.seededRandom(dynamicSeed + 5) * 6;
+      if (this.seededRandom(dynamicSeed + 300) < 0.3) return 'gas_giant';
+      const terrestrialRand = this.seededRandom(dynamicSeed + 400) * 6;
       if (terrestrialRand < 1) return 'arid_world';
       if (terrestrialRand < 2) return 'barren_world';
       if (terrestrialRand < 3) return 'dusty_world';
@@ -135,9 +137,9 @@ export class SystemGenerator {
     } 
     // Outer zone - cold
     else {
-      if (this.seededRandom(dynamicSeed + 6) < 0.4) return 'gas_giant';
-      if (this.seededRandom(dynamicSeed + 7) < 0.7) return 'frost_giant';
-      const coldRand = this.seededRandom(dynamicSeed + 8) * 3;
+      if (this.seededRandom(dynamicSeed + 500) < 0.4) return 'gas_giant';
+      if (this.seededRandom(dynamicSeed + 600) < 0.7) return 'frost_giant';
+      const coldRand = this.seededRandom(dynamicSeed + 700) * 3;
       if (coldRand < 1) return 'snowy_world';
       if (coldRand < 2) return 'tundra_world';
       return 'methane_world';
