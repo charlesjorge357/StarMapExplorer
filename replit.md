@@ -162,6 +162,7 @@ A comprehensive 3D universe mapping application built with React, Three.js, and 
 - July 3, 2025: Implemented orbital moons and cosmic neighbors for planetary view. Added realistic moon orbital mechanics with varied colors, sizes, and orbital distances around planets. Created cosmic neighbors system showing parent star with corona effect, other planets in the system as distant objects, and background starfield of 150+ distant stars. Moons feature proper orbital inclination and rotation with visual variety through different colors and glow effects.
 - July 7, 2025: Fixed ring angle consistency between system and planetary views by implementing exact same deterministic rotation calculation based on ring ID hash. Planetary view rings now match SystemView angles perfectly using identical mathematical formulas.
 - July 7, 2025: Implemented dynamic star seeding to generate different star distributions each session while keeping planet generation deterministic. Stars now use Math.random() seed instead of fixed 12345, creating varied galactic layouts while maintaining consistent planetary systems for each star.
+- July 7, 2025: Implemented realistic AU (Astronomical Unit) orbital distances replacing arbitrary spacing units. Planets now orbit at authentic distances (0.1-40 AU) following Titius-Bode-like law with 1.4-2.0x progressive spacing. Updated all 3D visualization scaling to use 1 AU = 30 units conversion factor for proper orbital mechanics display.
 
 ## User Preferences
 

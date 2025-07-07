@@ -207,8 +207,10 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
       // Match the planet's orbital position exactly
       const time = state.clock.getElapsedTime() * 0.1;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
-      ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
+      // Use AU scaling: 1 AU = 30 units for 3D visualization
+      const visualScale = 30;
+      ringRef.current.position.x = Math.cos(angle) * planet.orbitRadius * visualScale;
+      ringRef.current.position.z = Math.sin(angle) * planet.orbitRadius * visualScale;
 
       // Pulse effect
       const pulse = 1.0 + Math.sin(state.clock.getElapsedTime() * 3) * 0.2;
@@ -251,8 +253,10 @@ function PlanetMesh({
       // Use Date.now() for consistent timing across components
       const time = Date.now() * 0.0001;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
-      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
+      // Use AU scaling: 1 AU = 30 units for 3D visualization  
+      const visualScale = 30;
+      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * visualScale;
+      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * visualScale;
 
       // Axis rotation using frame time
       planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;

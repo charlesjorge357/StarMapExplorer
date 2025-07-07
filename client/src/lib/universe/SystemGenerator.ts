@@ -190,10 +190,12 @@ export class SystemGenerator {
 
     const angle = this.seededRandom(planetSeed + 10) * Math.PI * 2;
     const inclination = (this.seededRandom(planetSeed + 13) - 0.5) * 0.3;
+    // Scale AU to 3D units (1 AU = 30 units for good visibility)
+    const visualScale = 30;
     const position: [number, number, number] = [
-      Math.cos(angle) * orbitRadius * 10,
-      Math.sin(inclination) * orbitRadius * 2,
-      Math.sin(angle) * orbitRadius * 10
+      Math.cos(angle) * orbitRadius * visualScale,
+      Math.sin(inclination) * orbitRadius * 5,
+      Math.sin(angle) * orbitRadius * visualScale
     ];
 
     return {
@@ -235,29 +237,25 @@ export class SystemGenerator {
       'tundra_world', 'nuclear_world', 'ocean_world'
     ];
 
-    // Calculate orbital zones with proper spacing to prevent overlaps
-    const baseSpacing = 20 + star.radius * 6; // Increased base spacing
-    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
+    // Calculate realistic orbital zones in AU (Astronomical Units)
+    // Base inner orbit depends on star type - hotter stars push habitable zone further out
+    const innerOrbit = Math.max(0.1, star.temperature / 8000); // Scales from 0.1 AU to ~2.5 AU for hottest stars
     const orbitZones: number[] = [];
 
     for (let i = 0; i < planetCount; i++) {
       if (i === 0) {
-        // First planet starts at base spacing from star
-        orbitZones.push(baseSpacing);
+        // First planet starts close to the star
+        orbitZones.push(innerOrbit);
       } else {
         const prevOrbit = orbitZones[i - 1];
         
-        // Use conservative spacing that accounts for largest possible planets
-        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
-        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
+        // Use realistic orbital spacing following Titius-Bode-like law
+        // Each orbit is roughly 1.4-2.0x the previous orbit distance
+        const spacingMultiplier = 1.4 + Math.random() * 0.6; // 1.4-2.0x spacing
+        const newOrbit = prevOrbit * spacingMultiplier;
         
-        //const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
-        //orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
-        let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
-        if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
-          maxOrbitRadius= newOrbit + 20;
-        }
-        orbitZones.push(newOrbit);
+        // Cap maximum orbit at reasonable distance (similar to Neptune ~30 AU)
+        orbitZones.push(Math.min(newOrbit, 40));
       }
     }
 

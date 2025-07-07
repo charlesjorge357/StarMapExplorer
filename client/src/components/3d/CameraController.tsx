@@ -80,10 +80,12 @@ export function CameraController() {
     const time = Date.now() * 0.0001;
     const planetIndex = planetData.index || 0;
     const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+    // Use AU scaling: 1 AU = 30 units for 3D visualization
+    const visualScale = 30;
     const currentPlanetPos = new Vector3(
-      Math.cos(angle) * planetData.orbitRadius * 2,
+      Math.cos(angle) * planetData.orbitRadius * visualScale,
       0,
-      Math.sin(angle) * planetData.orbitRadius * 2
+      Math.sin(angle) * planetData.orbitRadius * visualScale
     );
 
     const orbitalRadius = Math.sqrt(currentPlanetPos.x * currentPlanetPos.x + currentPlanetPos.z * currentPlanetPos.z);
