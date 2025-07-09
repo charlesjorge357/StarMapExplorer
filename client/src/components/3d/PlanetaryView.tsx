@@ -657,16 +657,12 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
 
     // Use the same orbital distance calculation as SystemView
     // In SystemView: planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2
-    const starDistance = planet?.orbitRadius ? planet.orbitRadius * 9 : planetRadius * 50;
+    const starDistance = planet?.orbitRadius ? planet.orbitRadius * 20 : planetRadius * 50;
 
     // Add the parent star (sun) - positioned at the same orbital distance used in SystemView
     // Use actual star data from system if available
     const star = system?.star;
-    console.log('PlanetaryView star data:', star);
-    console.log('System data:', system);
-    console.log('Star radius value:', star?.radius);
-    
-    const starSize = star?.radius ? Math.log((star.radius * 1.1) + 1) * 6 + 4 : planetRadius * 0.8;
+    const starSize = star.radius * 1000;
     const starColor = star ? getStarColor(star.spectralClass) : '#FDB813';
     
     // Position star at the orbital distance, offset in a direction
