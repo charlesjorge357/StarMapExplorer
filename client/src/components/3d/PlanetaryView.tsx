@@ -666,7 +666,7 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
       position: [
         Math.cos(starAngle) * starDistance,
         starDistance * 0.1, // Small Y offset for 3D effect
-        Math.sin(starAngle) * starDistance
+        Math.sin(starAngle) * -(starDistance)
       ] as [number, number, number],
       size: starSize * 0.15, // Scale down for distant appearance
       color: starColor,
@@ -767,11 +767,15 @@ function CosmicObject({ obj }: { obj: any }) {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Subtle rotation for planets and asteroids only
+      // Subtle rotation for planets and asteroids
       if (obj.type === 'planet' || obj.type === 'asteroid') {
         meshRef.current.rotation.y += 0.001;
       }
-      // Stars remain static (no pulsing) to match system view appearance
+      // Gentle pulsing for stars
+      if (obj.type === 'star') {
+        const pulse = Math.sin(state.clock.getElapsedTime() * 2) * 0.1 + 1;
+        meshRef.current.scale.setScalar(pulse);
+      }
     }
   });
 
