@@ -460,7 +460,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       ))}
 
       {/* Cosmic neighbors starfield background */}
-      <CosmicNeighbors planetRadius={planetRadius} system={system} />
+      <CosmicNeighbors planetRadius={planetRadius} system={system} planet={planet} />
 
       {/* Asteroid belts from the system */}
       {system?.asteroidBelts && system.asteroidBelts.length > 0 && (
@@ -651,48 +651,61 @@ function getStarColor(spectralClass: string): string {
 }
 
 // Component for distant cosmic neighbors (parent star, other planets, distant stars)
-function CosmicNeighbors({ planetRadius, system }: { planetRadius: number; system?: any }) {
+function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: number; system?: any; planet?: any }) {
   const cosmicObjects = useMemo(() => {
     const objects = [];
-    const skyboxRadius = planetRadius * 50;
 
-    // Add the parent star (sun) - positioned at a realistic distance
+    // Use the same orbital distance calculation as SystemView
+    // In SystemView: planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2
+    const starDistance = planet?.orbitRadius ? planet.orbitRadius * 2 : planetRadius * 50;
+
+    // Add the parent star (sun) - positioned at the same orbital distance used in SystemView
     // Use actual star data from system if available
     const star = system?.star;
     const starSize = star ? Math.log((star.radius * 1.1) + 1) * 6 + 4 : planetRadius * 0.8;
     const starColor = star ? getStarColor(star.spectralClass) : '#FDB813';
     
+    // Position star at the orbital distance, offset in a direction
+    const starAngle = Math.PI * 0.3; // Fixed angle for consistent positioning
     objects.push({
       id: 'parent-star',
       type: 'star',
-      position: [skyboxRadius * 0.7, skyboxRadius * 0.2, skyboxRadius * 0.3] as [number, number, number],
+      position: [
+        Math.cos(starAngle) * starDistance,
+        starDistance * 0.1, // Small Y offset for 3D effect
+        Math.sin(starAngle) * starDistance
+      ] as [number, number, number],
       size: starSize * 0.15, // Scale down for distant appearance
       color: starColor,
       brightness: 1.0,
       emissive: true
     });
 
-    // Add other planets in the system as distant points (larger and brighter)
-    const planetPositions = [
-      [-skyboxRadius * 0.4, skyboxRadius * 0.1, skyboxRadius * 0.8],
-      [skyboxRadius * 0.6, -skyboxRadius * 0.3, skyboxRadius * 0.7],
-      [-skyboxRadius * 0.8, skyboxRadius * 0.5, -skyboxRadius * 0.2],
-      [skyboxRadius * 0.3, skyboxRadius * 0.8, -skyboxRadius * 0.5],
-      [-skyboxRadius * 0.2, -skyboxRadius * 0.6, skyboxRadius * 0.9],
-      [skyboxRadius * 0.9, skyboxRadius * 0.1, -skyboxRadius * 0.3]
-    ];
-
-    planetPositions.forEach((pos, index) => {
-      objects.push({
-        id: `planet-${index}`,
-        type: 'planet',
-        position: pos as [number, number, number],
-        size: Math.random() * 1.2 + 0.8, // Larger planets
-        color: ['#FF7043', '#81C784', '#D4A574', '#9ACD32', '#FF4500', '#006994'][index % 6],
-        brightness: 0.9, // Brighter
-        emissive: false
+    // Add other planets in the system as distant points using realistic orbital distances
+    if (system?.planets) {
+      system.planets.forEach((otherPlanet: any, index: number) => {
+        // Skip the current planet we're viewing
+        if (otherPlanet.id === planet?.id) return;
+        
+        // Use actual orbital distance with some angular offset
+        const orbitDistance = otherPlanet.orbitRadius * 2;
+        const angle = index * (Math.PI * 2 / Math.max(1, system.planets.length - 1)); // Distribute around
+        
+        objects.push({
+          id: `planet-${otherPlanet.id}`,
+          type: 'planet',
+          position: [
+            Math.cos(angle) * orbitDistance,
+            orbitDistance * 0.05, // Small Y offset
+            Math.sin(angle) * orbitDistance
+          ] as [number, number, number],
+          size: otherPlanet.radius * 0.6 * 0.2, // Scale based on actual radius, but smaller for distance
+          color: otherPlanet.computedColor || ['#FF7043', '#81C784', '#D4A574', '#9ACD32', '#FF4500', '#006994'][index % 6],
+          brightness: 0.9,
+          emissive: false
+        });
       });
-    });
+    }
 
     // Add asteroid belts as visible clusters
     const beltPositions = [
@@ -742,7 +755,7 @@ function CosmicNeighbors({ planetRadius, system }: { planetRadius: number; syste
     }
 
     return objects;
-  }, [planetRadius, system]);
+  }, [planetRadius, system, planet]);
 
   return (
     <group>
