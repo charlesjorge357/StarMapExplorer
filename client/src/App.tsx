@@ -263,16 +263,19 @@ function App() {
       });
     });
 
-    // Start with first track
-    const firstTrack = musicTracks[0];
-    firstTrack.play().catch(error => {
+    // Start with random track
+    const randomIndex = Math.floor(Math.random() * musicTracks.length);
+    const startingTrack = musicTracks[randomIndex];
+    startingTrack.play().catch(error => {
       console.log('Audio autoplay prevented by browser:', error);
     });
 
     // Store in audio system and unmute since user initiated music
     const audioStore = useAudio.getState();
     audioStore.setMusicTracks(musicTracks);
-    audioStore.setBackgroundMusic(firstTrack);
+    audioStore.setBackgroundMusic(startingTrack);
+    audioStore.setCurrentTrackIndex(randomIndex); // Set the starting track index
+    audioStore.setStartingTrackIndex(randomIndex); // Remember which track we started with for alternating pattern
     
     // Unmute the audio system since user clicked to start music
     if (audioStore.isMuted) {
@@ -280,8 +283,8 @@ function App() {
       console.log("Audio system unmuted for music playback");
     }
     
-    setAudio(firstTrack);
-    console.log(`Started background music with ${musicTracks.length} tracks - will auto-progress`);
+    setAudio(startingTrack);
+    console.log(`Started background music with ${musicTracks.length} tracks - starting with track ${randomIndex + 1} - will auto-progress`);
   };
 
   // Use SystemGenerator for consistent planet generation

@@ -4,6 +4,7 @@ interface AudioState {
   backgroundMusic: HTMLAudioElement | null;
   musicTracks: HTMLAudioElement[];
   currentTrackIndex: number;
+  startingTrackIndex: number; // Track which song we started with for alternating pattern
   hitSound: HTMLAudioElement | null;
   successSound: HTMLAudioElement | null;
   isMuted: boolean;
@@ -11,6 +12,8 @@ interface AudioState {
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
   setMusicTracks: (tracks: HTMLAudioElement[]) => void;
+  setCurrentTrackIndex: (index: number) => void;
+  setStartingTrackIndex: (index: number) => void;
   setHitSound: (sound: HTMLAudioElement) => void;
   setSuccessSound: (sound: HTMLAudioElement) => void;
   
@@ -27,12 +30,15 @@ export const useAudio = create<AudioState>((set, get) => ({
   backgroundMusic: null,
   musicTracks: [],
   currentTrackIndex: 0,
+  startingTrackIndex: 0,
   hitSound: null,
   successSound: null,
   isMuted: true, // Start muted by default
   
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
   setMusicTracks: (tracks) => set({ musicTracks: tracks }),
+  setCurrentTrackIndex: (index) => set({ currentTrackIndex: index }),
+  setStartingTrackIndex: (index) => set({ startingTrackIndex: index }),
   setHitSound: (sound) => set({ hitSound: sound }),
   setSuccessSound: (sound) => set({ successSound: sound }),
   
@@ -82,17 +88,43 @@ export const useAudio = create<AudioState>((set, get) => ({
   },
 
   playNextTrack: () => {
-    const { musicTracks, currentTrackIndex, isMuted } = get();
-    console.log(`playNextTrack called - tracks: ${musicTracks.length}, currentIndex: ${currentTrackIndex}, isMuted: ${isMuted}`);
+    const { musicTracks, currentTrackIndex, startingTrackIndex, isMuted } = get();
+    console.log(`playNextTrack called - tracks: ${musicTracks.length}, currentIndex: ${currentTrackIndex}, startingIndex: ${startingTrackIndex}, isMuted: ${isMuted}`);
     
     if (musicTracks.length === 0) {
       console.log("No music tracks available");
       return;
     }
     
-    const nextIndex = (currentTrackIndex + 1) % musicTracks.length;
+    // Create alternating pattern: starting track, then all others in order, then repeat
+    // Example: if started with track 1 (index 1): 1 → 0 → 2 → 3 → 1 → 0 → 2 → 3...
+    // Example: if started with track 2 (index 2): 2 → 0 → 1 → 3 → 2 → 0 → 1 → 3...
+    
+    let nextIndex;
+    if (currentTrackIndex === startingTrackIndex) {
+      // Just finished the starting track, go to index 0 (unless that WAS the starting track)
+      if (startingTrackIndex === 0) {
+        nextIndex = 1; // If we started with 0, go to 1 next
+      } else {
+        nextIndex = 0; // Otherwise go to 0
+      }
+    } else {
+      // Find next track in sequence, skipping the starting track unless we've gone through all others
+      nextIndex = currentTrackIndex + 1;
+      
+      // If we reach the starting track again, skip it (we'll come back to it later)
+      if (nextIndex === startingTrackIndex) {
+        nextIndex++;
+      }
+      
+      // If we've gone through all tracks, wrap back to the starting track
+      if (nextIndex >= musicTracks.length) {
+        nextIndex = startingTrackIndex;
+      }
+    }
+    
     const nextTrack = musicTracks[nextIndex];
-    console.log(`Switching from track ${currentTrackIndex} to track ${nextIndex}`);
+    console.log(`Alternating pattern: switching from track ${currentTrackIndex} to track ${nextIndex} (starting track: ${startingTrackIndex})`);
     
     // Stop current track
     if (musicTracks[currentTrackIndex]) {
