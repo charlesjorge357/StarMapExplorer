@@ -256,8 +256,10 @@ function App() {
       
       // Add event listener for automatic track progression
       track.addEventListener('ended', () => {
-        console.log(`Track ${index + 1} ended, playing next track...`);
-        useAudio.getState().playNextTrack();
+        console.log(`Track ${index + 1} (${track.src}) ended, attempting to play next track...`);
+        const audioStore = useAudio.getState();
+        console.log(`Current track index: ${audioStore.currentTrackIndex}, Total tracks: ${audioStore.musicTracks.length}`);
+        audioStore.playNextTrack();
       });
     });
 
@@ -267,9 +269,16 @@ function App() {
       console.log('Audio autoplay prevented by browser:', error);
     });
 
-    // Store in audio system
-    useAudio.getState().setMusicTracks(musicTracks);
-    useAudio.getState().setBackgroundMusic(firstTrack);
+    // Store in audio system and unmute since user initiated music
+    const audioStore = useAudio.getState();
+    audioStore.setMusicTracks(musicTracks);
+    audioStore.setBackgroundMusic(firstTrack);
+    
+    // Unmute the audio system since user clicked to start music
+    if (audioStore.isMuted) {
+      audioStore.toggleMute();
+      console.log("Audio system unmuted for music playback");
+    }
     
     setAudio(firstTrack);
     console.log(`Started background music with ${musicTracks.length} tracks - will auto-progress`);

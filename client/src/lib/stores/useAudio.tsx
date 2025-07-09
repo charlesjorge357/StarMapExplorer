@@ -83,23 +83,30 @@ export const useAudio = create<AudioState>((set, get) => ({
 
   playNextTrack: () => {
     const { musicTracks, currentTrackIndex, isMuted } = get();
-    if (musicTracks.length === 0) return;
+    console.log(`playNextTrack called - tracks: ${musicTracks.length}, currentIndex: ${currentTrackIndex}, isMuted: ${isMuted}`);
+    
+    if (musicTracks.length === 0) {
+      console.log("No music tracks available");
+      return;
+    }
     
     const nextIndex = (currentTrackIndex + 1) % musicTracks.length;
     const nextTrack = musicTracks[nextIndex];
+    console.log(`Switching from track ${currentTrackIndex} to track ${nextIndex}`);
     
     // Stop current track
     if (musicTracks[currentTrackIndex]) {
       musicTracks[currentTrackIndex].pause();
+      console.log(`Paused track ${currentTrackIndex}`);
     }
     
-    // Play next track
-    if (!isMuted) {
-      nextTrack.currentTime = 0;
-      nextTrack.play().catch(error => {
-        console.log("Next track play prevented:", error);
-      });
-    }
+    // Play next track regardless of mute state (for automatic progression)
+    nextTrack.currentTime = 0;
+    nextTrack.play().catch(error => {
+      console.log("Next track play prevented:", error);
+    }).then(() => {
+      console.log(`Successfully started track ${nextIndex}`);
+    });
     
     set({ currentTrackIndex: nextIndex, backgroundMusic: nextTrack });
   },
