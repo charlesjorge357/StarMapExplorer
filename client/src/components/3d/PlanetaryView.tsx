@@ -707,17 +707,18 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
       });
     }
 
-    // Add asteroid belts as visible clusters
+    // Add asteroid belts as visible clusters using orbital distance scaling
+    const beltBaseDistance = starDistance * 1.5; // Position belts further out than the star
     const beltPositions = [
-      [skyboxRadius * 0.3, 0, skyboxRadius * 0.3],
-      [-skyboxRadius * 0.5, skyboxRadius * 0.1, -skyboxRadius * 0.4],
-      [skyboxRadius * 0.4, -skyboxRadius * 0.2, skyboxRadius * 0.6]
+      [beltBaseDistance * 0.3, 0, beltBaseDistance * 0.3],
+      [-beltBaseDistance * 0.5, beltBaseDistance * 0.1, -beltBaseDistance * 0.4],
+      [beltBaseDistance * 0.4, -beltBaseDistance * 0.2, beltBaseDistance * 0.6]
     ];
 
     beltPositions.forEach((pos, index) => {
       // Create multiple asteroids in each belt
       for (let i = 0; i < 25; i++) {
-        const spread = skyboxRadius * 0.15;
+        const spread = beltBaseDistance * 0.15;
         const offsetX = (Math.random() - 0.5) * spread;
         const offsetY = (Math.random() - 0.5) * spread * 0.2;
         const offsetZ = (Math.random() - 0.5) * spread;
@@ -734,14 +735,15 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
       }
     });
 
-    // Add distant stars
+    // Add distant stars using orbital distance scaling
+    const distantStarRadius = starDistance * 3; // Much further out than the star
     for (let i = 0; i < 150; i++) {
       const phi = Math.random() * Math.PI * 2;
       const theta = Math.acos(2 * Math.random() - 1);
 
-      const x = skyboxRadius * Math.sin(theta) * Math.cos(phi);
-      const y = skyboxRadius * Math.sin(theta) * Math.sin(phi);
-      const z = skyboxRadius * Math.cos(theta);
+      const x = distantStarRadius * Math.sin(theta) * Math.cos(phi);
+      const y = distantStarRadius * Math.sin(theta) * Math.sin(phi);
+      const z = distantStarRadius * Math.cos(theta);
 
       objects.push({
         id: `star-${i}`,
