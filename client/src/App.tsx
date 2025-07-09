@@ -16,6 +16,7 @@ import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
+import { useAudio } from './lib/stores/useAudio';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -245,15 +246,19 @@ function App() {
     // Load multiple music tracks
     const musicTracks = [
       new Audio('/audio/galactic-theme.mp3'),
-      // Add more tracks here as you add them
-      // new Audio('/audio/system-theme.mp3'),
-      // new Audio('/audio/planetary-theme.mp3'),
+      new Audio('/audio/galacticview2_roguestars.mp3'),
     ];
 
-    // Configure all tracks
-    musicTracks.forEach(track => {
-      track.loop = true;
+    // Configure all tracks (disable individual looping for automatic progression)
+    musicTracks.forEach((track, index) => {
+      track.loop = false; // Disable looping to allow track progression
       track.volume = 0.3;
+      
+      // Add event listener for automatic track progression
+      track.addEventListener('ended', () => {
+        console.log(`Track ${index + 1} ended, playing next track...`);
+        useAudio.getState().playNextTrack();
+      });
     });
 
     // Start with first track
@@ -267,7 +272,7 @@ function App() {
     useAudio.getState().setBackgroundMusic(firstTrack);
     
     setAudio(firstTrack);
-    console.log(`Started background music with ${musicTracks.length} tracks`);
+    console.log(`Started background music with ${musicTracks.length} tracks - will auto-progress`);
   };
 
   // Use SystemGenerator for consistent planet generation
