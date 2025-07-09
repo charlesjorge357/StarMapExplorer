@@ -15,14 +15,48 @@ function MoonMesh({
   moon, 
   planetRef,
   planetRadius,
-  moonIndex 
+  moonIndex,
+  planetId 
 }: { 
   moon: any; 
   planetRef: React.RefObject<any>;
   planetRadius: number;
   moonIndex: number;
+  planetId: string;
 }) {
   const moonRef = useRef<THREE.Mesh>(null);
+
+  // Generate varied moon colors based on planet and moon index
+  const moonColor = useMemo(() => {
+    const seededRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
+    const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const moonSeed = seed + moonIndex * 1000;
+    
+    // Create varied moon colors - some rocky, some icy, some metallic
+    const moonTypes = [
+      '#8B7355', // Rocky brown
+      '#C0C0C0', // Silver metallic  
+      '#E6E6FA', // Ice blue-white
+      '#D2B48C', // Sandy tan
+      '#778899', // Slate gray
+      '#DDA0DD', // Light purple (rare minerals)
+      '#F5DEB3', // Wheat (dusty)
+      '#B22222'  // Iron red
+    ];
+    
+    const colorIndex = Math.floor(seededRandom(moonSeed) * moonTypes.length);
+    return moonTypes[colorIndex];
+  }, [planetId, moonIndex]);
+
+  const emissiveColor = useMemo(() => {
+    // Slight glow based on moon color
+    const color = new THREE.Color(moonColor);
+    return color.multiplyScalar(0.1);
+  }, [moonColor]);
 
   useFrame(() => {
     if (moonRef.current && planetRef.current) {
@@ -43,9 +77,11 @@ function MoonMesh({
     <mesh ref={moonRef}>
       <sphereGeometry args={[moon.radius * planetRadius * 0.15, 8, 8]} />
       <meshStandardMaterial 
-        color="#888888" 
-        emissive="#222222"
-        emissiveIntensity={0.1}
+        color={moonColor} 
+        emissive={emissiveColor}
+        emissiveIntensity={0.15}
+        metalness={0.3}
+        roughness={0.7}
       />
     </mesh>
   );
@@ -331,6 +367,7 @@ function PlanetMesh({
           planetRef={planetRef}
           planetRadius={planet.radius * 0.6}
           moonIndex={moonIndex}
+          planetId={planet.id}
         />
       ))}
       

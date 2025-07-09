@@ -455,6 +455,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
           moon={moon}
           planetRadius={planetRadius}
           moonIndex={moonIndex}
+          planetId={planet.id}
         />
       ))}
 
@@ -481,12 +482,34 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 }
 
 // Component for individual moons orbiting the planet
-function PlanetaryMoon({ moon, planetRadius, moonIndex }: { moon: any; planetRadius: number; moonIndex: number }) {
+function PlanetaryMoon({ moon, planetRadius, moonIndex, planetId }: { moon: any; planetRadius: number; moonIndex: number; planetId: string }) {
   const moonRef = useRef<any>();
 
-  // Moon visual properties based on index for variety
-  const moonColors = ['#C0C0C0', '#D2B48C', '#8B7D6B', '#A0A0A0', '#B8860B'];
-  const moonColor = moonColors[moonIndex % moonColors.length];
+  // Generate varied moon colors based on planet and moon index (same system as SystemView)
+  const moonColor = useMemo(() => {
+    const seededRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
+    const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const moonSeed = seed + moonIndex * 1000;
+    
+    // Create varied moon colors - some rocky, some icy, some metallic
+    const moonTypes = [
+      '#8B7355', // Rocky brown
+      '#C0C0C0', // Silver metallic  
+      '#E6E6FA', // Ice blue-white
+      '#D2B48C', // Sandy tan
+      '#778899', // Slate gray
+      '#DDA0DD', // Light purple (rare minerals)
+      '#F5DEB3', // Wheat (dusty)
+      '#B22222'  // Iron red
+    ];
+    
+    const colorIndex = Math.floor(seededRandom(moonSeed) * moonTypes.length);
+    return moonTypes[colorIndex];
+  }, [planetId, moonIndex]);
 
   useFrame((state) => {
     if (moonRef.current) {

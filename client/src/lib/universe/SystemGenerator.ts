@@ -281,7 +281,7 @@ export class SystemGenerator {
         const prevOrbit = orbitZones[i - 1];
         
         // Use conservative spacing that accounts for largest possible planets
-        const minSpacingBetweenOrbits = 25 + (i * 5); // Progressive spacing
+        const minSpacingBetweenOrbits = 21 + (i * 5); // Progressive spacing
         const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
         
         //const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
