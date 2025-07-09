@@ -98,15 +98,15 @@ export class SystemGenerator {
     const random = this.seededRandom(seed);
     
     // Convert orbit radius to scaled AU (orbitRadius / 6)
-    const scaledAU = orbitRadius / 70;
+    const scaledAU = orbitRadius / 6;
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
-    const tempFactor = Math.sqrt(starTemp / 5778);
-    const luminosityFactor = Math.sqrt(luminosity); // L☉
-    const adjustedAU = scaledAU * luminosityFactor * (0.1 * tempFactor);
+    const tempFactor = starTemp / 5778;
+    const adjustedAU = scaledAU / tempFactor;
     
     // Debug logging to understand the zone distribution
+    console.log(`Planet generation: orbitRadius=${orbitRadius.toFixed(1)}, scaledAU=${scaledAU.toFixed(2)}, starTemp=${starTemp}K, tempFactor=${tempFactor.toFixed(2)}, adjustedAU=${adjustedAU.toFixed(2)}`);
     
     
     // Define planet zones based on distance (nuclear/barren/arid closest, then sandy/jungle/marshy, etc.)
@@ -131,6 +131,7 @@ export class SystemGenerator {
     
     // Zone 3: Habitable (1.2 - 2.5 AU adjusted) - Jungle, Marshy, Grassland, Ocean worlds
     else if (adjustedAU < 2.5) {
+      console.log(`→ Zone 3 (Habitable): Jungle/Marshy/Grassland/Ocean worlds`);
       const rand = random * 4;
       if (rand < 1) return 'jungle_world';
       if (rand < 2) return 'marshy_world';
@@ -140,6 +141,7 @@ export class SystemGenerator {
     
     // Zone 4: Cold Terrestrial (2.5 - 5.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
     else if (adjustedAU < 5.0) {
+      console.log(`→ Zone 4 (Cold Terrestrial): Tundra/Snowy worlds, some gas giants`);
       // 25% chance for gas giants in this zone
       if (random < 0.1) return 'gas_giant';
       
@@ -151,6 +153,7 @@ export class SystemGenerator {
     
     // Zone 5: Far Cold (5.0 - 8.0 AU adjusted) - More terrestrial worlds, some giants
     else if (adjustedAU < 8.0) {
+      console.log(`→ Zone 5 (Far Cold): More terrestrial worlds, some giants`);
       const rand = random * 5;
       if (rand < 1) return 'barren_world';
       if (rand < 2) return 'frost_giant';
@@ -161,6 +164,7 @@ export class SystemGenerator {
     
     // Zone 6: Outer System (> 8.0 AU adjusted) - Mostly giants, some methane worlds
     else {
+      console.log(`→ Zone 6 (Outer System): Mostly giants, some methane worlds`);
       const rand = random * 3;
       if (rand < 1) return 'frost_giant';
       if (rand < 2) return 'barren_world';
