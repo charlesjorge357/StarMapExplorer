@@ -98,7 +98,7 @@ export class SystemGenerator {
     const random = this.seededRandom(seed);
     
     // Convert orbit radius to scaled AU (orbitRadius / 6)
-    const scaledAU = orbitRadius / 6;
+    const scaledAU = orbitRadius / 64;
     
     // Factor in star temperature - hotter stars push zones outward, colder pull inward
     // Base reference: Sun temperature ~5778K
