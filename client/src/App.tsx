@@ -242,19 +242,32 @@ function App() {
   const handleStart = () => {
     setShowSelector(false);
 
-    // Start background music
-    const backgroundMusic = new Audio('/audio/galactic-theme.mp3');
-    backgroundMusic.loop = true;
-    backgroundMusic.volume = 0.3; // Set to 30% volume
+    // Load multiple music tracks
+    const musicTracks = [
+      new Audio('/audio/galactic-theme.mp3'),
+      // Add more tracks here as you add them
+      // new Audio('/audio/system-theme.mp3'),
+      // new Audio('/audio/planetary-theme.mp3'),
+    ];
 
-    // Attempt to play music (modern browsers may require user interaction)
-    backgroundMusic.play().catch(error => {
-      console.log('Audio autoplay prevented by browser:', error);
-      // Store audio reference for later manual play if needed
+    // Configure all tracks
+    musicTracks.forEach(track => {
+      track.loop = true;
+      track.volume = 0.3;
     });
 
-    setAudio(backgroundMusic);
-    console.log('Started galactic background music');
+    // Start with first track
+    const firstTrack = musicTracks[0];
+    firstTrack.play().catch(error => {
+      console.log('Audio autoplay prevented by browser:', error);
+    });
+
+    // Store in audio system
+    useAudio.getState().setMusicTracks(musicTracks);
+    useAudio.getState().setBackgroundMusic(firstTrack);
+    
+    setAudio(firstTrack);
+    console.log(`Started background music with ${musicTracks.length} tracks`);
   };
 
   // Use SystemGenerator for consistent planet generation
