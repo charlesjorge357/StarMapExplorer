@@ -464,9 +464,9 @@ export class SystemGenerator {
     let moonCount = 0;
     
     // Determine moon count based on planet size
-    if (planetRadius > 6) moonCount = Math.floor(this.seededRandom(seed) * 8) + 2; // 2-9 moons for gas giants
+    if (planetRadius > 6) moonCount = Math.floor(this.seededRandom(seed) * 8) + 3; // 3-9 moons for gas giants
     else if (planetRadius > 2) moonCount = Math.floor(this.seededRandom(seed + 1) * 4) + 1; // 1-4 moons for large planets
-    else if (planetRadius > 0.7) moonCount = Math.floor(this.seededRandom(seed + 2) * 2); // 0-1 moons for medium planets
+    else if (planetRadius > 0.5) moonCount = Math.floor(this.seededRandom(seed + 2) * 3); // 0-2 moons for medium planets
 
     for (let j = 0; j < moonCount; j++) {
       const moonName = `${planetName} ${String.fromCharCode(97 + j)}`; // a, b, c, etc.

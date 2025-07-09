@@ -460,7 +460,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       ))}
 
       {/* Cosmic neighbors starfield background */}
-      <CosmicNeighbors planetRadius={planetRadius} />
+      <CosmicNeighbors planetRadius={planetRadius} system={system} />
 
       {/* Asteroid belts from the system */}
       {system?.asteroidBelts && system.asteroidBelts.length > 0 && (
@@ -635,19 +635,39 @@ function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadi
   );
 }
 
+// Helper function to get star color based on spectral class (same as SystemView)
+function getStarColor(spectralClass: string): string {
+  const firstChar = spectralClass.charAt(0).toUpperCase();
+  switch (firstChar) {
+    case 'O': return '#9bb0ff';
+    case 'B': return '#aabfff';
+    case 'A': return '#cad7ff';
+    case 'F': return '#f8f7ff';
+    case 'G': return '#fff4ea';
+    case 'K': return '#ffd2a1';
+    case 'M': return '#ffad51';
+    default: return '#ffffff';
+  }
+}
+
 // Component for distant cosmic neighbors (parent star, other planets, distant stars)
-function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
+function CosmicNeighbors({ planetRadius, system }: { planetRadius: number; system?: any }) {
   const cosmicObjects = useMemo(() => {
     const objects = [];
     const skyboxRadius = planetRadius * 50;
 
     // Add the parent star (sun) - positioned at a realistic distance
+    // Use actual star data from system if available
+    const star = system?.star;
+    const starSize = star ? Math.log((star.radius * 1.1) + 1) * 6 + 4 : planetRadius * 0.8;
+    const starColor = star ? getStarColor(star.spectralClass) : '#FDB813';
+    
     objects.push({
       id: 'parent-star',
       type: 'star',
       position: [skyboxRadius * 0.7, skyboxRadius * 0.2, skyboxRadius * 0.3] as [number, number, number],
-      size: planetRadius * 0.8,
-      color: '#FDB813', // Solar yellow
+      size: starSize * 0.15, // Scale down for distant appearance
+      color: starColor,
       brightness: 1.0,
       emissive: true
     });
@@ -722,7 +742,7 @@ function CosmicNeighbors({ planetRadius }: { planetRadius: number }) {
     }
 
     return objects;
-  }, [planetRadius]);
+  }, [planetRadius, system]);
 
   return (
     <group>
@@ -758,7 +778,8 @@ function CosmicObject({ obj }: { obj: any }) {
         <meshStandardMaterial 
           color={obj.color}
           emissive={obj.color}
-          emissiveIntensity={0.5}
+          emissiveIntensity={obj.type === 'star' ? 2.0 : 0.5}
+          toneMapped={obj.type === 'star' ? false : true}
         />
       ) : (
         <meshBasicMaterial 
