@@ -544,16 +544,8 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex, planetId }: { moon: any;
           color={moonColor}
           roughness={0.9}
           metalness={0.05}
-        />
-      </mesh>
-
-      {/* Subtle moon glow */}
-      <mesh ref={moonRef} raycast={() => null}>
-        <sphereGeometry args={[moonRadius * 1.1, 8, 8]} />
-        <meshBasicMaterial 
-          color={moonColor}
-          transparent
-          opacity={0.1}
+          transparent={false}
+          opacity={1.0}
         />
       </mesh>
     </group>
