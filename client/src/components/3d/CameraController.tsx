@@ -259,9 +259,18 @@ export function CameraController() {
   // Handle keyboard movement
   useFrame((state, delta) => {
     if (isTransitioning) {
-      // During transitions, smoothly interpolate to target position
-      camera.position.lerp(position, delta * 2);
-      camera.lookAt(target);
+      // During transitions, use smooth interpolation based on transition progress
+      const progress = useCamera.getState().getTransitionProgress();
+      const { fromPosition, toPosition, fromTarget, toTarget } = useCamera.getState();
+      
+      // Interpolate position and target
+      const currentPos = fromPosition.clone().lerp(toPosition, progress);
+      const currentTarget = fromTarget.clone().lerp(toTarget, progress);
+      
+      camera.position.copy(currentPos);
+      camera.lookAt(currentTarget);
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
       return;
     }
 

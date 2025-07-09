@@ -104,9 +104,21 @@ export function GalacticView() {
   const handleStarClick = (star: Star) => {
     console.log('Star clicked:', star.name);
     selectStar(star);
+    
+    // Get current camera state for smooth transition
+    const { camera } = useThree.getState();
+    const currentPos = camera.position.clone();
+    const currentTarget = new THREE.Vector3(0, 0, 0);
+    
+    // Calculate target position for system view
     const starPos = new THREE.Vector3(...star.position);
-    const cameraPos = starPos.clone().add(new THREE.Vector3(10, 5, 10));
-    transitionTo(starPos, cameraPos, 2000);
+    const systemViewPos = new THREE.Vector3(0, 20, 200); // Standard system view position
+    const systemViewTarget = new THREE.Vector3(0, 0, 0);
+    
+    // Start smooth transition
+    transitionTo(currentPos, systemViewPos, currentTarget, systemViewTarget, 2000);
+    
+    // Switch scope after transition completes
     setTimeout(() => setScope('system'), 2000);
   };
 
