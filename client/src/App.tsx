@@ -80,8 +80,13 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
     return map;
   }, [stars]);
 
-  // Safety check for warpLanes
+  // Safety check for warpLanes and stars
   if (!warpLanes || !Array.isArray(warpLanes) || warpLanes.length === 0) {
+    return null;
+  }
+  
+  if (!stars || !Array.isArray(stars) || stars.length === 0) {
+    console.warn('WarpLanes: No stars available for rendering');
     return null;
   }
 
