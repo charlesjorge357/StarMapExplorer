@@ -223,6 +223,9 @@ export class WarpLaneGenerator {
     }
 
     console.log(`Generated ${warpLanes.length} warp lanes`);
+    if (warpLanes.length > 0) {
+      console.log('Sample warp lane:', warpLanes[0]);
+    }
     return warpLanes;
   }
 }

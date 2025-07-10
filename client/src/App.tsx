@@ -70,14 +70,32 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
   // Create a lookup map for stars
   const starMap = useMemo(() => {
     const map = new Map<string, SimpleStar>();
-    stars.forEach(star => map.set(star.id, star));
+    if (stars && Array.isArray(stars)) {
+      stars.forEach(star => {
+        if (star && star.id) {
+          map.set(star.id, star);
+        }
+      });
+    }
     return map;
   }, [stars]);
+
+  // Safety check for warpLanes
+  if (!warpLanes || !Array.isArray(warpLanes) || warpLanes.length === 0) {
+    return null;
+  }
 
   return (
     <group>
       {warpLanes.map((lane) => {
-        const pathStars = lane.path.map((starId: string) => starMap.get(starId)).filter(Boolean);
+        // Safety checks for lane object
+        if (!lane || !lane.id || !lane.path || !Array.isArray(lane.path)) {
+          return null;
+        }
+
+        const pathStars = lane.path
+          .map((starId: string) => starMap.get(starId))
+          .filter(Boolean);
         
         if (pathStars.length < 2) return null;
 
@@ -87,34 +105,38 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
           const start = pathStars[i];
           const end = pathStars[i + 1];
           
-          if (start && end) {
-            const startPos = new THREE.Vector3(...start.position);
-            const endPos = new THREE.Vector3(...end.position);
-            const midPoint = startPos.clone().lerp(endPos, 0.5);
-            const distance = startPos.distanceTo(endPos);
-            
-            // Calculate rotation to align cylinder with the line between stars
-            const direction = endPos.clone().sub(startPos).normalize();
-            const quaternion = new THREE.Quaternion();
-            quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+          if (start && end && start.position && end.position) {
+            try {
+              const startPos = new THREE.Vector3(...start.position);
+              const endPos = new THREE.Vector3(...end.position);
+              const midPoint = startPos.clone().lerp(endPos, 0.5);
+              const distance = startPos.distanceTo(endPos);
+              
+              // Calculate rotation to align cylinder with the line between stars
+              const direction = endPos.clone().sub(startPos).normalize();
+              const quaternion = new THREE.Quaternion();
+              quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
 
-            segments.push(
-              <mesh 
-                key={`${lane.id}-segment-${i}`} 
-                position={[midPoint.x, midPoint.y, midPoint.z]}
-                quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
-                raycast={() => null}
-              >
-                <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
-                <meshBasicMaterial 
-                  color={lane.color} 
-                  transparent 
-                  opacity={lane.opacity}
-                  emissive={lane.color}
-                  emissiveIntensity={0.2}
-                />
-              </mesh>
-            );
+              segments.push(
+                <mesh 
+                  key={`${lane.id}-segment-${i}`} 
+                  position={[midPoint.x, midPoint.y, midPoint.z]}
+                  quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
+                  raycast={() => null}
+                >
+                  <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
+                  <meshBasicMaterial 
+                    color={lane.color || '#00FFFF'} 
+                    transparent 
+                    opacity={lane.opacity || 0.4}
+                    emissive={lane.color || '#00FFFF'}
+                    emissiveIntensity={0.2}
+                  />
+                </mesh>
+              );
+            } catch (error) {
+              console.error('Error creating warp lane segment:', error);
+            }
           }
         }
 
