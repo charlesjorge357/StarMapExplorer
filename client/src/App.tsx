@@ -281,7 +281,7 @@ function App() {
   useEffect(() => {
     console.log("Generating stars...");
     const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
-    const generatedStars = StarGenerator.generateStars(dynamicSeed, 2000); // Reduced from 4000 to 2000
+    const generatedStars = StarGenerator.generateStars(dynamicSeed, 4000);
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);

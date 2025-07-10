@@ -121,7 +121,7 @@ export class WarpLaneGenerator {
   static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
-    const minDistance = galaxyRadius * 0.5; // Minimum distance requirement (1/2 galaxy radius)
+    const minDistance = galaxyRadius * 0.4; // Reduced minimum distance requirement for more warp lanes
     
     // Limit stars for performance - use only a subset for warp lane generation
     const maxStarsForWarpLanes = Math.min(stars.length, 500);
@@ -150,7 +150,7 @@ export class WarpLaneGenerator {
       }
     }
     
-    console.log(`Found ${validPairs.length} valid star pairs for warp lanes`);
+    console.log(`Found ${validPairs.length} valid star pairs for warp lanes (min distance: ${minDistance})`);
 
     // Sort by distance and take pairs for warp lanes
     validPairs.sort((a, b) => b.distance - a.distance); // Prefer longer distances
@@ -195,6 +195,30 @@ export class WarpLaneGenerator {
         usedStars.add(pair.star2.id);
         
         console.log(`Generated warp lane: ${warpLane.name} (${pathResult.path.length} hops, distance: ${pathResult.distance.toFixed(1)})`);
+      } else {
+        console.log(`No Dijkstra path found for ${pair.star1.id} -> ${pair.star2.id}, attempting direct connection`);
+        // If no path found via Dijkstra, create direct connection for distant pairs
+        if (pair.distance >= minDistance) {
+          const directWarpLane: WarpLane = {
+            id: `warp-direct-${pair.star1.id}-${pair.star2.id}`,
+            name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
+            startStarId: pair.star1.id,
+            endStarId: pair.star2.id,
+            path: [pair.star1.id, pair.star2.id], // Direct connection
+            distance: pair.distance,
+            color: warpColors[warpLanes.length % warpColors.length],
+            opacity: 0.4,
+            isActive: true
+          };
+
+          warpLanes.push(directWarpLane);
+          usedStars.add(pair.star1.id);
+          usedStars.add(pair.star2.id);
+          
+          console.log(`Generated direct warp lane: ${directWarpLane.name} (direct connection, distance: ${pair.distance.toFixed(1)})`);
+        } else {
+          console.log(`Pair distance ${pair.distance.toFixed(1)} < minimum ${minDistance.toFixed(1)}, skipping`);
+        }
       }
     }
 
