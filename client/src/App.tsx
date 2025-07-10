@@ -116,6 +116,16 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
               const midPoint = startPos.clone().lerp(endPos, 0.5);
               const distance = startPos.distanceTo(endPos);
               
+              // Debug logging for first few segments
+              if (i === 0 && segments.length < 3) {
+                console.log(`Warp lane segment ${lane.id}-${i}:`, {
+                  start: start.position,
+                  end: end.position,
+                  midPoint: [midPoint.x, midPoint.y, midPoint.z],
+                  distance: distance
+                });
+              }
+              
               // Calculate rotation to align cylinder with the line between stars
               const direction = endPos.clone().sub(startPos).normalize();
               const quaternion = new THREE.Quaternion();
@@ -272,19 +282,25 @@ function StarField({
         />
       ))}
 
-      {/* Test warp lane to verify rendering */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[3.0, 3.0, 50, 8]} />
-        <meshStandardMaterial 
-          color="#FF0000" 
-          transparent 
-          opacity={0.8}
-          emissive="#FF0000"
-          emissiveIntensity={0.5}
-          metalness={0}
-          roughness={0.1}
-        />
-      </mesh>
+      {/* Test warp lane at known star position */}
+      {stars.length > 1 && (
+        <mesh position={[
+          (stars[0].position[0] + stars[1].position[0]) / 2,
+          (stars[0].position[1] + stars[1].position[1]) / 2,
+          (stars[0].position[2] + stars[1].position[2]) / 2
+        ]}>
+          <cylinderGeometry args={[3.0, 3.0, 50, 8]} />
+          <meshStandardMaterial 
+            color="#FF0000" 
+            transparent 
+            opacity={0.8}
+            emissive="#FF0000"
+            emissiveIntensity={0.5}
+            metalness={0}
+            roughness={0.1}
+          />
+        </mesh>
+      )}
 
       {/* Warp lanes */}
       {warpLanes && warpLanes.length > 0 && (
