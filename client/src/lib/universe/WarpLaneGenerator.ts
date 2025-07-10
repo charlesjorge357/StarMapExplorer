@@ -83,7 +83,7 @@ export class WarpLaneGenerator {
       iterations++;
       // Find unvisited node with minimum distance
       let current: string | null = null;
-      let minDistance = 100000000000;
+      let minDistance = 100000;
       
       for (const starId of unvisited) {
         if (distances[starId] < minDistance) {
@@ -154,7 +154,7 @@ export class WarpLaneGenerator {
     const starGraph = this.buildStarGraph(workingStars, maxGraphDistance);
     
     const usedStars = new Set<string>();
-    const minDistanceBetweenEndpoints = galaxyRadius * 1.5; // Minimum distance between start and end stars
+    const minDistanceBetweenEndpoints = galaxyRadius * 0.02; // Minimum distance between start and end stars
     
     // Generate multiple warp lane paths
     for (let laneIndex = 0; laneIndex < laneCount; laneIndex++) {
