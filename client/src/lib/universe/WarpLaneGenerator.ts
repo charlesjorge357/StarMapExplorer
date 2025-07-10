@@ -149,12 +149,8 @@ export class WarpLaneGenerator {
       '#FFD700'  // Gold
     ];
 
-    // Build star graph with increased max distance for pathfinding
-    const maxGraphDistance = galaxyRadius * 4.0; // Increased from 2.6 to allow longer connections
-    const starGraph = this.buildStarGraph(workingStars, maxGraphDistance);
-    
     const usedStars = new Set<string>();
-    const minDistanceBetweenEndpoints = galaxyRadius * 0.02; // Minimum distance between start and end stars
+    const minDistanceBetweenEndpoints = galaxyRadius * 1.5; // Minimum distance between start and end stars
     
     // Generate multiple warp lane paths
     for (let laneIndex = 0; laneIndex < laneCount; laneIndex++) {
@@ -196,44 +192,69 @@ export class WarpLaneGenerator {
       
       console.log(`Creating warp lane ${laneIndex + 1} from ${startStar.id} to ${endStar.id} (distance: ${bestDistance.toFixed(1)})`);
       
-      // Use Dijkstra's algorithm to find path between the two stars
-      const pathResult = this.dijkstra(starGraph, startStar.id, endStar.id);
+      // Build a 15-star path manually using a greedy approach
+      const path = [startStar.id];
+      let currentStar = startStar;
       
-      if (!pathResult) {
-        console.log(`No path found between ${startStar.id} and ${endStar.id}`);
-        continue;
-      }
+      // Create a set of available stars for this path (excluding used ones)
+      const pathAvailableStars = availableStars.filter(star => star.id !== startStar.id && star.id !== endStar.id);
       
-      const { path, distance } = pathResult;
-      
-      // Check if any stars in the path are already used
-      const pathHasUsedStars = path.some(starId => usedStars.has(starId));
-      if (pathHasUsedStars) {
-        console.log(`Path contains already used stars, skipping lane ${laneIndex}`);
-        continue;
-      }
-      
-      // If path has exactly 15 stars (13 intermediate + 2 endpoints), use it
-      // If it has fewer, it's still valid but not ideal
-      // If it has more, we'll trim it to 15 stars
-      let finalPath = path;
-      if (path.length > 15) {
-        // Keep start and end, and evenly distribute intermediate stars
-        const intermediateStars = path.slice(1, -1);
-        const step = Math.floor(intermediateStars.length / 13);
-        const selectedIntermediates = [];
-        for (let i = 0; i < 13; i++) {
-          const index = Math.min(i * step, intermediateStars.length - 1);
-          selectedIntermediates.push(intermediateStars[index]);
+      // Build path with 13 intermediate stars
+      for (let i = 0; i < 13; i++) {
+        if (pathAvailableStars.length === 0) break;
+        
+        // Find the star that's closest to the direction towards the end star
+        const directionToEnd = {
+          x: endStar.position[0] - currentStar.position[0],
+          y: endStar.position[1] - currentStar.position[1],
+          z: endStar.position[2] - currentStar.position[2]
+        };
+        
+        let bestNextStar: SimpleStar | null = null;
+        let bestScore = -1;
+        
+        pathAvailableStars.forEach((candidate, index) => {
+          const directionToCandidate = {
+            x: candidate.position[0] - currentStar.position[0],
+            y: candidate.position[1] - currentStar.position[1],
+            z: candidate.position[2] - currentStar.position[2]
+          };
+          
+          // Calculate dot product to measure alignment with direction to end
+          const dotProduct = directionToEnd.x * directionToCandidate.x + 
+                            directionToEnd.y * directionToCandidate.y + 
+                            directionToEnd.z * directionToCandidate.z;
+          
+          const distanceToEnd = this.calculateDistance(candidate, endStar);
+          const distanceFromCurrent = this.calculateDistance(currentStar, candidate);
+          
+          // Score based on alignment with end direction and reasonable step size
+          const score = dotProduct / (distanceFromCurrent * distanceToEnd) * 1000;
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestNextStar = candidate;
+          }
+        });
+        
+        if (bestNextStar) {
+          path.push(bestNextStar.id);
+          currentStar = bestNextStar;
+          
+          // Remove this star from available stars
+          const index = pathAvailableStars.findIndex(s => s.id === bestNextStar!.id);
+          if (index >= 0) pathAvailableStars.splice(index, 1);
         }
-        finalPath = [path[0], ...selectedIntermediates, path[path.length - 1]];
       }
+      
+      // Add end star
+      path.push(endStar.id);
       
       // Calculate total distance for the final path
       let totalDistance = 0;
-      for (let i = 0; i < finalPath.length - 1; i++) {
-        const star1 = workingStars.find(s => s.id === finalPath[i]);
-        const star2 = workingStars.find(s => s.id === finalPath[i + 1]);
+      for (let i = 0; i < path.length - 1; i++) {
+        const star1 = workingStars.find(s => s.id === path[i]);
+        const star2 = workingStars.find(s => s.id === path[i + 1]);
         if (star1 && star2) {
           totalDistance += this.calculateDistance(star1, star2);
         }
@@ -242,9 +263,9 @@ export class WarpLaneGenerator {
       const warpLane: WarpLane = {
         id: `warp-chain-${laneIndex}`,
         name: `Warp Route ${laneIndex + 1}`,
-        startStarId: finalPath[0],
-        endStarId: finalPath[finalPath.length - 1],
-        path: finalPath,
+        startStarId: path[0],
+        endStarId: path[path.length - 1],
+        path: path,
         distance: totalDistance,
         color: warpColors[laneIndex % warpColors.length],
         opacity: 0.4,
@@ -254,9 +275,9 @@ export class WarpLaneGenerator {
       warpLanes.push(warpLane);
       
       // Mark all stars in this path as used
-      finalPath.forEach(starId => usedStars.add(starId));
+      path.forEach(starId => usedStars.add(starId));
       
-      console.log(`Generated warp lane ${laneIndex + 1}: ${finalPath.length} stars, ${totalDistance.toFixed(1)} total distance`);
+      console.log(`Generated warp lane ${laneIndex + 1}: ${path.length} stars, ${totalDistance.toFixed(1)} total distance`);
     }
     
     console.log(`Generated ${warpLanes.length} warp lane chains`);
