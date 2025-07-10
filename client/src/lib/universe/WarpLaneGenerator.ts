@@ -31,6 +31,7 @@ export class WarpLaneGenerator {
    */
   static buildStarGraph(stars: SimpleStar[], maxDistance: number): Graph {
     const graph: Graph = {};
+    let totalConnections = 0;
     
     // Initialize graph
     stars.forEach(star => {
@@ -44,10 +45,12 @@ export class WarpLaneGenerator {
         if (distance <= maxDistance) {
           graph[stars[i].id][stars[j].id] = distance;
           graph[stars[j].id][stars[i].id] = distance;
+          totalConnections++;
         }
       }
     }
 
+    console.log(`Graph connectivity: ${totalConnections} connections, average ${(totalConnections * 2 / stars.length).toFixed(1)} connections per star`);
     return graph;
   }
 
@@ -131,6 +134,7 @@ export class WarpLaneGenerator {
     // Build graph with connections for pathfinding (larger radius for connectivity)
     const connectivityRadius = galaxyRadius * 0.6; // Increased for better star connectivity
     const graph = this.buildStarGraph(workingStars, connectivityRadius);
+    console.log(`Built connectivity graph with radius ${connectivityRadius}, graph has ${Object.keys(graph).length} nodes`);
 
     // Find star pairs that meet the minimum distance requirement
     const validPairs: { star1: SimpleStar, star2: SimpleStar, distance: number }[] = [];
@@ -172,8 +176,12 @@ export class WarpLaneGenerator {
       if (warpLanes.length >= laneCount) break;
       
       // Avoid reusing stars to prevent overlap
-      if (usedStars.has(pair.star1.id) || usedStars.has(pair.star2.id)) continue;
+      if (usedStars.has(pair.star1.id) || usedStars.has(pair.star2.id)) {
+        console.log(`Skipping pair ${pair.star1.id}-${pair.star2.id} (stars already used)`);
+        continue;
+      }
 
+      console.log(`Attempting pathfinding for ${pair.star1.id} -> ${pair.star2.id} (distance: ${pair.distance.toFixed(1)})`);
       // Find shortest path using Dijkstra's algorithm
       const pathResult = this.dijkstra(graph, pair.star1.id, pair.star2.id);
       
@@ -218,6 +226,31 @@ export class WarpLaneGenerator {
           console.log(`Generated direct warp lane: ${directWarpLane.name} (direct connection, distance: ${pair.distance.toFixed(1)})`);
         } else {
           console.log(`Pair distance ${pair.distance.toFixed(1)} < minimum ${minDistance.toFixed(1)}, skipping`);
+        }
+      }
+    }
+
+    // If no warp lanes were generated through pathfinding, create some simple direct connections
+    if (warpLanes.length === 0 && validPairs.length > 0) {
+      console.log('No pathfinding lanes generated, creating direct connections as fallback');
+      for (let i = 0; i < Math.min(laneCount, validPairs.length); i++) {
+        const pair = validPairs[i];
+        if (!usedStars.has(pair.star1.id) && !usedStars.has(pair.star2.id)) {
+          const directLane: WarpLane = {
+            id: `direct-${pair.star1.id}-${pair.star2.id}`,
+            name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
+            startStarId: pair.star1.id,
+            endStarId: pair.star2.id,
+            path: [pair.star1.id, pair.star2.id],
+            distance: pair.distance,
+            color: warpColors[i % warpColors.length],
+            opacity: 0.4,
+            isActive: true
+          };
+          warpLanes.push(directLane);
+          usedStars.add(pair.star1.id);
+          usedStars.add(pair.star2.id);
+          console.log(`Created direct fallback lane: ${directLane.name} (distance: ${pair.distance.toFixed(1)})`);
         }
       }
     }

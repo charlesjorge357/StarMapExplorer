@@ -267,6 +267,7 @@ function StarField({
       ))}
 
       {/* Warp lanes */}
+      {warpLanes.length > 0 && console.log(`Rendering ${warpLanes.length} warp lanes`)}
       <WarpLanes warpLanes={warpLanes} stars={stars} />
 
       {/* Camera-facing selection ring */}
