@@ -190,7 +190,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
           setHovered(false);
           document.body.style.cursor = 'auto';
         }}
-        renderOrder={-1}
+        renderOrder={0}
       >
         <sphereGeometry args={[selectionRadius * 0.9, 16, 12]} />
         <meshBasicMaterial transparent opacity={0} />

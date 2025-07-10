@@ -137,6 +137,7 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                   position={[midPoint.x, midPoint.y, midPoint.z]}
                   quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
                   raycast={() => null}
+                  frustumCulled={false}
                 >
                   <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
                   <meshStandardMaterial 
@@ -336,7 +337,7 @@ function App() {
     if (generatedStars.length > 0) {
       setTimeout(() => {
         try {
-          const galaxyRadius = 400; // Match the star generation radius
+          const galaxyRadius = 10000; // Match the star generation radius
           const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 24); // Tripled from 8 to 24
           setWarpLanes(generatedWarpLanes);
           console.log(`Generated ${generatedWarpLanes.length} warp lanes`);

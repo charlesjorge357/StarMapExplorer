@@ -83,7 +83,7 @@ export class WarpLaneGenerator {
       iterations++;
       // Find unvisited node with minimum distance
       let current: string | null = null;
-      let minDistance = Infinity;
+      let minDistance = 100000000000;
       
       for (const starId of unvisited) {
         if (distances[starId] < minDistance) {
@@ -128,7 +128,7 @@ export class WarpLaneGenerator {
   /**
    * Generate continuous warp lane paths (chains of 15-20 stars with sequential connections)
    */
-  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 30): WarpLane[] {
+  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 35): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
     
@@ -151,7 +151,7 @@ export class WarpLaneGenerator {
 
     const usedStars = new Set<string>();
     const starsPerLane = 15; // Each warp lane will connect 15 stars (14 segments)
-    const maxSearchDistance = galaxyRadius * 0.3; // Maximum distance to search for next star
+    const maxSearchDistance = galaxyRadius * 2.6; // Maximum distance to search for next star
     
     // Generate multiple warp lane paths
     for (let laneIndex = 0; laneIndex < laneCount; laneIndex++) {
@@ -188,7 +188,7 @@ export class WarpLaneGenerator {
         
         // Find the closest candidate within search distance
         let closestStar: SimpleStar | null = null;
-        let closestDistance = Infinity;
+        let closestDistance = 1000000;
         
         for (const candidate of candidates) {
           const distance = this.calculateDistance(currentStar, candidate);
