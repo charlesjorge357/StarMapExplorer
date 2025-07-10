@@ -139,6 +139,7 @@ export interface UniverseData {
   stars: Star[];
   systems: StarSystem[];
   nebulas?: Nebula[];
+  warpLanes?: WarpLane[];
   metadata: {
     version: string;
     created: string;
@@ -156,4 +157,16 @@ export interface Nebula {
   composition: string;
   type: "emission" | "reflection" | "dark" | "planetary";
   starsWithin?: Star[]; // optional
+}
+
+export interface WarpLane {
+  id: string;
+  name: string;
+  startStarId: string;
+  endStarId: string;
+  path: string[]; // Array of star IDs representing the shortest path
+  distance: number; // Total distance of the warp lane
+  color: string; // Color of the warp lane visualization
+  opacity: number; // Transparency level
+  isActive: boolean; // Whether the warp lane is currently active
 }

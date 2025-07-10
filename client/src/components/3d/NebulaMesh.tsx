@@ -152,7 +152,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   });
 
   // Calculate the maximum radius for the hitbox and selection ring (elliptical bounding sphere)
-  const selectionRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusZ); // Use X or Z, whichever is longer
+  const selectionRadius = Math.max(nebulaShape.radiusX, nebulaShape.radiusZ)/3; // Use X or Z, whichever is longer
 
   // Check if camera is within clickable range (not too close, not too far)
   const [canClick, setCanClick] = useState(true);

@@ -11,6 +11,7 @@ import { ObjectPanel } from "./components/ui/ObjectPanel";
 import { NebulaDetails } from "./components/ui/NebulaDetails";
 import { StarGenerator } from "./lib/universe/StarGenerator";
 import { SystemGenerator } from "./lib/universe/SystemGenerator";
+import { WarpLaneGenerator } from "./lib/universe/WarpLaneGenerator";
 import { NebulaMesh } from "./components/3d/NebulaMesh";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
@@ -64,13 +65,77 @@ function SelectionRing({ star }: { star: SimpleStar }) {
   );
 }
 
+// Component for rendering warp lanes
+function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[] }) {
+  // Create a lookup map for stars
+  const starMap = useMemo(() => {
+    const map = new Map<string, SimpleStar>();
+    stars.forEach(star => map.set(star.id, star));
+    return map;
+  }, [stars]);
+
+  return (
+    <group>
+      {warpLanes.map((lane) => {
+        const pathStars = lane.path.map((starId: string) => starMap.get(starId)).filter(Boolean);
+        
+        if (pathStars.length < 2) return null;
+
+        // Create cylinders connecting each star in the path
+        const segments = [];
+        for (let i = 0; i < pathStars.length - 1; i++) {
+          const start = pathStars[i];
+          const end = pathStars[i + 1];
+          
+          if (start && end) {
+            const startPos = new THREE.Vector3(...start.position);
+            const endPos = new THREE.Vector3(...end.position);
+            const midPoint = startPos.clone().lerp(endPos, 0.5);
+            const distance = startPos.distanceTo(endPos);
+            
+            // Calculate rotation to align cylinder with the line between stars
+            const direction = endPos.clone().sub(startPos).normalize();
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+
+            segments.push(
+              <mesh 
+                key={`${lane.id}-segment-${i}`} 
+                position={[midPoint.x, midPoint.y, midPoint.z]}
+                quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
+                raycast={() => null}
+              >
+                <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
+                <meshBasicMaterial 
+                  color={lane.color} 
+                  transparent 
+                  opacity={lane.opacity}
+                  emissive={lane.color}
+                  emissiveIntensity={0.2}
+                />
+              </mesh>
+            );
+          }
+        }
+
+        return (
+          <group key={lane.id}>
+            {segments}
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 function StarField({ 
   selectedStar, 
   setSelectedStar,
   selectedNebula,
   setSelectedNebula,
   stars,
-  nebulas
+  nebulas,
+  warpLanes
 }: { 
   selectedStar: SimpleStar | null; 
   setSelectedStar: (star: SimpleStar | null) => void;
@@ -78,6 +143,7 @@ function StarField({
   setSelectedNebula: (nebula: any) => void;
   stars: SimpleStar[];
   nebulas: any[];
+  warpLanes: any[];
 }) {
   // Load star surface texture
   const starBumpMap = useTexture('/textures/star_surface.jpg');
@@ -178,6 +244,9 @@ function StarField({
         />
       ))}
 
+      {/* Warp lanes */}
+      <WarpLanes warpLanes={warpLanes} stars={stars} />
+
       {/* Camera-facing selection ring */}
       {selectedStar && <SelectionRing star={selectedStar} />}
     </group>
@@ -201,13 +270,14 @@ function App() {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
+  const [warpLanes, setWarpLanes] = useState<any[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
 
   // Generate nebulas once
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
 
-  // Generate stars when app loads and clear system cache
+  // Generate stars and warp lanes when app loads and clear system cache
   useEffect(() => {
     console.log("Generating stars...");
     const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
@@ -215,6 +285,15 @@ function App() {
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
+    
+    // Generate warp lanes after stars are created
+    if (generatedStars.length > 0) {
+      const galaxyRadius = 400; // Match the star generation radius
+      const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 9);
+      setWarpLanes(generatedWarpLanes);
+      console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
+    }
+    
     console.log("System cache cleared - new systems will include rings");
   }, []);
 
@@ -662,6 +741,7 @@ function App() {
                     setSelectedNebula={setSelectedNebula}
                     stars={stars}
                     nebulas={nebulas}
+                    warpLanes={warpLanes}
                   />
                   <NebulaScreenTint nebulas={nebulas} />
                 </>
