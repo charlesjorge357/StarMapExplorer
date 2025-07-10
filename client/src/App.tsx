@@ -128,15 +128,15 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                   quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
                   raycast={() => null}
                 >
-                  <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
+                  <cylinderGeometry args={[2.0, 2.0, distance, 8]} />
                   <meshStandardMaterial 
                     color={lane.color || '#00FFFF'} 
                     transparent 
-                    opacity={lane.opacity || 0.4}
+                    opacity={0.8}
                     emissive={lane.color || '#00FFFF'}
-                    emissiveIntensity={0.2}
+                    emissiveIntensity={0.5}
                     metalness={0}
-                    roughness={0.5}
+                    roughness={0.1}
                   />
                 </mesh>
               );
@@ -272,9 +272,26 @@ function StarField({
         />
       ))}
 
+      {/* Test warp lane to verify rendering */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[3.0, 3.0, 50, 8]} />
+        <meshStandardMaterial 
+          color="#FF0000" 
+          transparent 
+          opacity={0.8}
+          emissive="#FF0000"
+          emissiveIntensity={0.5}
+          metalness={0}
+          roughness={0.1}
+        />
+      </mesh>
+
       {/* Warp lanes */}
       {warpLanes && warpLanes.length > 0 && (
-        <WarpLanes warpLanes={warpLanes} stars={stars} />
+        <>
+          {console.log(`Rendering ${warpLanes.length} warp lanes:`, warpLanes.map(l => l.name))}
+          <WarpLanes warpLanes={warpLanes} stars={stars} />
+        </>
       )}
 
       {/* Camera-facing selection ring */}
