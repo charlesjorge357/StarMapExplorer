@@ -709,7 +709,7 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
         if (otherPlanet.id === planet?.id) return;
         
         // Use actual orbital distance with some angular offset
-        const orbitDistance = otherPlanet.orbitRadius * 2;
+        const orbitDistance = otherPlanet.orbitRadius * 20;
         const angle = index * (Math.PI * 2 / Math.max(1, system.planets.length - 1)); // Distribute around
         
         objects.push({
@@ -722,8 +722,8 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
           ] as [number, number, number],
           size: otherPlanet.radius * 0.6 * 0.2, // Scale based on actual radius, but smaller for distance
           color: otherPlanet.computedColor || ['#FF7043', '#81C784', '#D4A574', '#9ACD32', '#FF4500', '#006994'][index % 6],
-          brightness: 0.9,
-          emissive: false
+          brightness: 1,
+          emissive: true
         });
       });
     }
