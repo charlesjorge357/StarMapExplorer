@@ -38,6 +38,8 @@ export class WarpLaneGenerator {
       graph[star.id] = {};
     });
 
+    console.log(`Building graph for ${stars.length} stars with max distance ${maxDistance}`);
+    
     // Connect stars within distance threshold
     for (let i = 0; i < stars.length; i++) {
       for (let j = i + 1; j < stars.length; j++) {
@@ -51,6 +53,11 @@ export class WarpLaneGenerator {
     }
 
     console.log(`Graph connectivity: ${totalConnections} connections, average ${(totalConnections * 2 / stars.length).toFixed(1)} connections per star`);
+    
+    // Debug: Check if we have any connections at all
+    const connectedStars = Object.keys(graph).filter(starId => Object.keys(graph[starId]).length > 0);
+    console.log(`${connectedStars.length} out of ${stars.length} stars have connections`);
+    
     return graph;
   }
 
@@ -172,8 +179,13 @@ export class WarpLaneGenerator {
       '#FFD700'  // Gold
     ];
 
+    console.log(`Processing ${validPairs.length} valid pairs, attempting to generate ${laneCount} warp lanes`);
+    
     for (const pair of validPairs) {
-      if (warpLanes.length >= laneCount) break;
+      if (warpLanes.length >= laneCount) {
+        console.log(`Reached target lane count ${laneCount}, stopping generation`);
+        break;
+      }
       
       // Avoid reusing stars to prevent overlap
       if (usedStars.has(pair.star1.id) || usedStars.has(pair.star2.id)) {
@@ -182,6 +194,13 @@ export class WarpLaneGenerator {
       }
 
       console.log(`Attempting pathfinding for ${pair.star1.id} -> ${pair.star2.id} (distance: ${pair.distance.toFixed(1)})`);
+      
+      // Check if both stars exist in the graph
+      if (!graph[pair.star1.id] || !graph[pair.star2.id]) {
+        console.log(`Stars not found in graph: ${pair.star1.id}=${!!graph[pair.star1.id]}, ${pair.star2.id}=${!!graph[pair.star2.id]}`);
+        continue;
+      }
+      
       // Find shortest path using Dijkstra's algorithm
       const pathResult = this.dijkstra(graph, pair.star1.id, pair.star2.id);
       
@@ -229,6 +248,8 @@ export class WarpLaneGenerator {
         }
       }
     }
+    
+    console.log(`Warp lane generation completed: ${warpLanes.length} lanes generated out of ${laneCount} requested`);
 
     // If no warp lanes were generated through pathfinding, create some simple direct connections
     if (warpLanes.length === 0 && validPairs.length > 0) {
