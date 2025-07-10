@@ -464,7 +464,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 
       {/* Asteroid belts from the system */}
       {system?.asteroidBelts && system.asteroidBelts.length > 0 && (
-        <AsteroidBelts belts={system.asteroidBelts} planetRadius={planetRadius} />
+        <AsteroidBelts belts={system.asteroidBelts} planet={planet} />
       )}
 
       {/* Removed nebula screen tint to prevent planet color tinting */}
@@ -553,18 +553,27 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex, planetId }: { moon: any;
 }
 
 // Component for asteroid belts in planetary view
-function AsteroidBelts({ belts, planetRadius }: { belts: any[]; planetRadius: number }) {
+function AsteroidBelts({ belts, planet }: { belts: any[]; planet: any }) {
+  // Calculate star position using same logic as CosmicNeighbors
+  const starDistance = planet?.orbitRadius ? planet.orbitRadius * 25 : 1000;
+  const starAngle = Math.PI * 0.3; // Same angle as star positioning
+  const starPosition = [
+    Math.cos(starAngle) * starDistance,
+    starDistance * 0.1,
+    Math.sin(starAngle) * -starDistance
+  ];
+
   return (
-    <group>
+    <group position={starPosition}>
       {belts.map((belt: any, beltIndex: number) => (
-        <AsteroidBelt key={belt.id} belt={belt} planetRadius={planetRadius} beltIndex={beltIndex} />
+        <AsteroidBelt key={belt.id} belt={belt} beltIndex={beltIndex} />
       ))}
     </group>
   );
 }
 
 // Individual asteroid belt component
-function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadius: number; beltIndex: number }) {
+function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
   const asteroidData = useMemo(() => {
     // Match SystemView asteroid count calculation
     const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 200); // Reduced for planetary view performance
