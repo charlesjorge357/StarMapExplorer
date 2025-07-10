@@ -729,7 +729,7 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
     }
 
     // Add asteroid belts as visible clusters using orbital distance scaling
-    const beltBaseDistance = starDistance * 1.5; // Position belts further out than the star
+    const beltBaseDistance = starDistance * 100; // Position belts further out than the star
     const beltPositions = [
       [beltBaseDistance * 0.3, 0, beltBaseDistance * 0.3],
       [-beltBaseDistance * 0.5, beltBaseDistance * 0.1, -beltBaseDistance * 0.4],
