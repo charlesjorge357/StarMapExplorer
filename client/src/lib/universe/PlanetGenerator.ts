@@ -90,9 +90,33 @@ export class PlanetGenerator {
   }
 
   private static generateFeatureName(type: 'city' | 'fort' | 'landmark', index: number): string {
-    const cityNames = ['New Terra', 'Alpha Station', 'Beta Colony', 'Gamma Outpost', 'Delta City'];
-    const fortNames = ['Fort Alpha', 'Beta Garrison', 'Gamma Stronghold', 'Delta Fortress', 'Epsilon Base'];
-    const landmarkNames = ['Crystal Peaks', 'Azure Falls', 'Crimson Canyon', 'Emerald Valley', 'Silver Plateau'];
+    const cityNames = [
+      'New Terra', 'Alpha Station', 'Beta Colony', 'Gamma Outpost', 'Delta City',
+      'Nova Harbor', 'Stellar Point', 'Void Port', 'Nexus Prime', 'Horizon City',
+      'Zenith Colony', 'Eclipse Station', 'Aurora Settlement', 'Cosmos Bay', 'Nebula Falls',
+      'Infinity Gate', 'Quantum City', 'Hyperion Base', 'Starfall Landing', 'Meridian Crossing',
+      'Phoenix Rising', 'Crystal Shore', 'Crimson Spire', 'Azure Heights', 'Titanium Valley',
+      'Solar Wind', 'Neutron Plaza', 'Pulsar Point', 'Comet\'s Rest', 'Asteroid Creek'
+    ];
+    
+    const fortNames = [
+      'Fort Alpha', 'Beta Garrison', 'Gamma Stronghold', 'Delta Fortress', 'Epsilon Base',
+      'Ironhold Citadel', 'Starwatch Keep', 'Voidguard Bastion', 'Sentinel\'s Gate', 'Defender\'s Rest',
+      'Steel Thunder', 'Storm\'s End', 'Barrier Peak', 'Shield Wall', 'Guardian\'s Stand',
+      'Blackstone Keep', 'Iron Ridge', 'Steelpoint', 'Titanwall', 'Adamant Hold',
+      'Eagle\'s Nest', 'Raven\'s Perch', 'Wolf\'s Den', 'Bear\'s Cave', 'Lion\'s Mane',
+      'Nova Citadel', 'Stellar Bastion', 'Cosmic Gate', 'Star Fortress', 'Void Bulwark'
+    ];
+    
+    const landmarkNames = [
+      'Crystal Peaks', 'Azure Falls', 'Crimson Canyon', 'Emerald Valley', 'Silver Plateau',
+      'Whispering Stones', 'Singing Crystals', 'Dancing Lights', 'Floating Isles', 'Gravity Wells',
+      'Rainbow Geysers', 'Prismatic Caves', 'Magnetic Mountains', 'Temporal Rifts', 'Phantom Mists',
+      'Golden Spires', 'Sapphire Lakes', 'Ruby Caverns', 'Diamond Cliffs', 'Opal Gardens',
+      'Thunder Plains', 'Lightning Fields', 'Storm\'s Heart', 'Wind\'s Edge', 'Solar Mirrors',
+      'Starfall Crater', 'Meteor Garden', 'Comet\'s Trail', 'Nova\'s Scar', 'Nebula\'s Eye',
+      'Ancient Ruins', 'Titan\'s Bones', 'Dragon\'s Teeth', 'Giant\'s Stairs', 'Elder\'s Rest'
+    ];
 
     switch (type) {
       case 'city':
@@ -121,16 +145,18 @@ export class PlanetGenerator {
 
   static generateAffiliation(): string {
     const affiliations = [
-      'Terran Federation',
-      'Independent Colony',
-      'Mining Consortium',
-      'Trade Union',
-      'Scientific Outpost',
-      'Frontier Settlement',
-      'Corporate Territory',
-      'Free State',
-      'Research Station',
-      'Colonial Administration'
+      'Terran Federation', 'Independent Colony', 'Mining Consortium', 'Trade Union',
+      'Scientific Outpost', 'Frontier Settlement', 'Corporate Territory', 'Free State',
+      'Research Station', 'Colonial Administration', 'Stellar Republic', 'Void Runners',
+      'Nova Syndicate', 'Crimson Fleet', 'Azure Coalition', 'Golden Imperium',
+      'Iron Brotherhood', 'Silver Circle', 'Quantum Collective', 'Nebula Wanderers',
+      'Star Merchants', 'Cosmic Explorers', 'Deep Space Miners', 'Orbital Traders',
+      'Galactic Pioneers', 'Astro Engineers', 'Solar Confederacy', 'Lunar Alliance',
+      'Mars Initiative', 'Jupiter Cartel', 'Saturn Assembly', 'Outer Rim Traders',
+      'Border Worlds', 'Edge Systems', 'Rim Colonies', 'Far Reach Territory',
+      'New Earth Movement', 'Old Terra Loyalists', 'Phoenix Rising', 'Red Dawn',
+      'Blue Star Company', 'White Light Corporation', 'Black Void Industries',
+      'Green World Initiative', 'United Colonies', 'Free Traders Guild'
     ];
     return affiliations[Math.floor(Math.random() * affiliations.length)];
   }
