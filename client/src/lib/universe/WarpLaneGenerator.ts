@@ -121,7 +121,7 @@ export class WarpLaneGenerator {
   static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
-    const minDistance = galaxyRadius * 0.4; // Reduced minimum distance requirement for more warp lanes
+    const minDistance = galaxyRadius * 0.3; // Balanced minimum distance requirement
     
     // Limit stars for performance - use only a subset for warp lane generation
     const maxStarsForWarpLanes = Math.min(stars.length, 500);
@@ -129,7 +129,7 @@ export class WarpLaneGenerator {
     console.log(`Using ${workingStars.length} stars for warp lane pathfinding`);
     
     // Build graph with connections for pathfinding (larger radius for connectivity)
-    const connectivityRadius = galaxyRadius * 0.25; // Reduced from 0.3 to 0.25 for performance
+    const connectivityRadius = galaxyRadius * 0.6; // Increased for better star connectivity
     const graph = this.buildStarGraph(workingStars, connectivityRadius);
 
     // Find star pairs that meet the minimum distance requirement
