@@ -211,7 +211,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
               transparent
               opacity={particle.opacity * (isSelected ? 1.8 : 1) * fadeMultiplier}
               depthWrite={false}
-              depthTest={true}
+              depthTest={false}
               blending={THREE.AdditiveBlending}
               rotation={particle.initialRotation}
             />
