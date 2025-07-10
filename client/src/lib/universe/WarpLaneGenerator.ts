@@ -131,15 +131,15 @@ export class WarpLaneGenerator {
   static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
-    const minDistance = galaxyRadius * 0.4; // Reasonable minimum distance for warp lanes
+    const minDistance = galaxyRadius * 0.2; // Reduced minimum distance for more warp lanes
     
     // Limit stars for performance - use only a subset for warp lane generation
     const maxStarsForWarpLanes = Math.min(stars.length, 500);
     const workingStars = stars.slice(0, maxStarsForWarpLanes);
     console.log(`Using ${workingStars.length} stars for warp lane pathfinding`);
     
-    // Build graph with connections for pathfinding (moderate radius for realistic connectivity)
-    const connectivityRadius = galaxyRadius * 0.3; // Reduced for more realistic star connectivity
+    // Build graph with connections for pathfinding (increased radius for better connectivity)
+    const connectivityRadius = galaxyRadius * 0.5; // Increased for better star connectivity
     const graph = this.buildStarGraph(workingStars, connectivityRadius);
     console.log(`Built connectivity graph with radius ${connectivityRadius}, graph has ${Object.keys(graph).length} nodes`);
 
@@ -187,9 +187,12 @@ export class WarpLaneGenerator {
         break;
       }
       
-      // Avoid reusing stars to prevent overlap
-      if (usedStars.has(pair.star1.id) || usedStars.has(pair.star2.id)) {
-        console.log(`Skipping pair ${pair.star1.id}-${pair.star2.id} (stars already used)`);
+      // Allow stars to be reused for more connections - only skip if BOTH stars are already endpoints
+      const star1Used = warpLanes.some(lane => lane.startStarId === pair.star1.id || lane.endStarId === pair.star1.id);
+      const star2Used = warpLanes.some(lane => lane.startStarId === pair.star2.id || lane.endStarId === pair.star2.id);
+      
+      if (star1Used && star2Used) {
+        console.log(`Skipping pair ${pair.star1.id}-${pair.star2.id} (both stars already have connections)`);
         continue;
       }
 
@@ -224,8 +227,6 @@ export class WarpLaneGenerator {
         };
 
         warpLanes.push(warpLane);
-        usedStars.add(pair.star1.id);
-        usedStars.add(pair.star2.id);
         
         console.log(`Generated warp lane: ${warpLane.name} (${pathResult.path.length} hops, distance: ${pathResult.distance.toFixed(1)})`);
       } else {
@@ -245,8 +246,6 @@ export class WarpLaneGenerator {
           };
 
           warpLanes.push(directWarpLane);
-          usedStars.add(pair.star1.id);
-          usedStars.add(pair.star2.id);
           
           console.log(`Generated direct warp lane: ${directWarpLane.name} (direct connection, distance: ${pair.distance.toFixed(1)})`);
         } else {
@@ -262,7 +261,8 @@ export class WarpLaneGenerator {
       console.log('No pathfinding lanes generated, creating direct connections as fallback');
       for (let i = 0; i < Math.min(laneCount, validPairs.length); i++) {
         const pair = validPairs[i];
-        if (!usedStars.has(pair.star1.id) && !usedStars.has(pair.star2.id)) {
+        // Allow any star pair for fallback lanes
+        if (true) {
           const directLane: WarpLane = {
             id: `direct-${pair.star1.id}-${pair.star2.id}`,
             name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
