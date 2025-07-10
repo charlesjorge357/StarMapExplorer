@@ -566,20 +566,22 @@ function AsteroidBelts({ belts, planetRadius }: { belts: any[]; planetRadius: nu
 // Individual asteroid belt component
 function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadius: number; beltIndex: number }) {
   const asteroidData = useMemo(() => {
-    const asteroidCount = Math.min(25, belt.asteroidCount || 25); // Limit asteroids for performance
+    // Match SystemView asteroid count calculation
+    const totalAsteroids = Math.min(Math.pow(belt.outerRadius, 1.5) * 5, 200); // Reduced for planetary view performance
     const asteroids = [];
 
-    for (let i = 0; i < asteroidCount; i++) {
-      // Use deterministic generation based on belt ID and asteroid index
-      const seed1 = (beltIndex * 1000 + i * 73 + 37) % 1000 / 1000;
-      const seed2 = (beltIndex * 1000 + i * 149 + 83) % 1000 / 1000;
-      const seed3 = (beltIndex * 1000 + i * 211 + 127) % 1000 / 1000;
+    for (let i = 0; i < totalAsteroids; i++) {
+      // Use same seeding as SystemView for consistency
+      const seed1 = (i * 73 + 37) % 1000 / 1000;
+      const seed2 = (i * 149 + 83) % 1000 / 1000;
+      const seed3 = (i * 211 + 127) % 1000 / 1000;
 
       const baseAngle = seed1 * Math.PI * 2;
-      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * planetRadius * 5; // Scale relative to planet
-      const size = (0.3 + seed3 * 0.8) * planetRadius * 0.02; // Size relative to planet
-      const yOffset = (seed1 - 0.5) * planetRadius * 0.5; // Y variation
-      const orbitSpeed = 0.001 + (radius * 0.000001); // Very slow orbit
+      // Use the same radius calculation as SystemView (* 2 scaling)
+      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 2;
+      const size = 0.1 + (seed3 * 0.3); // Same size range as SystemView
+      const yOffset = (seed1 - 0.5) * 3; // Same Y variation as SystemView
+      const orbitSpeed = 0.01 + (radius * 0.00005); // Same speed calculation as SystemView
 
       asteroids.push({
         id: i,
@@ -592,7 +594,7 @@ function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadi
     }
 
     return asteroids;
-  }, [belt.id, beltIndex, planetRadius]);
+  }, [belt.id]); // Only regenerate if belt ID changes (like SystemView)
 
   const groupRef = useRef<any>();
 
@@ -603,6 +605,7 @@ function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadi
         const asteroid = asteroidData[i];
         if (asteroid) {
           const angle = asteroid.baseAngle + time * asteroid.orbitSpeed;
+          // Use same positioning as SystemView
           const x = Math.cos(angle) * asteroid.radius;
           const z = Math.sin(angle) * asteroid.radius;
           child.position.set(x, asteroid.yOffset, z);
@@ -612,17 +615,33 @@ function AsteroidBelt({ belt, planetRadius, beltIndex }: { belt: any; planetRadi
   });
 
   return (
-    <group ref={groupRef}>
-      {asteroidData.map((asteroid) => (
-        <mesh key={asteroid.id} raycast={() => null}>
-          <sphereGeometry args={[asteroid.size, 6, 6]} />
-          <meshStandardMaterial 
-            color="#999999" 
-            roughness={0.9}
-            metalness={0.1}
-          />
-        </mesh>
-      ))}
+    <group>
+      {/* Belt ring visualization (matching SystemView) */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
+        <ringGeometry 
+          args={[
+            belt.innerRadius * 2, 
+            belt.outerRadius * 2, 
+            64
+          ]} 
+        />
+        <meshBasicMaterial 
+          color="#666666" 
+          transparent 
+          opacity={0.2} // Slightly more transparent in planetary view
+          side={2}
+        />
+      </mesh>
+
+      {/* Individual asteroids */}
+      <group ref={groupRef}>
+        {asteroidData.map((asteroid) => (
+          <mesh key={asteroid.id} raycast={() => null}>
+            <sphereGeometry args={[asteroid.size, 4, 4]} />
+            <meshBasicMaterial color="#888888" />
+          </mesh>
+        ))}
+      </group>
     </group>
   );
 }
@@ -649,13 +668,13 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
 
     // Use the same orbital distance calculation as SystemView
     // In SystemView: planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2
-    const starDistance = planet?.orbitRadius ? planet.orbitRadius * 25 : planetRadius * 50;
+    const starDistance = planet?.orbitRadius * 55;
 
     // Add the parent star (sun) - positioned at the same orbital distance used in SystemView
     // Use actual star data from system if available
     const star = system?.star;
     // Use logarithmic scaling to prevent extremely large stars from overwhelming the view
-    const starSize = Math.log((star.radius * 1000) + 1) * 10 + 1000;
+    const starSize = Math.log((star.radius * 100) + 1) * 10 + 800;
     const starColor = star ? getStarColor(star.spectralClass) : '#FDB813';
     
     // Position star at the orbital distance, offset in a direction
