@@ -131,15 +131,15 @@ export class WarpLaneGenerator {
   static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
-    const minDistance = galaxyRadius * 0.2; // Reduced minimum distance requirement
+    const minDistance = galaxyRadius * 0.4; // Reasonable minimum distance for warp lanes
     
     // Limit stars for performance - use only a subset for warp lane generation
     const maxStarsForWarpLanes = Math.min(stars.length, 500);
     const workingStars = stars.slice(0, maxStarsForWarpLanes);
     console.log(`Using ${workingStars.length} stars for warp lane pathfinding`);
     
-    // Build graph with connections for pathfinding (much larger radius for connectivity)
-    const connectivityRadius = galaxyRadius * 1.2; // Increased significantly for better connectivity
+    // Build graph with connections for pathfinding (moderate radius for realistic connectivity)
+    const connectivityRadius = galaxyRadius * 0.3; // Reduced for more realistic star connectivity
     const graph = this.buildStarGraph(workingStars, connectivityRadius);
     console.log(`Built connectivity graph with radius ${connectivityRadius}, graph has ${Object.keys(graph).length} nodes`);
 
@@ -204,7 +204,13 @@ export class WarpLaneGenerator {
       // Find shortest path using Dijkstra's algorithm
       const pathResult = this.dijkstra(graph, pair.star1.id, pair.star2.id);
       
-      if (pathResult) {
+      if (pathResult && pathResult.path.length > 1) {
+        // Only create warp lanes for paths that aren't just direct connections
+        if (pathResult.path.length === 2 && pathResult.distance < minDistance) {
+          console.log(`Path too short and direct (${pathResult.distance.toFixed(1)} < ${minDistance.toFixed(1)}), skipping`);
+          continue;
+        }
+        
         const warpLane: WarpLane = {
           id: `warp-${pair.star1.id}-${pair.star2.id}`,
           name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
@@ -223,8 +229,8 @@ export class WarpLaneGenerator {
         
         console.log(`Generated warp lane: ${warpLane.name} (${pathResult.path.length} hops, distance: ${pathResult.distance.toFixed(1)})`);
       } else {
-        console.log(`No Dijkstra path found for ${pair.star1.id} -> ${pair.star2.id}, attempting direct connection`);
-        // If no path found via Dijkstra, create direct connection for distant pairs
+        console.log(`No valid path found for ${pair.star1.id} -> ${pair.star2.id} (pathResult: ${!!pathResult})`);
+        // Create direct connection as fallback for distant pairs
         if (pair.distance >= minDistance) {
           const directWarpLane: WarpLane = {
             id: `warp-direct-${pair.star1.id}-${pair.star2.id}`,
