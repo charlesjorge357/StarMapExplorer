@@ -459,13 +459,13 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         />
       ))}
 
-      {/* Cosmic neighbors starfield background */}
-      <CosmicNeighbors planetRadius={planetRadius} system={system} planet={planet} />
-
-      {/* Asteroid belts from the system */}
+      {/* Asteroid belts from the system - render before cosmic neighbors for proper depth */}
       {system?.asteroidBelts && system.asteroidBelts.length > 0 && (
         <AsteroidBelts belts={system.asteroidBelts} planet={planet} />
       )}
+
+      {/* Cosmic neighbors starfield background */}
+      <CosmicNeighbors planetRadius={planetRadius} system={system} planet={planet} />
 
       {/* Removed nebula screen tint to prevent planet color tinting */}
 
