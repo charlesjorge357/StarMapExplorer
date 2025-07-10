@@ -147,7 +147,8 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                     emissiveIntensity={0.2}
                     metalness={0}
                     roughness={0.5}
-                    depthWrite={false}
+                    depthTest={true}
+                    depthWrite={true}
                     side={2}
                   />
                 </mesh>
@@ -288,7 +289,7 @@ function StarField({
 
       {/* Warp lanes - rendered above nebulas */}
       {warpLanes && warpLanes.length > 0 && (
-        <group renderOrder={5}>
+        <group renderOrder={10}>
           <WarpLanes warpLanes={warpLanes} stars={stars} />
         </group>
       )}

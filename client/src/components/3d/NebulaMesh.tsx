@@ -211,7 +211,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
               transparent
               opacity={particle.opacity * (isSelected ? 1.8 : 1) * fadeMultiplier}
               depthWrite={false}
-              depthTest={false}
+              depthTest={true}
               blending={THREE.AdditiveBlending}
               rotation={particle.initialRotation}
             />
@@ -221,14 +221,14 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
       {/* Central glow for emission nebulas */}
       {nebula.type === 'emission' && (
-        <sprite scale={[nebulaShape.maxRadius, nebulaShape.maxRadius, 1]}>
+        <sprite scale={[nebulaShape.maxRadius, nebulaShape.maxRadius, 1]} renderOrder={-1}>
           <spriteMaterial
             map={texture}
             color={nebula.color}
             transparent
             opacity={0.04 * (1 - (screenTintIntensity / 0.15))}
             depthWrite={false}
-            depthTest={false}
+            depthTest={true}
             blending={THREE.AdditiveBlending}
           />
         </sprite>
