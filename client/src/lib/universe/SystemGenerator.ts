@@ -139,8 +139,8 @@ export class SystemGenerator {
       return 'ocean_world';
     }
     
-    // Zone 4: Cold Terrestrial (2.5 - 5.0 AU adjusted) - Tundra, Snowy worlds, some gas giants
-    else if (adjustedAU < 5.0) {
+    // Zone 4: Cold Terrestrial (2.5 - 5.5 AU adjusted) - Tundra, Snowy worlds, some gas giants
+    else if (adjustedAU < 5.5) {
       console.log(`→ Zone 4 (Cold Terrestrial): Tundra/Snowy worlds, some gas giants`);
       // 25% chance for gas giants in this zone
       if (random < 0.1) return 'gas_giant';
@@ -158,7 +158,7 @@ export class SystemGenerator {
       if (rand < 1) return 'barren_world';
       if (rand < 2) return 'frost_giant';
       if (rand < 3) return 'methane_world';
-      if (rand < 4) return 'snowy_world';
+      if (rand < 4) return 'barren_world';
       return 'tundra_world';
     }
     
@@ -253,9 +253,9 @@ export class SystemGenerator {
 
     // Legacy generation logic - identical to original App.tsx
     // Fewer planets for larger stars (they're more disruptive to planet formation)
-    let maxPlanets = 8;
-    if (star.radius > 2) maxPlanets = 4;
-    if (star.radius > 5) maxPlanets = 2;
+    let maxPlanets = 9;
+    if (star.radius > 2) maxPlanets = 5;
+    if (star.radius > 5) maxPlanets = 3;
 
     const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
 
@@ -269,7 +269,7 @@ export class SystemGenerator {
     // Calculate orbital zones with proper spacing to prevent overlaps
     // Randomize the base distance from the star (±50% variation)
     const baseSpacingMultiplier = 0.5 + Math.random(); // 0.5 to 1.5 multiplier
-    const baseSpacing = (20 + star.radius * 6) * baseSpacingMultiplier;
+    const baseSpacing = (18 + star.radius * 6) * baseSpacingMultiplier;
     let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
     const orbitZones: number[] = [];
 
