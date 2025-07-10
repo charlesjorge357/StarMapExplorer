@@ -187,12 +187,11 @@ export class WarpLaneGenerator {
         break;
       }
       
-      // Allow stars to be reused for more connections - only skip if BOTH stars are already endpoints
-      const star1Used = warpLanes.some(lane => lane.startStarId === pair.star1.id || lane.endStarId === pair.star1.id);
-      const star2Used = warpLanes.some(lane => lane.startStarId === pair.star2.id || lane.endStarId === pair.star2.id);
+      // Limit connections per star to prevent clustering - max 3 connections per star
+      const star1Connections = warpLanes.filter(lane => lane.startStarId === pair.star1.id || lane.endStarId === pair.star1.id).length;
+      const star2Connections = warpLanes.filter(lane => lane.startStarId === pair.star2.id || lane.endStarId === pair.star2.id).length;
       
-      if (star1Used && star2Used) {
-        console.log(`Skipping pair ${pair.star1.id}-${pair.star2.id} (both stars already have connections)`);
+      if (star1Connections >= 3 || star2Connections >= 3) {
         continue;
       }
 

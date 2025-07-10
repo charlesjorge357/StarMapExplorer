@@ -138,15 +138,17 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                   quaternion={[quaternion.x, quaternion.y, quaternion.z, quaternion.w]}
                   raycast={() => null}
                 >
-                  <cylinderGeometry args={[2.0, 2.0, distance, 8]} />
+                  <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
                   <meshStandardMaterial 
                     color={lane.color || '#00FFFF'} 
                     transparent 
-                    opacity={0.8}
+                    opacity={lane.opacity || 0.4}
                     emissive={lane.color || '#00FFFF'}
-                    emissiveIntensity={0.5}
+                    emissiveIntensity={0.2}
                     metalness={0}
-                    roughness={0.1}
+                    roughness={0.5}
+                    depthWrite={false}
+                    side={2}
                   />
                 </mesh>
               );
@@ -282,32 +284,13 @@ function StarField({
         />
       ))}
 
-      {/* Test warp lane at known star position */}
-      {stars.length > 1 && (
-        <mesh position={[
-          (stars[0].position[0] + stars[1].position[0]) / 2,
-          (stars[0].position[1] + stars[1].position[1]) / 2,
-          (stars[0].position[2] + stars[1].position[2]) / 2
-        ]}>
-          <cylinderGeometry args={[3.0, 3.0, 50, 8]} />
-          <meshStandardMaterial 
-            color="#FF0000" 
-            transparent 
-            opacity={0.8}
-            emissive="#FF0000"
-            emissiveIntensity={0.5}
-            metalness={0}
-            roughness={0.1}
-          />
-        </mesh>
-      )}
 
-      {/* Warp lanes */}
+
+      {/* Warp lanes - rendered above nebulas */}
       {warpLanes && warpLanes.length > 0 && (
-        <>
-          {console.log(`Rendering ${warpLanes.length} warp lanes:`, warpLanes.map(l => l.name))}
+        <group renderOrder={1}>
           <WarpLanes warpLanes={warpLanes} stars={stars} />
-        </>
+        </group>
       )}
 
       {/* Camera-facing selection ring */}
@@ -354,7 +337,7 @@ function App() {
       setTimeout(() => {
         try {
           const galaxyRadius = 400; // Match the star generation radius
-          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 8); // Reduced from 9 to 8
+          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 24); // Tripled from 8 to 24
           setWarpLanes(generatedWarpLanes);
           console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
         } catch (error) {
