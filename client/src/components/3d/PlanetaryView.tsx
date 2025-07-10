@@ -587,10 +587,10 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
 
       const baseAngle = seed1 * Math.PI * 2;
       // Use the same radius calculation as SystemView (* 2 scaling)
-      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 2;
-      const size = 0.1 + (seed3 * 0.3); // Same size range as SystemView
+      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 21;
+      const size = 1 + (seed3 * 3); // Same size range as SystemView
       const yOffset = (seed1 - 0.5) * 3; // Same Y variation as SystemView
-      const orbitSpeed = 0.01 + (radius * 0.00005); // Same speed calculation as SystemView
+      const orbitSpeed = 0.001 + (radius * 0.000005); // Same speed calculation as SystemView
 
       asteroids.push({
         id: i,
@@ -629,8 +629,8 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
       <mesh rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
         <ringGeometry 
           args={[
-            belt.innerRadius * 2, 
-            belt.outerRadius * 2, 
+            belt.innerRadius * 21, 
+            belt.outerRadius * 21, 
             64
           ]} 
         />
@@ -693,7 +693,7 @@ function CosmicNeighbors({ planetRadius, system, planet }: { planetRadius: numbe
       type: 'star',
       position: [
         Math.cos(starAngle) * starDistance,
-        starDistance * 0.1, // Small Y offset for 3D effect
+        starDistance * 0.01, // Small Y offset for 3D effect
         Math.sin(starAngle) * -(starDistance)
       ] as [number, number, number],
       size: starSize * 0.15, // Scale down for distant appearance
