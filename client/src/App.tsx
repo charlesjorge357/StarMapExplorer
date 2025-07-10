@@ -86,7 +86,6 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
   }
   
   if (!stars || !Array.isArray(stars) || stars.length === 0) {
-    console.warn('WarpLanes: No stars available for rendering');
     return null;
   }
 
@@ -130,12 +129,14 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                   raycast={() => null}
                 >
                   <cylinderGeometry args={[0.5, 0.5, distance, 8]} />
-                  <meshBasicMaterial 
+                  <meshStandardMaterial 
                     color={lane.color || '#00FFFF'} 
                     transparent 
                     opacity={lane.opacity || 0.4}
                     emissive={lane.color || '#00FFFF'}
                     emissiveIntensity={0.2}
+                    metalness={0}
+                    roughness={0.5}
                   />
                 </mesh>
               );
@@ -272,8 +273,9 @@ function StarField({
       ))}
 
       {/* Warp lanes */}
-      {warpLanes.length > 0 && console.log(`Rendering ${warpLanes.length} warp lanes`)}
-      <WarpLanes warpLanes={warpLanes} stars={stars} />
+      {warpLanes && warpLanes.length > 0 && (
+        <WarpLanes warpLanes={warpLanes} stars={stars} />
+      )}
 
       {/* Camera-facing selection ring */}
       {selectedStar && <SelectionRing star={selectedStar} />}
