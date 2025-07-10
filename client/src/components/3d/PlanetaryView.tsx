@@ -767,15 +767,11 @@ function CosmicObject({ obj }: { obj: any }) {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Subtle rotation for planets and asteroids
+      // Subtle rotation for planets and asteroids only
       if (obj.type === 'planet' || obj.type === 'asteroid') {
         meshRef.current.rotation.y += 0.001;
       }
-      // Gentle pulsing for stars
-      if (obj.type === 'star') {
-        const pulse = Math.sin(state.clock.getElapsedTime() * 2) * 0.1 + 1;
-        meshRef.current.scale.setScalar(pulse);
-      }
+      // Stars remain static (no pulsing) to match system view appearance
     }
   });
 

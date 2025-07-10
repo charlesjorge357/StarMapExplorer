@@ -248,7 +248,184 @@ export class SystemGenerator {
     
   }
 
-  
+  static generateSystem(star: any, seed: number): StarSystem {
+    const planets = [];
+
+    // Legacy generation logic - identical to original App.tsx
+    // Fewer planets for larger stars (they're more disruptive to planet formation)
+    let maxPlanets = 9;
+    if (star.radius > 2) maxPlanets = 5;
+    if (star.radius > 5) maxPlanets = 3;
+
+    const planetCount = Math.floor(Math.random() * maxPlanets) + 1;
+
+    const planetTypes: PlanetType[] = [
+      'gas_giant', 'frost_giant', 'arid_world', 'barren_world',
+      'dusty_world', 'grassland_world', 'jungle_world', 'marshy_world',
+      'martian_world', 'methane_world', 'sandy_world', 'snowy_world',
+      'tundra_world', 'nuclear_world', 'ocean_world'
+    ];
+
+    // Calculate orbital zones with proper spacing to prevent overlaps
+    // Randomize the base distance from the star (±50% variation)
+    const baseSpacingMultiplier = 0.5 + Math.random(); // 0.5 to 1.5 multiplier
+    const baseSpacing = (18 + star.radius * 6) * baseSpacingMultiplier;
+    let maxOrbitRadius = baseSpacing * 8; // Increased max orbit
+    const orbitZones: number[] = [];
+
+    for (let i = 0; i < planetCount; i++) {
+      if (i === 0) {
+        // First planet starts at base spacing from star
+        orbitZones.push(baseSpacing);
+      } else {
+        const prevOrbit = orbitZones[i - 1];
+
+        // Use conservative spacing that accounts for largest possible planets
+        const minSpacingBetweenOrbits = 21 + (i * 5); // Progressive spacing
+        const randomVariation = Math.random() * 15 + 10; // 10-25 additional spacing
+
+        //const newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        //orbitZones.push(Math.min(newOrbit, maxOrbitRadius));
+        let newOrbit = prevOrbit + minSpacingBetweenOrbits + randomVariation;
+        if (newOrbit > maxOrbitRadius && i < planetCount - 1) {
+          maxOrbitRadius= newOrbit + 20;
+        }
+        orbitZones.push(newOrbit);
+      }
+    }
+
+    for (let i = 0; i < planetCount; i++) {
+      const orbitRadius = orbitZones[i];
+      // Use deterministic planet type based on orbit distance and star temperature
+      const planetSeed = this.hashString(star.name) + i * 1000;
+      const type = this.determinePlanetType(orbitRadius, star.temperature, star.luminosity, planetSeed);
+
+      // Earth radii scaling (realistic)
+      let radius: number;
+      switch (type) {
+        case 'gas_giant':
+          radius = 8 + Math.random() * 4; // 8–12 R⊕
+          break;
+        case 'frost_giant':
+          radius = 4 + Math.random() * 4; // 4–8 R⊕
+          break;
+        case 'grassland_world':
+        case 'jungle_world':
+        case 'ocean_world':
+        case 'arid_world':
+        case 'marshy_world':
+          radius = 0.8 + Math.random() * 1.5; // 0.8–2.3 R⊕
+          break;
+        case 'nuclear_world':
+        case 'barren_world':
+        case 'dusty_world':
+        case 'martian_world':
+        case 'methane_world':
+        case 'sandy_world':
+        case 'snowy_world':
+        case 'tundra_world':
+          radius = 0.3 + Math.random() * 0.7; // 0.3–1.0 R⊕
+          break;
+        default:
+          radius = 1.0;
+      }
+
+      // Mass = radius³ × density factor (gas giants less dense)
+      const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
+      const mass = Math.pow(radius, 3) * densityFactor;
+
+      // Simplified temperature model
+      const temperature = 200 + Math.random() * 600;
+
+      // Generate atmosphere
+      let atmosphere: string[] = [];
+      switch (type) {
+        case 'gas_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Methane'];
+          break;
+        case 'frost_giant':
+          atmosphere = ['Hydrogen', 'Helium', 'Water', 'Ammonia'];
+          break;
+        case 'grassland_world':
+        case 'jungle_world':
+        case 'ocean_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
+          break;
+        case 'arid_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen'];
+          break;
+        case 'barren_world':
+          atmosphere = [];
+          break;
+        case 'dusty_world':
+          atmosphere = ['Carbon Dioxide', 'Dust Particles'];
+          break;
+        case 'marshy_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Methane', 'Water Vapor'];
+          break;
+        case 'martian_world':
+          atmosphere = ['Carbon Dioxide', 'Nitrogen', 'Iron Oxide'];
+          break;
+        case 'methane_world':
+          atmosphere = ['Methane', 'Nitrogen', 'Ethane'];
+          break;
+        case 'sandy_world':
+          atmosphere = ['Carbon Dioxide', 'Silicon Particles'];
+          break;
+        case 'snowy_world':
+        case 'tundra_world':
+          atmosphere = ['Nitrogen', 'Oxygen', 'Water Vapor'];
+          break;
+        case 'nuclear_world':
+          atmosphere = ['Helium-3', 'Argon', 'Tritium'];
+          break;
+      }
+
+      const angle = Math.random() * Math.PI * 2;
+      const inclination = (Math.random() - 0.5) * 0.3;
+      const position: [number, number, number] = [
+        Math.cos(angle) * orbitRadius * 10,
+        Math.sin(inclination) * orbitRadius * 2,
+        Math.sin(angle) * orbitRadius * 10
+      ];
+
+      const planet: Planet = {
+        id: `planet-${star.id}-${i}`,
+        name: `${star.name} ${String.fromCharCode(945 + i)}`,
+        position,
+        radius,
+        mass,
+        type,
+        orbitRadius,
+        displayOrbit: orbitRadius / 6,
+        orbitSpeed: 0.05 + Math.random() * 0.15,
+        rotationSpeed: 0.01 + Math.random() * 0.05,
+        temperature,
+        atmosphere,
+        moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
+        rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
+        textureIndex: this.generateTextureIndex(type, i, star.name),
+        surfaceFeatures: []
+      };
+
+      // Generate surface features using PlanetGenerator
+      planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet as any);
+
+      planets.push(planet);
+    }
+
+    // Generate asteroid belts in orbital gaps
+    const asteroidBelts = this.generateAsteroidBelts(planets, star);
+    console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
+
+    return {
+      id: `system-${star.id}`,
+      starId: star.id,
+      star,
+      planets,
+      asteroidBelts
+    };
+  }
 
   static getPlanetColor(type: PlanetType, seed: number): string {
     const variation = (this.seededRandom(seed + 2000) - 0.5) * 0.3;
