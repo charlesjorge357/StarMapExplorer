@@ -586,8 +586,8 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
       const seed3 = (i * 211 + 127) % 1000 / 1000;
 
       const baseAngle = seed1 * Math.PI * 2;
-      // Use the same radius calculation as SystemView (* 2 scaling)
-      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 2;
+      // Use exact same radius calculation as SystemView (no scaling here)
+      const radius = belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius);
       const size = 0.1 + (seed3 * 0.3); // Same size range as SystemView
       const yOffset = (seed1 - 0.5) * 3; // Same Y variation as SystemView
       const orbitSpeed = 0.01 + (radius * 0.00005); // Same speed calculation as SystemView
@@ -614,9 +614,9 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
         const asteroid = asteroidData[i];
         if (asteroid) {
           const angle = asteroid.baseAngle + time * asteroid.orbitSpeed;
-          // Use same positioning as SystemView
-          const x = Math.cos(angle) * asteroid.radius;
-          const z = Math.sin(angle) * asteroid.radius;
+          // Use exact same positioning as SystemView (apply * 2 scaling here)
+          const x = Math.cos(angle) * asteroid.radius * 2;
+          const z = Math.sin(angle) * asteroid.radius * 2;
           child.position.set(x, asteroid.yOffset, z);
         }
       });
