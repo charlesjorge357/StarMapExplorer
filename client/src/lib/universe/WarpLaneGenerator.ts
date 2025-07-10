@@ -126,47 +126,17 @@ export class WarpLaneGenerator {
   }
 
   /**
-   * Generate warp lanes using Dijkstra's algorithm
+   * Generate continuous warp lane paths (chains of 15-20 stars with sequential connections)
    */
-  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
+  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 30): WarpLane[] {
     console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
-    const minDistance = galaxyRadius * 0.2; // Reduced minimum distance for more warp lanes
     
-    // Limit stars for performance - use only a subset for warp lane generation
+    // Limit stars for performance
     const maxStarsForWarpLanes = Math.min(stars.length, 500);
     const workingStars = stars.slice(0, maxStarsForWarpLanes);
-    console.log(`Using ${workingStars.length} stars for warp lane pathfinding`);
+    console.log(`Using ${workingStars.length} stars for warp lane generation`);
     
-    // Build graph with connections for pathfinding (increased radius for better connectivity)
-    const connectivityRadius = galaxyRadius * 0.5; // Increased for better star connectivity
-    const graph = this.buildStarGraph(workingStars, connectivityRadius);
-    console.log(`Built connectivity graph with radius ${connectivityRadius}, graph has ${Object.keys(graph).length} nodes`);
-
-    // Find star pairs that meet the minimum distance requirement
-    const validPairs: { star1: SimpleStar, star2: SimpleStar, distance: number }[] = [];
-    
-    // Limit the pair checking to prevent performance issues
-    const maxPairChecks = Math.min(workingStars.length, 300);
-    for (let i = 0; i < maxPairChecks && validPairs.length < laneCount * 5; i++) {
-      for (let j = i + 1; j < maxPairChecks && validPairs.length < laneCount * 5; j++) {
-        const distance = this.calculateDistance(workingStars[i], workingStars[j]);
-        if (distance >= minDistance) {
-          validPairs.push({
-            star1: workingStars[i],
-            star2: workingStars[j],
-            distance
-          });
-        }
-      }
-    }
-    
-    console.log(`Found ${validPairs.length} valid star pairs for warp lanes (min distance: ${minDistance})`);
-
-    // Sort by distance and take pairs for warp lanes
-    validPairs.sort((a, b) => b.distance - a.distance); // Prefer longer distances
-    
-    const usedStars = new Set<string>();
     const warpColors = [
       '#00FFFF', // Cyan
       '#FF00FF', // Magenta  
@@ -179,136 +149,112 @@ export class WarpLaneGenerator {
       '#FFD700'  // Gold
     ];
 
-    console.log(`Processing ${validPairs.length} valid pairs, attempting to generate ${laneCount} warp lanes`);
+    const usedStars = new Set<string>();
+    const starsPerLane = 15; // Each warp lane will connect 15 stars (14 segments)
+    const maxSearchDistance = galaxyRadius * 0.3; // Maximum distance to search for next star
     
-    for (const pair of validPairs) {
-      if (warpLanes.length >= laneCount) {
-        console.log(`Reached target lane count ${laneCount}, stopping generation`);
+    // Generate multiple warp lane paths
+    for (let laneIndex = 0; laneIndex < laneCount; laneIndex++) {
+      if (usedStars.size >= workingStars.length - starsPerLane) {
+        console.log(`Not enough unused stars for more lanes (used: ${usedStars.size}/${workingStars.length})`);
         break;
       }
       
-      // Limit connections per star to prevent clustering - max 3 connections per star
-      const star1Connections = warpLanes.filter(lane => lane.startStarId === pair.star1.id || lane.endStarId === pair.star1.id).length;
-      const star2Connections = warpLanes.filter(lane => lane.startStarId === pair.star2.id || lane.endStarId === pair.star2.id).length;
-      
-      if (star1Connections >= 3 || star2Connections >= 3) {
-        continue;
-      }
-
-      console.log(`Attempting pathfinding for ${pair.star1.id} -> ${pair.star2.id} (distance: ${pair.distance.toFixed(1)})`);
-      
-      // Check if both stars exist in the graph
-      if (!graph[pair.star1.id] || !graph[pair.star2.id]) {
-        console.log(`Stars not found in graph: ${pair.star1.id}=${!!graph[pair.star1.id]}, ${pair.star2.id}=${!!graph[pair.star2.id]}`);
-        continue;
+      // Pick a random starting star that hasn't been used yet
+      const availableStars = workingStars.filter(star => !usedStars.has(star.id));
+      if (availableStars.length < starsPerLane) {
+        console.log(`Not enough available stars for lane ${laneIndex} (need ${starsPerLane}, have ${availableStars.length})`);
+        break;
       }
       
-      // Find shortest path using Dijkstra's algorithm
-      const pathResult = this.dijkstra(graph, pair.star1.id, pair.star2.id);
+      const startingStar = availableStars[Math.floor(Math.random() * availableStars.length)];
+      const path: string[] = [startingStar.id];
+      let currentStar = startingStar;
       
-      if (pathResult && pathResult.path.length > 1) {
-        // Only create warp lanes for paths that aren't just direct connections
-        if (pathResult.path.length === 2 && pathResult.distance < minDistance) {
-          console.log(`Path too short and direct (${pathResult.distance.toFixed(1)} < ${minDistance.toFixed(1)}), skipping`);
-          continue;
+      console.log(`Creating warp lane ${laneIndex + 1} starting from ${startingStar.id}`);
+      
+      // Build a chain of stars by finding the closest available star each time
+      for (let step = 1; step < starsPerLane; step++) {
+        const candidates = workingStars.filter(star => 
+          !usedStars.has(star.id) && 
+          !path.includes(star.id) &&
+          star.id !== currentStar.id
+        );
+        
+        if (candidates.length === 0) {
+          console.log(`No more candidates available at step ${step} for lane ${laneIndex}`);
+          break;
+        }
+        
+        // Find the closest candidate within search distance
+        let closestStar: SimpleStar | null = null;
+        let closestDistance = Infinity;
+        
+        for (const candidate of candidates) {
+          const distance = this.calculateDistance(currentStar, candidate);
+          if (distance <= maxSearchDistance && distance < closestDistance) {
+            closestDistance = distance;
+            closestStar = candidate;
+          }
+        }
+        
+        // If no star found within search distance, pick the closest available star
+        if (!closestStar) {
+          for (const candidate of candidates) {
+            const distance = this.calculateDistance(currentStar, candidate);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestStar = candidate;
+            }
+          }
+        }
+        
+        if (closestStar) {
+          path.push(closestStar.id);
+          currentStar = closestStar;
+          console.log(`  Step ${step}: ${currentStar.id} (distance: ${closestDistance.toFixed(1)})`);
+        } else {
+          console.log(`  Could not find next star at step ${step}`);
+          break;
+        }
+      }
+      
+      // Only create the warp lane if we have a meaningful path (at least 5 stars)
+      if (path.length >= 5) {
+        // Calculate total distance
+        let totalDistance = 0;
+        for (let i = 0; i < path.length - 1; i++) {
+          const star1 = workingStars.find(s => s.id === path[i]);
+          const star2 = workingStars.find(s => s.id === path[i + 1]);
+          if (star1 && star2) {
+            totalDistance += this.calculateDistance(star1, star2);
+          }
         }
         
         const warpLane: WarpLane = {
-          id: `warp-${pair.star1.id}-${pair.star2.id}`,
-          name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
-          startStarId: pair.star1.id,
-          endStarId: pair.star2.id,
-          path: pathResult.path,
-          distance: pathResult.distance,
-          color: warpColors[warpLanes.length % warpColors.length],
+          id: `warp-chain-${laneIndex}`,
+          name: `Warp Route ${laneIndex + 1}`,
+          startStarId: path[0],
+          endStarId: path[path.length - 1],
+          path: path,
+          distance: totalDistance,
+          color: warpColors[laneIndex % warpColors.length],
           opacity: 0.4,
           isActive: true
         };
-
+        
         warpLanes.push(warpLane);
         
-        console.log(`Generated warp lane: ${warpLane.name} (${pathResult.path.length} hops, distance: ${pathResult.distance.toFixed(1)})`);
-      } else {
-        console.log(`No valid path found for ${pair.star1.id} -> ${pair.star2.id} (pathResult: ${!!pathResult})`);
-        // Create direct connection as fallback for distant pairs
-        if (pair.distance >= minDistance) {
-          const directWarpLane: WarpLane = {
-            id: `warp-direct-${pair.star1.id}-${pair.star2.id}`,
-            name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
-            startStarId: pair.star1.id,
-            endStarId: pair.star2.id,
-            path: [pair.star1.id, pair.star2.id], // Direct connection
-            distance: pair.distance,
-            color: warpColors[warpLanes.length % warpColors.length],
-            opacity: 0.4,
-            isActive: true
-          };
-
-          warpLanes.push(directWarpLane);
-          
-          console.log(`Generated direct warp lane: ${directWarpLane.name} (direct connection, distance: ${pair.distance.toFixed(1)})`);
-        } else {
-          console.log(`Pair distance ${pair.distance.toFixed(1)} < minimum ${minDistance.toFixed(1)}, skipping`);
-        }
-      }
-    }
-    
-    console.log(`Warp lane generation completed: ${warpLanes.length} lanes generated out of ${laneCount} requested`);
-
-    // If no warp lanes were generated through pathfinding, create some simple direct connections
-    if (warpLanes.length === 0 && validPairs.length > 0) {
-      console.log('No pathfinding lanes generated, creating direct connections as fallback');
-      for (let i = 0; i < Math.min(laneCount, validPairs.length); i++) {
-        const pair = validPairs[i];
-        // Allow any star pair for fallback lanes
-        if (true) {
-          const directLane: WarpLane = {
-            id: `direct-${pair.star1.id}-${pair.star2.id}`,
-            name: `${pair.star1.name || pair.star1.id} - ${pair.star2.name || pair.star2.id}`,
-            startStarId: pair.star1.id,
-            endStarId: pair.star2.id,
-            path: [pair.star1.id, pair.star2.id],
-            distance: pair.distance,
-            color: warpColors[i % warpColors.length],
-            opacity: 0.4,
-            isActive: true
-          };
-          warpLanes.push(directLane);
-          usedStars.add(pair.star1.id);
-          usedStars.add(pair.star2.id);
-          console.log(`Created direct fallback lane: ${directLane.name} (distance: ${pair.distance.toFixed(1)})`);
-        }
-      }
-    }
-    
-    // Final fallback: if still no lanes, create some basic connections
-    if (warpLanes.length === 0 && workingStars.length >= 2) {
-      console.log('Creating basic fallback lanes with any available stars');
-      for (let i = 0; i < Math.min(laneCount, Math.floor(workingStars.length / 2)); i++) {
-        const star1 = workingStars[i * 2];
-        const star2 = workingStars[i * 2 + 1];
-        const distance = this.calculateDistance(star1, star2);
+        // Mark all stars in this path as used
+        path.forEach(starId => usedStars.add(starId));
         
-        const basicLane: WarpLane = {
-          id: `basic-${star1.id}-${star2.id}`,
-          name: `${star1.name || star1.id} - ${star2.name || star2.id}`,
-          startStarId: star1.id,
-          endStarId: star2.id,
-          path: [star1.id, star2.id],
-          distance: distance,
-          color: warpColors[i % warpColors.length],
-          opacity: 0.4,
-          isActive: true
-        };
-        warpLanes.push(basicLane);
-        console.log(`Created basic fallback lane: ${basicLane.name} (distance: ${distance.toFixed(1)})`);
+        console.log(`Generated warp lane ${laneIndex + 1}: ${path.length} stars, ${totalDistance.toFixed(1)} total distance`);
+      } else {
+        console.log(`Path too short for lane ${laneIndex} (only ${path.length} stars), skipping`);
       }
     }
-
-    console.log(`Generated ${warpLanes.length} warp lanes`);
-    if (warpLanes.length > 0) {
-      console.log('Sample warp lane:', warpLanes[0]);
-    }
+    
+    console.log(`Generated ${warpLanes.length} warp lane chains`);
     return warpLanes;
   }
 }

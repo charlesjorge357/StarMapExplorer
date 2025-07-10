@@ -288,7 +288,7 @@ function StarField({
 
       {/* Warp lanes - rendered above nebulas */}
       {warpLanes && warpLanes.length > 0 && (
-        <group renderOrder={1}>
+        <group renderOrder={5}>
           <WarpLanes warpLanes={warpLanes} stars={stars} />
         </group>
       )}
