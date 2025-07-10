@@ -281,17 +281,24 @@ function App() {
   useEffect(() => {
     console.log("Generating stars...");
     const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
-    const generatedStars = StarGenerator.generateStars(dynamicSeed, 4000);
+    const generatedStars = StarGenerator.generateStars(dynamicSeed, 2000); // Reduced from 4000 to 2000
     setStars(generatedStars);
     setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
     
-    // Generate warp lanes after stars are created
+    // Generate warp lanes after stars are created (async to prevent blocking)
     if (generatedStars.length > 0) {
-      const galaxyRadius = 400; // Match the star generation radius
-      const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 9);
-      setWarpLanes(generatedWarpLanes);
-      console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
+      setTimeout(() => {
+        try {
+          const galaxyRadius = 400; // Match the star generation radius
+          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 8); // Reduced from 9 to 8
+          setWarpLanes(generatedWarpLanes);
+          console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
+        } catch (error) {
+          console.error("Error generating warp lanes:", error);
+          setWarpLanes([]); // Fallback to no warp lanes
+        }
+      }, 100);
     }
     
     console.log("System cache cleared - new systems will include rings");

@@ -66,7 +66,11 @@ export class WarpLaneGenerator {
       unvisited.add(starId);
     });
 
-    while (unvisited.size > 0) {
+    let iterations = 0;
+    const maxIterations = 1000; // Prevent infinite loops
+    
+    while (unvisited.size > 0 && iterations < maxIterations) {
+      iterations++;
       // Find unvisited node with minimum distance
       let current: string | null = null;
       let minDistance = Infinity;
@@ -114,29 +118,39 @@ export class WarpLaneGenerator {
   /**
    * Generate warp lanes using Dijkstra's algorithm
    */
-  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 9): WarpLane[] {
+  static generateWarpLanes(stars: SimpleStar[], galaxyRadius: number, laneCount: number = 8): WarpLane[] {
+    console.log(`Starting warp lane generation with ${stars.length} stars...`);
     const warpLanes: WarpLane[] = [];
     const minDistance = galaxyRadius * 0.5; // Minimum distance requirement (1/2 galaxy radius)
     
+    // Limit stars for performance - use only a subset for warp lane generation
+    const maxStarsForWarpLanes = Math.min(stars.length, 500);
+    const workingStars = stars.slice(0, maxStarsForWarpLanes);
+    console.log(`Using ${workingStars.length} stars for warp lane pathfinding`);
+    
     // Build graph with connections for pathfinding (larger radius for connectivity)
-    const connectivityRadius = galaxyRadius * 0.3; // Allow broader connections for pathfinding
-    const graph = this.buildStarGraph(stars, connectivityRadius);
+    const connectivityRadius = galaxyRadius * 0.25; // Reduced from 0.3 to 0.25 for performance
+    const graph = this.buildStarGraph(workingStars, connectivityRadius);
 
     // Find star pairs that meet the minimum distance requirement
     const validPairs: { star1: SimpleStar, star2: SimpleStar, distance: number }[] = [];
     
-    for (let i = 0; i < stars.length; i++) {
-      for (let j = i + 1; j < stars.length; j++) {
-        const distance = this.calculateDistance(stars[i], stars[j]);
+    // Limit the pair checking to prevent performance issues
+    const maxPairChecks = Math.min(workingStars.length, 200);
+    for (let i = 0; i < maxPairChecks && validPairs.length < laneCount * 3; i++) {
+      for (let j = i + 1; j < maxPairChecks && validPairs.length < laneCount * 3; j++) {
+        const distance = this.calculateDistance(workingStars[i], workingStars[j]);
         if (distance >= minDistance) {
           validPairs.push({
-            star1: stars[i],
-            star2: stars[j],
+            star1: workingStars[i],
+            star2: workingStars[j],
             distance
           });
         }
       }
     }
+    
+    console.log(`Found ${validPairs.length} valid star pairs for warp lanes`);
 
     // Sort by distance and take pairs for warp lanes
     validPairs.sort((a, b) => b.distance - a.distance); // Prefer longer distances
