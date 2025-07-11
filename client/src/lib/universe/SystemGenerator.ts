@@ -94,7 +94,10 @@ export class SystemGenerator {
     return index < greekLetters.length ? `${starName} ${greekLetters[index]}` : `${starName} ${index + 1}`;
   }
 
+  
+
   static determinePlanetType(orbitRadius: number, starTemp: number, luminosity: number, seed: number): PlanetType {
+    
     const random = this.seededRandom(seed);
     
     // Convert orbit radius to scaled AU (orbitRadius / 6)
@@ -143,7 +146,7 @@ export class SystemGenerator {
     else if (adjustedAU < 5.5) {
       console.log(`→ Zone 4 (Cold Terrestrial): Tundra/Snowy worlds, some gas giants`);
       // 25% chance for gas giants in this zone
-      if (random < 0.1) return 'gas_giant';
+      if (random < 0.5) return 'gas_giant';
       
       const terrestrialRand = random * 3;
       if (terrestrialRand < 1) return 'tundra_world';
@@ -196,11 +199,86 @@ export class SystemGenerator {
     let mass = Math.pow(radius, 3);
     if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
 
-    const baseTemp = starTemp / (orbitRadius * orbitRadius * 16);
+    const baseTemp = 100;
+
+
+    function computePlanetTemperature(
+      starTemp: number,
+      orbitRadius: number,
+      type: string
+    ): number {
+      const range = temperatureRanges[type];
+      if (!range) return NaN;
+
+      const [minBase, maxBase] = range;
+
+      // Random within type’s temperature band
+      let baseTemp = minBase + Math.random() * (maxBase - minBase);
+
+      // Adjust for star’s temperature (Sun = 5778)
+      const tempFactor = starTemp / SUN_TEMP;
+
+
+      const scaledAU = orbitRadius / 64;
+      
+      // Scale by distance (inverse-square law), normalized to Sun-like behavior
+      const distanceFalloff = 1 / (scaledAU * scaledAU) / tempFactor;
+
+      // Final Kelvin temperature, scaled by star bias and orbital distance
+      const finalTemp = baseTemp * distanceFalloff;
+
+      return baseTemp;
+    }
+
+
+    const SUN_TEMP = 5778;
+
+
+    const temperatureRanges: Record<string, [number, number]> = {
+      gas_giant: [90, 160],         // Like Jupiter/Saturn
+      frost_giant: [50, 100],       // Like Uranus/Neptune
+      arid_world: [310, 360],       // Hot, desert-like
+      barren_world: [200, 270],     // Moon-like, no atmosphere
+      dusty_world: [280, 330],      // Think warm, dusty Mars/Venus
+      grassland_world: [270, 310],  // Earthlike temperate
+      jungle_world: [300, 330],     // Hot, humid
+      marshy_world: [280, 310],     // Temperate, wet
+      martian_world: [210, 260],    // Cold, dry
+      methane_world: [80, 140],     // Cold, atmospheric absorption
+      sandy_world: [290, 340],      // Hot and dry
+      snowy_world: [180, 240],      // Iceball
+      tundra_world: [200, 260],     // Cold, seasonal
+      nuclear_world: [400, 800],    // Irradiated or scorched
+      ocean_world: [270, 310],      // Earthlike oceanic
+    };
+
+    
     let temperature = baseTemp;
-    if (type === 'gas_giant') temperature *= 0.7;
-    if (type === 'dusty_world') temperature *= 1.5; // Dust traps heat
-    if (type === 'methane_world') temperature *= 0.8; // Methane atmosphere cooling
+
+    switch (type) {
+      case 'gas_giant':
+      case 'frost_giant':
+      case 'arid_world':
+      case 'barren_world':
+      case 'dusty_world':
+      case 'grassland_world':
+      case 'jungle_world':
+      case 'marshy_world':
+      case 'martian_world':
+      case 'methane_world':
+      case 'sandy_world':
+      case 'snowy_world':
+      case 'tundra_world':
+      case 'nuclear_world':
+      case 'ocean_world':
+        let temperature = computePlanetTemperature(starTemp, orbitRadius, type);
+        console.log('Computed temperature:', temperature, 'for type:', type, 'at orbit radius:', orbitRadius, 'with star temperature:', starTemp, 'and base temperature:', baseTemp, 'and temperature range:', 'temperatureRanges[type],');
+        break;
+      default:
+        console.warn(`Unknown planet type: ${type}`);
+        temperature = NaN;
+        break;
+    }
 
     let atmosphere: string[] = [];
     switch (type) {

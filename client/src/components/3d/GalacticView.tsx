@@ -46,7 +46,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
           setHovered(false);
           document.body.style.cursor = 'auto';
         }}
-        renderOrder={1000}
+        renderOrder={999}
       >
         <sphereGeometry args={[1, 8, 6]} />
         <meshStandardMaterial
@@ -55,6 +55,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
           emissiveIntensity={isSelected ? 0.8 : 0.4}
           transparent={false}
           opacity={1.0}
+          depthTest = {false}
         />
       </mesh>
 

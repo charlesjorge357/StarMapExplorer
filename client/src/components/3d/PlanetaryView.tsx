@@ -6,6 +6,7 @@ import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
+import { UnsignedInt248Type } from 'three';
 
 interface PlanetaryViewProps {
   planet: any;
@@ -555,12 +556,12 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex, planetId }: { moon: any;
 // Component for asteroid belts in planetary view
 function AsteroidBelts({ belts, planet }: { belts: any[]; planet: any }) {
   // Calculate star position using same logic as CosmicNeighbors
-  const starDistance = planet?.orbitRadius ? planet.orbitRadius * 25 : 1000;
+  const starDistance = planet.orbitRadius * 25;
   const starAngle = Math.PI * 0.3; // Same angle as star positioning
   const starPosition = [
     Math.cos(starAngle) * starDistance,
-    starDistance * -0.001,
-    Math.sin(starAngle) * -starDistance
+    starDistance * 0.001,
+    Math.sin(starAngle) * -(starDistance)
   ];
 
   return (
@@ -587,7 +588,7 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
 
       const baseAngle = seed1 * Math.PI * 2;
       // Use the same radius calculation as SystemView (* 2 scaling)
-      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 21;
+      const radius = (belt.innerRadius + seed2 * (belt.outerRadius - belt.innerRadius)) * 24;
       const size = 1 + (seed3 * 3); // Same size range as SystemView
       const yOffset = (seed1 - 0.5) * 3; // Same Y variation as SystemView
       const orbitSpeed = 0.0001 + (radius * 0.0000005); // Same speed calculation as SystemView
@@ -629,8 +630,8 @@ function AsteroidBelt({ belt, beltIndex }: { belt: any; beltIndex: number }) {
       <mesh rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
         <ringGeometry 
           args={[
-            belt.innerRadius * 21, 
-            belt.outerRadius * 21, 
+            belt.innerRadius * 24, 
+            belt.outerRadius * 24, 
             64
           ]} 
         />

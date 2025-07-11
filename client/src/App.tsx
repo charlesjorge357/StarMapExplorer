@@ -143,12 +143,13 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                   <meshStandardMaterial 
                     color={lane.color || '#00FFFF'} 
                     transparent 
-                    opacity={lane.opacity || 0.4}
+                    opacity={lane.opacity || 0.3}
                     emissive={lane.color || '#00FFFF'}
                     emissiveIntensity={0.2}
                     metalness={0}
                     roughness={0.5}
-                    depthWrite={false}
+                    depthTest={false}
+                    depthWrite={true}
                     side={2}
                   />
                 </mesh>
@@ -256,6 +257,7 @@ function StarField({
                 map={starBumpMap}
                 transparent={false}
                 opacity={1.0}
+                depthTest = {false}
               />
             </mesh>
 
@@ -268,6 +270,7 @@ function StarField({
                   transparent
                   opacity={0.3}
                   depthWrite={false}
+                  depthTest={false}
                 />
               </mesh>
             )}
@@ -289,7 +292,7 @@ function StarField({
 
       {/* Warp lanes - rendered above nebulas */}
       {warpLanes && warpLanes.length > 0 && (
-        <group renderOrder={5}>
+        <group renderOrder={1}>
           <WarpLanes warpLanes={warpLanes} stars={stars} />
         </group>
       )}
@@ -338,7 +341,7 @@ function App() {
       setTimeout(() => {
         try {
           const galaxyRadius = 10000; // Match the star generation radius
-          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 24); // Tripled from 8 to 24
+          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 15); // Tripled from 8 to 24
           setWarpLanes(generatedWarpLanes);
           console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
         } catch (error) {
