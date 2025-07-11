@@ -383,6 +383,7 @@ function App() {
     const musicTracks = [
       new Audio('/audio/galactic-theme.mp3'),
       new Audio('/audio/galacticview2_roguestars.mp3'),
+      new Audio('/audio/vapor3.mp3'),
     ];
 
     // Configure all tracks (disable individual looping for automatic progression)

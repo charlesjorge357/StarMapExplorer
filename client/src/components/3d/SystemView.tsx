@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
@@ -10,6 +10,7 @@ import { SystemNebulaSkybox } from './SystemNebulaSkybox';
 import { StarSkybox } from './StarSkybox';
 import { LazyTexturePlanet } from './LazyTexturePlanet';
 import { PlanetRings } from './PlanetRings';
+import { Console } from 'console';
 
 function MoonMesh({ 
   moon, 
@@ -389,6 +390,104 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   const [isSearching, setIsSearching] = useState(false);
   const { selectStar } = useUniverse();
 
+
+
+  const outermostOrbit = useMemo(() => {
+    if (!system.planets || system.planets.length === 0) return 0;
+    return Math.max(...system.planets.map((p: any) => p.orbitRadius * 1.5));
+  }, [system.planets]);
+
+  const cometRef = useRef<THREE.Mesh>(null);
+  const cometDataRef = useRef<{
+    position: THREE.Vector3;
+    velocity: THREE.Vector3;
+    angle: number;
+  } | null>(null);
+
+  function randomAngleExcludingRange() {
+    // Decide randomly which range to pick from: 0 => negative, 1 => positive
+    const pickRange = Math.random() < 10 ? -10 : 10;
+
+    // Generate a random float between 0 and 1
+    const rand = Math.random();
+
+    // Scale and shift rand to range [1, 2], then multiply by pickRange
+    return pickRange * (0.1 + rand);
+  }
+
+  const [showComet, setShowComet] = useState(false);
+
+  // Function to spawn a new comet
+  const spawnComet = () => {
+    setShowComet(true);
+    const angle = randomAngleExcludingRange();
+    const radius = outermostOrbit * 4;
+    const randomValue = 0.9 + Math.random() * 0.2;
+
+    const scaledAngle = Math.random() * Math.PI * 2;
+
+    const pos = new THREE.Vector3(
+      Math.cos(scaledAngle) * radius,
+      0,
+      Math.sin(scaledAngle) * radius
+    );
+
+    const radial = new THREE.Vector3(
+      -Math.cos(scaledAngle * randomValue),
+      0,
+      -Math.sin(scaledAngle * randomValue)
+    );
+
+    
+
+    const speed = 9;
+    const velocity = radial.multiplyScalar(speed * 0.9);
+
+    cometDataRef.current = { position: pos, velocity, angle };
+
+    // Set initial mesh position
+    if (cometRef.current) {
+      cometRef.current.position.copy(pos);
+    }
+
+    console.log(`Spawned comet at outermost orbit: ${outermostOrbit}`);
+  };
+
+  useEffect(() => {
+    if (outermostOrbit > 0) {
+      spawnComet();
+    }
+  }, [outermostOrbit]);
+
+  useFrame((_, delta) => {
+    const cometData = cometDataRef.current;
+    if (!cometData || !cometRef.current) return;
+
+    const pos = cometData.position;
+    const vel = cometData.velocity;
+
+    const toStar = pos.clone().negate();
+    const dist = toStar.length();
+    const dirToStar = toStar.normalize();
+
+    const accelerationMag = 0.0005 / (dist * dist + 0.1);
+    const acceleration = dirToStar.multiplyScalar(accelerationMag);
+
+    vel.add(acceleration.multiplyScalar(delta * 6));
+    pos.add(vel.clone().multiplyScalar(delta * 6));
+
+    cometRef.current.position.copy(pos);
+
+    if (dist > outermostOrbit * 5) {
+      cometDataRef.current = null;
+      console.log(`Comet destroyed at outermost orbit: ${outermostOrbit}`);
+      setShowComet(false);
+      setTimeout(spawnComet, 100);
+    }
+  });
+
+  
+
   // Generate nebulas for this system view
   const nebulas = useMemo(() => StarGenerator.generateNebulas(35), []);
 
@@ -622,6 +721,14 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   return (
     <group>
+      {/* Comet mesh */}
+      {showComet && (
+        <mesh ref={cometRef} position={cometDataRef.current.position}>
+          <sphereGeometry args={[0.3, 8, 8]} />
+          <meshStandardMaterial color="#ccc" emissive='#FFFFFF' emissiveIntensity={2.0} metalness={0.5}/>
+        </mesh>
+      )}
+      
       {/* Nebula screen tint disabled due to visual issues */}
       {/* {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />} */}
 
@@ -629,19 +736,19 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       <SystemNebulaSkybox 
         nebulas={nebulas} 
         excludeNebula={starInNebula} 
-        starPosition={system.star?.position || [0, 0, 0]} 
+        starPosition={system.star?.position || [0, 0, 0]}
       />
 
       {/* Starfield skybox */}
       <StarSkybox 
         count={5000} 
         radius={800} 
-        starPosition={system.star?.position || [0, 0, 0]} 
+        starPosition={system.star?.position || [0, 0, 0]}
       />
 
       {/* Background plane for deselection clicks */}
       <mesh 
-        position={[0, 0, -5000]} 
+        position={[0, 0, -5000]}
         onClick={handleBackgroundClick}
         visible={false}
       >

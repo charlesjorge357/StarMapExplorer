@@ -1,4 +1,5 @@
 import { WarpLane } from '../../../../shared/schema';
+import * as THREE from 'three';
 
 interface SimpleStar {
   id: string;
@@ -12,18 +13,12 @@ interface SimpleStar {
 }
 
 function generateColors(count: number): string[] {
-  const colors = [];
+  const colors: string[] = [];
   for (let i = 0; i < count; i++) {
-    const hue = (i * 360 / count) % 360;
+    const hue = (i * 360) / count;
     colors.push(`hsl(${hue}, 70%, 60%)`);
   }
   return colors;
-}
-
-// Usage:
-
-interface Graph {
-  [starId: string]: { [neighborId: string]: number };
 }
 
 export class WarpLaneGenerator {
@@ -34,7 +29,6 @@ export class WarpLaneGenerator {
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
-  /** Generate a point on a curved path between start and end */
   static generateCurvedWaypoint(
     t: number,
     start: [number, number, number],
@@ -46,22 +40,17 @@ export class WarpLaneGenerator {
     const mx = (sx + ex) / 2;
     const my = (sy + ey) / 2;
     const mz = (sz + ez) / 2;
-
     const arcOffset: [number, number, number] = [
       (Math.random() - 0.5) * curveStrength,
       (Math.random() - 0.5) * curveStrength,
       (Math.random() - 0.5) * curveStrength,
     ];
-
     const cx = mx + arcOffset[0];
     const cy = my + arcOffset[1];
     const cz = mz + arcOffset[2];
-
-    // Quadratic Bézier curve: B(t) = (1 - t)^2 * P0 + 2(1 - t)t * C + t^2 * P2
     const x = (1 - t) ** 2 * sx + 2 * (1 - t) * t * cx + t ** 2 * ex;
     const y = (1 - t) ** 2 * sy + 2 * (1 - t) * t * cy + t ** 2 * ey;
     const z = (1 - t) ** 2 * sz + 2 * (1 - t) * t * cz + t ** 2 * ez;
-
     return [x, y, z];
   }
 
@@ -81,7 +70,6 @@ export class WarpLaneGenerator {
       if (available.length < 2) break;
 
       const start = available[Math.floor(Math.random() * available.length)];
-
       const minEndSep = galaxyRadius * 0.6;
       const ends = available.filter(
         (s) => s.id !== start.id && this.calculateDistance(start, s) >= minEndSep
@@ -90,7 +78,6 @@ export class WarpLaneGenerator {
         i--;
         continue;
       }
-
       const end = ends[Math.floor(Math.random() * ends.length)];
 
       const distance = this.calculateDistance(start, end);
@@ -98,35 +85,100 @@ export class WarpLaneGenerator {
       const requiredHops = Math.max(4, Math.floor(distance / hopSpacing));
       const hopMidCount = requiredHops - 2;
 
+      // Generate curved mids
       const mids: string[] = [];
-
-      // Generate curved waypoints along Bezier arc
       for (let k = 1; k <= hopMidCount; k++) {
         const t = k / (requiredHops - 1);
         const [px, py, pz] = this.generateCurvedWaypoint(
           t,
           start.position,
           end.position,
-          galaxyRadius * 0.4 // arc strength
+          galaxyRadius * 0.4
         );
-
-        let nearest: { id: string; dist: number } = { id: '', dist: Infinity };
+        let nearest = { id: '', dist: Infinity };
         working.forEach((s) => {
           if (s.id === start.id || s.id === end.id || used.has(s.id)) return;
-          const d = Math.sqrt(
-            (s.position[0] - px) ** 2 +
-            (s.position[1] - py) ** 2 +
-            (s.position[2] - pz) ** 2
+          const d = Math.hypot(
+            s.position[0] - px,
+            s.position[1] - py,
+            s.position[2] - pz
           );
-          if (d < nearest.dist) {
-            nearest = { id: s.id, dist: d };
-          }
+          if (d < nearest.dist) nearest = { id: s.id, dist: d };
         });
-
         if (nearest.id) mids.push(nearest.id);
       }
 
-      const path = [start.id, ...mids, end.id];
+      const basePath = [start.id, ...mids, end.id];
+      const maxSegment = hopSpacing * 1.5;
+      const maxDeviation = galaxyRadius * 0.2;
+      const enhanced: string[] = [];
+
+      for (let j = 0; j < basePath.length - 1; j++) {
+        const aId = basePath[j];
+        const bId = basePath[j + 1];
+        const aStar = working.find((s) => s.id === aId)!;
+        const bStar = working.find((s) => s.id === bId)!;
+
+        enhanced.push(aId);
+
+        // Try inserting up to 3 midpoints between a and b
+        let midpoints: string[] = [];
+        const aPos = new THREE.Vector3(...aStar.position);
+        const bPos = new THREE.Vector3(...bStar.position);
+        const abDir = bPos.clone().sub(aPos).normalize();
+        const segDist = aPos.distanceTo(bPos);
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          let best: { id: string; score: number } | null = null;
+
+          for (const s of working) {
+            // Reject stars already used or in path (start, end, midpoints, or enhanced)
+            if (
+              used.has(s.id) ||
+              s.id === aId ||
+              s.id === bId ||
+              midpoints.includes(s.id) ||
+              enhanced.includes(s.id)
+            ) continue;
+
+            const sPos = new THREE.Vector3(...s.position);
+            const proj = sPos.clone().sub(aPos).dot(abDir);
+            if (proj < 0 || proj > segDist) continue;
+
+            // Reject candidates that are behind any previously chosen midpoints in this segment (enforce forward progress)
+            if (midpoints.length > 0) {
+              const lastMidPos = working.find((ws) => ws.id === midpoints[midpoints.length - 1])!;
+              const lastMidVector = new THREE.Vector3(...lastMidPos.position);
+              const lastProj = lastMidVector.clone().sub(aPos).dot(abDir);
+              if (proj <= lastProj) continue; // Candidate is not further along, skip
+            }
+
+            const closest = aPos.clone().add(abDir.clone().multiplyScalar(proj));
+            const deviation = sPos.distanceTo(closest);
+
+            if (deviation < maxDeviation) {
+              const totalPath = aPos.distanceTo(sPos) + sPos.distanceTo(bPos);
+              const score = totalPath + deviation;
+              if (!best || score < best.score) {
+                best = { id: s.id, score };
+              }
+            }
+          }
+
+          if (best) {
+            midpoints.push(best.id);
+            used.add(best.id); // Immediately mark midpoint star as used
+          } else {
+            break;
+          }
+        }
+
+        enhanced.push(...midpoints);
+      }
+
+      enhanced.push(end.id);
+
+      const path = Array.from(new Set(enhanced));
       if (path.length < 2) {
         i--;
         continue;
@@ -152,10 +204,9 @@ export class WarpLaneGenerator {
       });
 
       path.forEach((id) => used.add(id));
-      console.log(`Lane ${i + 1}: ${path.length} hops (mids sampled: ${mids.length})`);
+      console.log(`Lane ${i + 1}: ${path.length} hops`);
     }
 
     return warpLanes;
   }
 }
-
