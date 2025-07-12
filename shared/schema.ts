@@ -67,6 +67,7 @@ export interface Planet {
   surfaceFeatures: SurfaceFeature[];
   rings: PlanetRing[]; // Planetary ring systems
   textureIndex?: number; // Persistent texture selection index
+  faction?: Faction;
 }
 
 export interface Moon {
@@ -169,4 +170,27 @@ export interface WarpLane {
   color: string; // Color of the warp lane visualization
   opacity: number; // Transparency level
   isActive: boolean; // Whether the warp lane is currently active
+}
+
+export interface Faction {
+  id: string;
+  name: string;
+  description: string;
+  leader: string;
+  homeworld: string;
+  population: number;
+  technology: string;
+  influence: number;
+  allies: string[];
+  enemies: string[];
+  goals: string[];
+  resources: {
+    credits: number;
+    minerals: number;
+    energy: number;
+    food: number;
+  };
+  ships: Ship[];
+  forts: Fort[];
+  fleets: Fleet[];
 }

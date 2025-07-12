@@ -1,7 +1,9 @@
 import { PlanetGenerator } from './PlanetGenerator';
+import { Faction } from '../../../../shared/schema';
 import { SurfaceFeature, Planet, Moon, PlanetRing, PlanetType } from '../../../../shared/schema';
 import { SurfaceFeatureMarker } from 'client/src/components/ui/SurfaceFeatures'
 import React, { useRef, useMemo } from 'react';
+import { FactionGenerator } from './FactionGenerator';
 
 // Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
@@ -20,6 +22,7 @@ interface StarSystem {
   star?: any;
   planets: Planet[];
   asteroidBelts: AsteroidBelt[];
+  factions: Faction[];
 }
 
 export class SystemGenerator {
@@ -372,6 +375,8 @@ export class SystemGenerator {
       }
     }
 
+    
+
     for (let i = 0; i < planetCount; i++) {
       const orbitRadius = orbitZones[i];
       // Use deterministic planet type based on orbit distance and star temperature
@@ -467,6 +472,9 @@ export class SystemGenerator {
         Math.sin(angle) * orbitRadius * 10
       ];
 
+      
+
+
       const planet: Planet = {
         id: `planet-${star.id}-${i}`,
         name: `${star.name} ${String.fromCharCode(945 + i)}`,
@@ -483,13 +491,25 @@ export class SystemGenerator {
         moons: this.generateMoons(radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 1000 + this.hashString(star.name)),
         rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
         textureIndex: this.generateTextureIndex(type, i, star.name),
-        surfaceFeatures: []
+        surfaceFeatures: [],
+        faction : null
       };
 
+
+      
       // Generate surface features using PlanetGenerator
-      planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet as any);
 
       planets.push(planet);
+    }
+
+    
+    
+    // Generate factions for the system
+    const factions = FactionGenerator.generateFactionsForSystem(planets);
+
+    for (const planet of planets) {
+      planet.faction = FactionGenerator.getFactionForPlanet(planet.name, factions);
+      planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
     }
 
     // Generate asteroid belts in orbital gaps
@@ -501,7 +521,8 @@ export class SystemGenerator {
       starId: star.id,
       star,
       planets,
-      asteroidBelts
+      asteroidBelts,
+      factions : factions
     };
   }
 

@@ -56,6 +56,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
           transparent={false}
           opacity={1.0}
           depthTest = {false}
+          depthWrite={true}
         />
       </mesh>
 

@@ -49,7 +49,7 @@ export class StarGenerator {
     const nebulas = this.generateNebulas(35); // Generate 35 nebulas first
     
     // Calculate how many stars should be in nebulas vs scattered
-    const starsInNebulas = Math.floor(count * 0.4); // 40% of stars in nebulas
+    const starsInNebulas = Math.floor(count * 0.35); // 40% of stars in nebulas
     const scatteredStars = count - starsInNebulas;
     
     let starIndex = 0;
@@ -80,7 +80,7 @@ export class StarGenerator {
     // Place remaining stars scattered throughout space
     for (let i = starIndex; i < count; i++) {
       // Generate position in a much larger sphere to prevent overlapping (6000 unit radius)
-      const distance = 150 + random() * 5850; // Minimum distance of 150 units from center
+      const distance = 250 + random() * 5850; // Minimum distance of 150 units from center
       const theta = random() * Math.PI * 2;
       const phi = Math.acos(2 * random() - 1);
       

@@ -149,7 +149,7 @@ function WarpLanes({ warpLanes, stars }: { warpLanes: any[]; stars: SimpleStar[]
                     metalness={0}
                     roughness={0.5}
                     depthTest={false}
-                    depthWrite={true}
+                    depthWrite={false}
                     side={2}
                   />
                 </mesh>
@@ -656,6 +656,7 @@ function App() {
     return null;
   };
 
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       {/* Planet Search UI for System View */}
@@ -875,8 +876,8 @@ function App() {
           {currentView === 'planetary' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedFeature 
-                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Escape: deselect • Backspace: system view`
-                : 'Click surface features to inspect • Backspace: return to system view'
+                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Enter: deselect • Backspace: system view`
+                : 'Click surface features to inspect, and hit Enter to lock • Backspace: return to system view'
               }
             </div>
           )}
@@ -988,6 +989,7 @@ function App() {
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.displayOrbit.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>{' '}{selectedPlanet.faction.name || "Uninhabited"}</p>
                 {selectedPlanet.atmosphere.length >0 && (
                   <div>
                     <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
@@ -1001,6 +1003,7 @@ function App() {
             </div>
           )}
 
+
           {/* Planetary view - planet information (persistent from system view) */}
           {currentView === 'planetary' && selectedPlanet && (
             <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
@@ -1013,6 +1016,7 @@ function App() {
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Surface Features:</span> {selectedPlanet.surfaceFeatures?.length || 0}</p>
+                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>{' '}{selectedPlanet.faction.name || "Uninhabited"}</p>
                 {selectedPlanet.atmosphere.length >0 && (
                   <div>
                     <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>

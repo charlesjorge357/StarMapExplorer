@@ -1,4 +1,4 @@
-import { Planet, PlanetType, SurfaceFeature } from "shared/schema";
+import { Planet, PlanetType, SurfaceFeature, Faction } from "shared/schema";
 
 export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {
@@ -56,8 +56,11 @@ export class PlanetGenerator {
     }
   }
 
-  static generateSurfaceFeatures(planet: Planet, count: number = 5): SurfaceFeature[] {
+  
+
+  static generateSurfaceFeatures(planet: Planet, count: number = 5, factions: Faction[]): SurfaceFeature[] {
     const features: SurfaceFeature[] = [];
+    
 
     // Only generate surface features for rocky planets
     if (planet.type === 'gas_giant' || planet.type === 'frost_giant') {
@@ -80,7 +83,7 @@ export class PlanetGenerator {
         population: type === 'city' ? Math.floor(Math.random() * 10000000) + 50000 : undefined,
         size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)] as 'small' | 'medium' | 'large',
         technology: ['primitive', 'industrial', 'advanced'][Math.floor(Math.random() * 3)] as 'primitive' | 'industrial' | 'advanced',
-        affiliation: this.generateAffiliation()
+        affiliation: this.generateAffiliation(factions, planet)
       };
 
       features.push(feature);
@@ -143,21 +146,24 @@ export class PlanetGenerator {
     }
   }
 
-  static generateAffiliation(): string {
-    const affiliations = [
-      'Terran Federation', 'Independent Colony', 'Mining Consortium', 'Trade Union',
-      'Scientific Outpost', 'Frontier Settlement', 'Corporate Territory', 'Free State',
-      'Research Station', 'Colonial Administration', 'Stellar Republic', 'Void Runners',
-      'Nova Syndicate', 'Crimson Fleet', 'Azure Coalition', 'Golden Imperium',
-      'Iron Brotherhood', 'Silver Circle', 'Quantum Collective', 'Nebula Wanderers',
-      'Star Merchants', 'Cosmic Explorers', 'Deep Space Miners', 'Orbital Traders',
-      'Galactic Pioneers', 'Astro Engineers', 'Solar Confederacy', 'Lunar Alliance',
-      'Mars Initiative', 'Jupiter Cartel', 'Saturn Assembly', 'Outer Rim Traders',
-      'Border Worlds', 'Edge Systems', 'Rim Colonies', 'Far Reach Territory',
-      'New Earth Movement', 'Old Terra Loyalists', 'Phoenix Rising', 'Red Dawn',
-      'Blue Star Company', 'White Light Corporation', 'Black Void Industries',
-      'Green World Initiative', 'United Colonies', 'Free Traders Guild'
-    ];
-    return affiliations[Math.floor(Math.random() * affiliations.length)];
+  private static generateTechnology (){
+    return ['primitive', 'industrial', 'advanced'][Math.floor(Math.random() * 3)];
   }
+
+  static generateAffiliation(factions: Faction[], planet?: Planet): string {
+    // Priority: if planet matches a faction's homeworld, return that faction
+    if (planet && factions.find(f => f.homeworld !== 'Contested Zone')) {
+      const matched = factions.find(f => f.homeworld === planet.name);
+      if (matched) return matched.name;
+    }
+
+    // Fallback unaffiliated groups
+    const unaffiliated = [
+      'Independent Colony', 'Free Traders Guild', 'Crimson Cartel', 'Void Runners',
+      'Outer Rim Rebels', 'Civic League', 'Neutral Enclave', 'Smugglers Den',
+      'Black Market Union', 'Free State of Orion', 'Nomad Clans', 'Mercenary Syndicate'
+    ];
+    return unaffiliated[Math.floor(Math.random() * unaffiliated.length)];
+  }
+
 }

@@ -11,6 +11,7 @@ import { StarSkybox } from './StarSkybox';
 import { LazyTexturePlanet } from './LazyTexturePlanet';
 import { PlanetRings } from './PlanetRings';
 import { Console } from 'console';
+import { CometTrail } from './CometTrail';
 
 function MoonMesh({ 
   moon, 
@@ -724,10 +725,13 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
       {/* Comet mesh */}
       {showComet && (
         <mesh ref={cometRef} position={cometDataRef.current.position}>
-          <sphereGeometry args={[0.3, 8, 8]} />
-          <meshStandardMaterial color="#ccc" emissive='#FFFFFF' emissiveIntensity={2.0} metalness={0.5}/>
+          <sphereGeometry args={[0.2, 8, 8]} />
+          <meshStandardMaterial color="#FFFFFF" emissive='#FFFFFF' emissiveIntensity={2.0} metalness={0.1}/>
         </mesh>
       )}
+
+      {/* Add this after the comet mesh */}
+      <CometTrail cometRef={cometRef} />
       
       {/* Nebula screen tint disabled due to visual issues */}
       {/* {starInNebula && <NebulaScreenTint nebulas={[starInNebula]} />} */}
