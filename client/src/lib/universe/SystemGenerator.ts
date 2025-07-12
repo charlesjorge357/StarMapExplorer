@@ -502,13 +502,55 @@ export class SystemGenerator {
       planets.push(planet);
     }
 
+
+    const sciFiPlanetNames = [
+      "Zephyron", "Thalmera", "Auralis", "Korynth", "Nytheris", "Vorthemar", "Caldran", "Syrixa", "Azaneth", "Darethys",
+      "Xal'tuun", "Dreylix", "Vexhara", "Ombrath", "Zyrentha", "Kryonox", "Tal'qereth", "Nevrakos", "Uvolian", "Brexxil",
+      "Glacior", "Theta Draconis", "Orbis", "Ecliptara", "Nova Serpentis", "Delta Tyros", "Veltrax", "Crythus", "Arcern", "Miridian",
+      "Vandros", "Tyrnax", "Solmera", "Varkhail", "Lithara", "Xenthros", "Kronavel", "Myridos", "Etravax", "Zarion",
+      "Elowen", "Faelyra", "Lunethra", "Sylquar", "Nirelle", "Vaelyss", "Aevora", "Liraquon", "Olyndria", "Virenthia",
+      "Astrion", "Celestara", "Virellon", "Nimbara", "Corvaron", "Tyrenia", "Omexis", "Draventh", "Felyros", "Xerathion",
+      "Jovaris", "Nebulon", "Quantaris", "Zeraphon", "Itharion", "Velmora", "Yxion", "Qorvath", "Lumetra", "Thandor",
+      "Ixaris", "Orathra", "Zenthros", "Havikar", "Solthea", "Cryven", "Zyralis", "Altheron", "Myrrhax", "Kelnaris",
+      "Vorundra", "Caelyx", "Therion", "Graveth", "Obrion", "Telvinar", "Ravaryn", "Cindros", "Mezareth", "Ultheris",
+      "Zavari", "Virexos", "Qualthar", "Ostryx", "Kavros", "Erethion", "Noctyra", "Joruun", "Xantheris", "Byloris",
+      "Drelthar", "Mazira", "Varkos", "Anareth", "Epsilonya", "Pharaxis", "Kyreth", "Zolvana", "Trevalis", "Umbrith",
+      "Aerthas", "Velquor", "Xaralon", "Ilveris", "Galveron", "Orlethus", "Braxion", "Etharis", "Syrundra", "Volnexis",
+      "Naryth", "Zeruun", "Carthion", "Eldivar", "Yavros", "Uthelios", "Krionex", "Serephar", "Venthros", "Qanthera",
+      "Ilyxis", "Dovareth", "Molthar", "Velmire", "Asterak", "Obrys", "Trelyra", "Zuvareth", "Kaelyth", "Solryn",
+      "Galthis", "Ormun", "Tiraveth", "Jorthal", "Bravix", "Qephron", "Isylos", "Narviros", "Thyradon", "Klyven",
+      "Althenor", "Rynaxa", "Felaris", "Yovareth", "Korrenth", "Vystra", "Nevalin", "Thalix", "Morridan", "Uravis",
+      "Xarvus", "Zynkara", "Lorion", "Vireth", "Zolaris", "Quelmar", "Atrenox", "Irridan", "Fendros", "Omeryth",
+      "Polvaris", "Rytheron", "Tarnyx", "Zhenova", "Krellon", "Ezonis", "Glythera", "Omniveth", "Trephos", "Ulvarion",
+      "Varnyx", "Xepharis", "Koltra", "Seltherion", "Ythros", "Barynth", "Drakonis", "Tharnon", "Calion", "Zurith",
+      "Ezurion", "Navira", "Jorvalis", "Syltherra", "Oratrix", "Myrria", "Threnos", "Gavros", "Talyss", "Quoris",
+      "Iridax", "Malryx", "Fenorra", "Urikos", "Zolvena", "Tethron", "Nerith", "Obsidra", "Karthyx", "Ylvenor",
+      "Lunovar", "Halveth", "Dravion", "Soralyth", "Qyvora", "Ixalon", "Volthara", "Icarion", "Velixa", "Arvalis",
+      "Thranith", "Galyra", "Phaloris", "Nemuron", "Asveris", "Klythera", "Delvex", "Xyrentha", "Oraveth", "Vyshera",
+    ];
+
+
+
+
+    
+
     
     
     // Generate factions for the system
     const factions = FactionGenerator.generateFactionsForSystem(planets);
 
     for (const planet of planets) {
-      planet.faction = FactionGenerator.getFactionForPlanet(planet.name, factions);
+      const faction = factions.find((f) => f.homeworld === planet.name);
+
+      if (faction) {
+        const newName = sciFiPlanetNames[Math.floor(Math.random() * sciFiPlanetNames.length)];
+        planet.name = newName;
+        faction.homeworld = newName; // <-- sync it!
+        planet.faction = FactionGenerator.editFactionFromPlanet(planet, faction);
+      }
+      else {
+        planet.faction = FactionGenerator.getFactionForPlanet(planet.name, factions);
+      }
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
     }
 

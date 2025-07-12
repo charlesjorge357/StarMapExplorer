@@ -58,7 +58,7 @@ export class FactionGenerator {
       });
     } else {
       const shuffled = [...planets].sort(() => Math.random() - 0.5); // randomize planet order
-      const factionCount = planets.length - 1;
+      const factionCount = Math.max(1, Math.floor(planets.length / 2));
       // MULTIPLE factions, one per planet
       for (let i = 0; i < factionCount; i++) {
         const planet = shuffled[i];
@@ -97,8 +97,18 @@ export class FactionGenerator {
     };
   }
 
+  public static editFactionFromPlanet (planet: Planet, faction: Faction): Faction{
+    faction.homeworld = planet.name;
+    faction.name = this.generateFactionName(planet);
+    faction.description = `A faction based on the ${planet.type.replace("_", " ")} of ${planet.name}.`;
+    faction.leader = this.generateLeaderName();
+    faction.goals = this.generateGoals();
+    faction.resources = this.generateResources(planet);
+    return faction;
+  }
+
   private static generateFactionName(planet: Planet): string {
-    const baseNames = [
+    const governments = [
       "Consortium",
       "Federation",
       "Syndicate",
@@ -115,14 +125,59 @@ export class FactionGenerator {
       "Coalition",
       "Corporation",
       "Collective",
-      "Syndicate",
-      "Union",
-      "Guild",
-      "Assembly",
       "Tsardom",
     ];
-    const suffix = baseNames[Math.floor(Math.random() * baseNames.length)];
-    return `${planet.name} ${suffix}`;
+
+    const prefixes = [
+      "The",
+      "New",
+      "Greater",
+      "United",
+      "Free",
+      "Imperial",
+      "Grand",
+      "Solar",
+      "Galactic",
+      "Outer",
+    ];
+
+    // Simple demonym generator based on planet name suffixes
+    function generateDemonym(name: string): string {
+      if (!name) return "";
+      const lower = name.toLowerCase();
+
+      if (lower.endsWith("a") || lower.endsWith("ia")) return name + "n";
+      if (lower.endsWith("on")) return name + "ian";
+      if (lower.endsWith("us")) return name.slice(0, -2) + "an";
+      if (lower.endsWith("is")) return name.slice(0, -2) + "ian";
+      if (lower.endsWith("ar")) return name + "ian";
+      if (lower.endsWith("e")) return name + "an";
+      if (lower.endsWith("y")) return name.slice(0, -1) + "ian";
+      if (lower.endsWith("er")) return name + "ian";
+
+      // Default fallback
+      return name + "ian";
+    }
+
+    
+    const gov = governments[Math.floor(Math.random() * governments.length)];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const demonym = generateDemonym(planet.name);
+
+    // Naming patterns
+    const patterns = [
+      () => `${planet.name} ${gov}`,                    // Crythus Syndicate
+      () => `${demonym} ${gov}`,                        // Crythian Empire
+      () => `${gov} of ${planet.name}`,                 // Federation of Crythus
+      () => `The ${demonym} ${gov}`,                    // The Crythian Assembly
+      () => `${prefix} ${planet.name} ${gov}`,          // Greater Crythus Guild
+      () => `${prefix} ${gov}`,                         // Galactic Union
+    ];
+
+    // Pick a random pattern to generate a name
+    const factionName = patterns[Math.floor(Math.random() * patterns.length)]();
+
+    return factionName;
   }
 
   private static generateLeaderName(): string {
