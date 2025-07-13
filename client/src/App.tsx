@@ -18,6 +18,7 @@ import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 import { useAudio } from './lib/stores/useAudio';
+import { MusicController } from './components/3d/musicController';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -30,6 +31,8 @@ interface SimpleStar {
   temperature?: number;
   luminosity?: number;
 }
+
+
 
 // Define control keys
 const controls = [
@@ -364,6 +367,10 @@ function App() {
     return () => clearInterval(interval);
   }, [currentView]);
 
+
+
+
+
   // Cleanup audio on component unmount
   useEffect(() => {
     return () => {
@@ -374,16 +381,31 @@ function App() {
     };
   }, [audio]);
 
-
+  const [hasStarted, setHasStarted] = useState(false);
 
   const handleStart = () => {
     setShowSelector(false);
+    setHasStarted(true);
 
     // Load multiple music tracks
     const musicTracks = [
       new Audio('/audio/galactic-theme.mp3'),
       new Audio('/audio/galacticview2_roguestars.mp3'),
       new Audio('/audio/vapor3.mp3'),
+      new Audio('/audio/marcoost.mp3'),
+      new Audio('/audio/coma3.mp3'),
+      new Audio('/audio/coma2.mp3'),
+      new Audio('/audio/coma1.mp3'),
+    ];
+
+    const trackNames = [
+        'Galactic Theme',
+        'Rogue Stars',
+        'Vapor 3',
+        'Marco OST',
+        'Coma 3',
+        'Coma 2',
+        'Coma 1',
     ];
 
     // Configure all tracks (disable individual looping for automatic progression)
@@ -415,14 +437,17 @@ function App() {
     audioStore.setStartingTrackIndex(randomIndex); // Remember which track we started with for alternating pattern
     
     // Unmute the audio system since user clicked to start music
-    if (audioStore.isMuted) {
+    /*if (audioStore.isMuted) {
       audioStore.toggleMute();
       console.log("Audio system unmuted for music playback");
-    }
+    }*/
     
     setAudio(startingTrack);
+    
     console.log(`Started background music with ${musicTracks.length} tracks - starting with track ${randomIndex + 1} - will auto-progress`);
   };
+
+  
 
   // Use SystemGenerator for consistent planet generation
   const generateSystemForStar = (star: SimpleStar) => {
@@ -433,7 +458,7 @@ function App() {
     return system;
   };
 
-
+  
 
 
   // Get star color for UI display
@@ -781,6 +806,11 @@ function App() {
             </div>
           )}
         </>
+      )}
+      {hasStarted === true && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <MusicController />
+        </div>
       )}
       <KeyboardControls map={controls}>
         <Canvas camera={{ position: [0, 0, 5], far: 500000, near: 0.1 }}>

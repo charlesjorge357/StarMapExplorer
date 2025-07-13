@@ -8,6 +8,8 @@ interface AudioState {
   hitSound: HTMLAudioElement | null;
   successSound: HTMLAudioElement | null;
   isMuted: boolean;
+  isPlaying: boolean,
+  setIsPlaying: (playing: boolean) => void;
   
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
@@ -33,7 +35,7 @@ export const useAudio = create<AudioState>((set, get) => ({
   startingTrackIndex: 0,
   hitSound: null,
   successSound: null,
-  isMuted: true, // Start muted by default
+  isMuted: false, // Start unmuted
   
   setBackgroundMusic: (music) => set({ backgroundMusic: music }),
   setMusicTracks: (tracks) => set({ musicTracks: tracks }),
@@ -41,6 +43,8 @@ export const useAudio = create<AudioState>((set, get) => ({
   setStartingTrackIndex: (index) => set({ startingTrackIndex: index }),
   setHitSound: (sound) => set({ hitSound: sound }),
   setSuccessSound: (sound) => set({ successSound: sound }),
+  isPlaying : true,
+  setIsPlaying: (playing: boolean) => set({ isPlaying: playing }),
   
   toggleMute: () => {
     const { isMuted } = get();
@@ -48,6 +52,10 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     // Just update the muted state
     set({ isMuted: newMutedState });
+    const { backgroundMusic } = get();
+    if (backgroundMusic) {
+      backgroundMusic.muted = newMutedState;
+    }
     
     // Log the change
     console.log(`Sound ${newMutedState ? 'muted' : 'unmuted'}`);

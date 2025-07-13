@@ -25,6 +25,7 @@ export class FactionGenerator {
    * Does NOT depend on surface features.
    */
 
+
   static getFactionForPlanet(planetName: string, factions: Faction[]): Faction {
     // Try to find a faction where this planet is the homeworld
     const faction = factions.find((f) => f.homeworld === planetName);
@@ -38,38 +39,74 @@ export class FactionGenerator {
   }
 
   static generateFactionsForSystem(planets: Planet[]): Faction[] {
+    planets = planets.filter(Boolean); // REMOVE undefined/null planets
     const factions: Faction[] = [];
     if (planets.length === 0) return factions;
 
     factions.push(ContestedFaction);
 
+    const habitableTypes = [
+      "grassland_world",
+      "jungle_world",
+      "ocean_world",
+      "marshy_world",
+      "sandy_world",
+      "dusty_world",
+      "tundra_world",
+      "snowy_world",
+    ];
+    const hostileTypes = [
+      "gas_giant",
+      "frost_giant",
+      "arid_world",
+      "nuclear_world",
+      "barren_world",
+      "martian_world",
+      "methane_world",
+    ];
+
+    
+
+    const habitablePlanets = planets.filter((p) => habitableTypes.includes(p.type));
+    const hostilePlanets = planets.filter((p) => hostileTypes.includes(p.type));
+    const neutralPlanets = planets.filter(
+      (p) => !habitableTypes.includes(p.type) && !hostileTypes.includes(p.type),
+    );
+
     const isDominated = Math.random() < 0.1;
 
-    if (isDominated) {
-      // ONE faction dominates the whole system (all planets)
-      const dominantPlanet =
-        planets[Math.floor(Math.random() * planets.length)];
+    if (isDominated && habitablePlanets.length > 0) {
+      const dominantPlanet = habitablePlanets[Math.floor(Math.random() * habitablePlanets.length)];
       const faction = this.createFactionFromPlanet(dominantPlanet);
       factions.push(faction);
 
-      // Assign faction to all planets
+      // Assign the same faction to all non-hostile planets
       planets.forEach((p) => {
-        p.faction = faction.name; // You might want to add 'faction' field on Planet
+        if (!hostileTypes.includes(p.type)) {
+          p.faction = faction;
+        } else {
+          p.faction = ContestedFaction;
+        }
       });
     } else {
-      const shuffled = [...planets].sort(() => Math.random() - 0.5); // randomize planet order
-      const factionCount = Math.max(1, Math.floor(planets.length / 2));
-      // MULTIPLE factions, one per planet
+      const shuffled = [...habitablePlanets, ...neutralPlanets].sort(() => Math.random() - 0.5);
+      const factionCount = Math.max(1, Math.floor(habitablePlanets.length * 0.75));
+
       for (let i = 0; i < factionCount; i++) {
         const planet = shuffled[i];
         const faction = this.createFactionFromPlanet(planet);
         factions.push(faction);
-        planet.faction = faction.id;
+        planet.faction = faction;
       }
 
-      // The remaining planet(s) are considered contested (unclaimed)
-      for (let i = factionCount; i < planets.length; i++) {
-        shuffled[i].faction = ContestedFaction.id;
+      // Any unclaimed neutral or habitable planets are contested
+      for (let i = factionCount; i < shuffled.length; i++) {
+        shuffled[i].faction = ContestedFaction;
+      }
+
+      // All hostile planets are automatically contested
+      for (const hostile of hostilePlanets) {
+        hostile.faction = ContestedFaction;
       }
     }
 
@@ -77,6 +114,11 @@ export class FactionGenerator {
   }
 
   private static createFactionFromPlanet(planet: Planet): Faction {
+    if (!planet) {
+      console.warn("Attempted to create faction from undefined planet.");
+      return ContestedFaction;
+    }
+    
     const name = this.generateFactionName(planet);
     return {
       id: `faction-${planet.id}`,

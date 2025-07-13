@@ -4,6 +4,7 @@ import { SurfaceFeature, Planet, Moon, PlanetRing, PlanetType } from '../../../.
 import { SurfaceFeatureMarker } from 'client/src/components/ui/SurfaceFeatures'
 import React, { useRef, useMemo } from 'react';
 import { FactionGenerator } from './FactionGenerator';
+import {PlanetNameGenerator} from './PlanetNameGenerator';
 
 // Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
@@ -202,7 +203,7 @@ export class SystemGenerator {
     let mass = Math.pow(radius, 3);
     if (type === 'gas_giant' || type === 'frost_giant') mass *= 0.3;
 
-    const baseTemp = 100;
+    const baseTemp = 0;
 
 
     function computePlanetTemperature(
@@ -211,24 +212,36 @@ export class SystemGenerator {
       type: string
     ): number {
       const range = temperatureRanges[type];
-      if (!range) return NaN;
+      if (!range) {
+        console.warn(`No temperature range for planet type: "${type}"`);
+        return NaN;
+      }
 
       const [minBase, maxBase] = range;
 
-      // Random within type’s temperature band
-      let baseTemp = minBase + Math.random() * (maxBase - minBase);
+      if (minBase > maxBase) {
+        console.warn(`Invalid range for type ${type}: minBase > maxBase (${minBase} > ${maxBase})`);
+      }
+      if (minBase < 0 || maxBase < 0) {
+        console.warn(`Negative temperature range for type ${type}: (${minBase}, ${maxBase})`);
+      }
 
-      // Adjust for star’s temperature (Sun = 5778)
+      // Random base temperature within planet type range (Kelvin)
+      const baseTemp = minBase + Math.random() * (maxBase - minBase);
+
+      // Normalize star temp relative to Sun
       const tempFactor = starTemp / SUN_TEMP;
 
-
+      // Scale orbital distance (assuming AU scaled to your system, adjust if needed)
       const scaledAU = orbitRadius / 64;
-      
-      // Scale by distance (inverse-square law), normalized to Sun-like behavior
+
+      // Inverse square falloff of heat from star (normalized)
       const distanceFalloff = 1 / (scaledAU * scaledAU) / tempFactor;
 
-      // Final Kelvin temperature, scaled by star bias and orbital distance
+      // Final temperature scaled by star temp and orbit radius
       const finalTemp = baseTemp * distanceFalloff;
+
+      console.log(`Planet type: ${type}, Base temp generated: ${baseTemp.toFixed(2)} K`);
 
       return baseTemp;
     }
@@ -238,21 +251,21 @@ export class SystemGenerator {
 
 
     const temperatureRanges: Record<string, [number, number]> = {
-      gas_giant: [90, 160],         // Like Jupiter/Saturn
-      frost_giant: [50, 100],       // Like Uranus/Neptune
-      arid_world: [310, 360],       // Hot, desert-like
-      barren_world: [200, 270],     // Moon-like, no atmosphere
-      dusty_world: [280, 330],      // Think warm, dusty Mars/Venus
-      grassland_world: [270, 310],  // Earthlike temperate
-      jungle_world: [300, 330],     // Hot, humid
-      marshy_world: [280, 310],     // Temperate, wet
-      martian_world: [210, 260],    // Cold, dry
-      methane_world: [80, 140],     // Cold, atmospheric absorption
-      sandy_world: [290, 340],      // Hot and dry
-      snowy_world: [180, 240],      // Iceball
-      tundra_world: [200, 260],     // Cold, seasonal
-      nuclear_world: [400, 800],    // Irradiated or scorched
-      ocean_world: [270, 310],      // Earthlike oceanic
+      gas_giant: [50, 150],          // e.g. Jupiter ~110K, range covers colder/warmer gas giants
+      frost_giant: [40, 100],        // colder gas giants / ice giants
+      arid_world: [280, 320],        // deserts ~7°C to 47°C (280K - 320K)
+      barren_world: [200, 280],      // rocky, no atmosphere, cooler range
+      dusty_world: [240, 300],       // Mars-like dusty planets, ~-33°C to 27°C
+      grassland_world: [280, 310],   // Earth-like, ~7°C to 37°C
+      jungle_world: [290, 315],      // tropical, ~17°C to 42°C
+      marshy_world: [285, 310],      // swampy, ~12°C to 37°C
+      martian_world: [150, 240],     // Mars average ~210K (-63°C)
+      methane_world: [50, 90],       // Titan-like, very cold
+      sandy_world: [280, 310],       // similar to arid but more stable temps
+      snowy_world: [180, 240],       // icy planets, ~-93°C to -33°C
+      tundra_world: [200, 260],      // cold, ~-73°C to -13°C
+      nuclear_world: [600, 1500],    // extremely hot, volcanic or irradiated worlds
+      ocean_world: [275, 305],       // Earth ocean average ~2°C to 32°C
     };
 
     
@@ -502,10 +515,10 @@ export class SystemGenerator {
       planets.push(planet);
     }
 
-
+// giant proper noun list
     const sciFiPlanetNames = [
       "Zephyron", "Thalmera", "Auralis", "Korynth", "Nytheris", "Vorthemar", "Caldran", "Syrixa", "Azaneth", "Darethys",
-      "Xal'tuun", "Dreylix", "Vexhara", "Ombrath", "Zyrentha", "Kryonox", "Tal'qereth", "Nevrakos", "Uvolian", "Brexxil",
+      "Xal'tuun", "Dreylix", "Vexhara", "Ombrath", "Zyrentha", "Kryonox", "Tal'qereth", "Nevrakos", "Uvolia", "Brexxil",
       "Glacior", "Theta Draconis", "Orbis", "Ecliptara", "Nova Serpentis", "Delta Tyros", "Veltrax", "Crythus", "Arcern", "Miridian",
       "Vandros", "Tyrnax", "Solmera", "Varkhail", "Lithara", "Xenthros", "Kronavel", "Myridos", "Etravax", "Zarion",
       "Elowen", "Faelyra", "Lunethra", "Sylquar", "Nirelle", "Vaelyss", "Aevora", "Liraquon", "Olyndria", "Virenthia",
@@ -543,7 +556,8 @@ export class SystemGenerator {
       const faction = factions.find((f) => f.homeworld === planet.name);
 
       if (faction) {
-        const newName = sciFiPlanetNames[Math.floor(Math.random() * sciFiPlanetNames.length)];
+        //const newName = sciFiPlanetNames[Math.floor(Math.random() * sciFiPlanetNames.length)];
+        const newName = PlanetNameGenerator();
         planet.name = newName;
         faction.homeworld = newName; // <-- sync it!
         planet.faction = FactionGenerator.editFactionFromPlanet(planet, faction);
