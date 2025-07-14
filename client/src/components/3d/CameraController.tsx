@@ -114,6 +114,8 @@ export function CameraController() {
     if (!camera) return;
 
     // Stop orbital tracking
+    velocityRef.current.set(0, 0, 0);
+    targetVelocityRef.current.set(0, 0, 0);
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
 
@@ -238,9 +240,11 @@ export function CameraController() {
     };
   }, [camera, gl.domElement, isTransitioning]);
 
+
+  const previousScopeRef = useRef<string>(currentScope);
   // Set camera position based on scope
   useEffect(() => {
-    if (currentScope === 'system') {
+    if (currentScope === 'system' && previousScopeRef.current === 'galactic') {
       // Set extended camera range for system view
       camera.near = 0.1;
       camera.far = 500000;
@@ -254,24 +258,25 @@ export function CameraController() {
         console.log('Set system view camera position:', camera.position);
       }
     }
+    previousScopeRef.current = currentScope;
   }, [camera, currentScope]);
 
   // Handle keyboard movement
   useFrame((state, delta) => {
     if (isTransitioning) {
-      // During transitions, use smooth interpolation based on transition progress
+      // During transitions, smooth the camera positioning
       const progress = useCamera.getState().getTransitionProgress();
       const { fromPosition, toPosition, fromTarget, toTarget } = useCamera.getState();
-      
-      // Interpolate position and target
+
+      // Interpolate position and target smoothly
       const currentPos = fromPosition.clone().lerp(toPosition, progress);
       const currentTarget = fromTarget.clone().lerp(toTarget, progress);
-      
+
       camera.position.copy(currentPos);
       camera.lookAt(currentTarget);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
-      return;
+      return; // Ensure no further updates if transitioning
     }
 
     // Handle orbital tracking - copy planet's movement data directly to camera

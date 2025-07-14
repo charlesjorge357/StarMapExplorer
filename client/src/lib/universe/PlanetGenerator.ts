@@ -1,4 +1,5 @@
-import { Planet, PlanetType, SurfaceFeature, Faction } from "shared/schema";
+import SurfaceFeaturesList from "@/components/ui/SurfaceFeaturesList";
+import { Planet, PlanetType, SurfaceFeature, Faction, Armies, Divisions, Fleets, Ships } from "shared/schema";
 
 export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {
@@ -83,7 +84,8 @@ export class PlanetGenerator {
         population: type === 'city' ? Math.floor(Math.random() * 10000000) + 50000 : undefined,
         size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)] as 'small' | 'medium' | 'large',
         technology: ['primitive', 'industrial', 'advanced'][Math.floor(Math.random() * 3)] as 'primitive' | 'industrial' | 'advanced',
-        affiliation: this.generateAffiliation(factions, planet)
+        affiliation: this.generateAffiliation(factions, planet),
+        planet: planet,
       };
 
       features.push(feature);
@@ -151,19 +153,36 @@ export class PlanetGenerator {
   }
 
   static generateAffiliation(factions: Faction[], planet?: Planet): string {
-    // Priority: if planet matches a faction's homeworld, return that faction
-    if (planet && factions.find(f => f.homeworld !== 'Contested Zone')) {
+    // 1) If this planet *is* a faction homeworld, use that faction directly
+    if (planet) {
       const matched = factions.find(f => f.homeworld === planet.name);
-      if (matched) return matched.name;
+      if (matched) {
+        for (const surfaceFeature of planet.surfaceFeatures)
+          matched.holdings.push(surfaceFeature);
+        return matched.name;
+      }
     }
 
-    // Fallback unaffiliated groups
+    // 2) Fallback unaffiliated groups
     const unaffiliated = [
       'Independent Colony', 'Free Traders Guild', 'Crimson Cartel', 'Void Runners',
       'Outer Rim Rebels', 'Civic League', 'Neutral Enclave', 'Smugglers Den',
       'Black Market Union', 'Free State of Orion', 'Nomad Clans', 'Mercenary Syndicate'
     ];
-    return unaffiliated[Math.floor(Math.random() * unaffiliated.length)];
+
+    // 3) Other factions in this system (exclude generic contested and the planet’s own)
+    const otherFactionNames = factions
+      .filter(f => f.name !== 'Contested Zone' && f.homeworld !== planet?.name)
+      .map(f => f.name);
+    // 4) Combine and pick at random
+    const pool = [...unaffiliated, ...otherFactionNames];
+    const chosenFactionName = pool[Math.floor(Math.random() * pool.length)];
+    const chosenFaction = factions.find(f => f.name === chosenFactionName);
+    if (chosenFaction) {
+      chosenFaction.holdings = chosenFaction.holdings || [];
+      chosenFaction.holdings.push(...(planet.surfaceFeatures || []));
+    }
+    return chosenFactionName;
   }
 
 }

@@ -5,6 +5,7 @@ import { SurfaceFeatureMarker } from 'client/src/components/ui/SurfaceFeatures'
 import React, { useRef, useMemo } from 'react';
 import { FactionGenerator } from './FactionGenerator';
 import {PlanetNameGenerator} from './PlanetNameGenerator';
+import { MilitaryGenerator } from "./MilitaryGenerator";
 
 // Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
@@ -547,29 +548,73 @@ export class SystemGenerator {
 
     
 
-    
+    const filteredPlanets = planets.filter((planet): planet is NonNullable<typeof planet> => planet != null);
     
     // Generate factions for the system
-    const factions = FactionGenerator.generateFactionsForSystem(planets);
+    // 1) Build factions for the system:
+    const factions = FactionGenerator.generateFactionsForSystem(filteredPlanets);
 
-    for (const planet of planets) {
-      const faction = factions.find((f) => f.homeworld === planet.name);
-
-      if (faction) {
-        //const newName = sciFiPlanetNames[Math.floor(Math.random() * sciFiPlanetNames.length)];
-        const newName = PlanetNameGenerator();
+    // 2) First pass: rename any homeworlds & assign planet.faction
+    for (const planet of filteredPlanets) {
+      const home = factions.find(f => f.homeworld === planet.name);
+      if (home) {
+        const newName = PlanetNameGenerator(); 
         planet.name = newName;
-        faction.homeworld = newName; // <-- sync it!
-        planet.faction = FactionGenerator.editFactionFromPlanet(planet, faction);
-      }
-      else {
+        home.homeworld = newName;            // keep faction.homeworld in sync
+        planet.faction = FactionGenerator.editFactionFromPlanet(planet, home);
+      } else {
         planet.faction = FactionGenerator.getFactionForPlanet(planet.name, factions);
       }
+      
+    }
+
+    
+
+    // 3) **Only now** generate surfaceFeatures (passing in factions):
+    for (const planet of filteredPlanets) {
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
+
+      const matchedFaction = factions.find(f => f.homeworld === planet.name);
+      if (matchedFaction) {
+        // After features are assigned, immediately update holdings
+        matchedFaction.holdings.push(...planet.surfaceFeatures);
+
+        // Generate military immediately after holdings are updated
+        MilitaryGenerator.generateMilitaryForFaction(matchedFaction);
+
+      }
+      
+      const contestedZone = factions.find(f => f.name === 'Contested Zone');
+      if (contestedZone) {
+        contestedZone.holdings.push(...planet.surfaceFeatures);
+        for (const feature of planet.surfaceFeatures) {
+          if (!feature.affiliation) continue; // skip if no affiliation
+          const nonContestedFactions = factions.filter(f => f.name !== 'Contested Zone');
+          const owningFaction = nonContestedFactions.find(f => f.name === feature.affiliation);
+          if (owningFaction) {
+            // Ensure holdings array exists
+            if (!Array.isArray(owningFaction.holdings)) {
+              owningFaction.holdings = [];
+            }
+            owningFaction.holdings.push(feature);
+              
+            // Push this feature to the faction's holdings if not already present
+          }
+        }
+      }
+      
+    }
+
+    for (const faction of factions){
+      console.log(
+        `Faction: ${faction.name}, Holdings: ${faction.holdings.length}`,
+        faction,
+        faction.holdings,
+      );
     }
 
     // Generate asteroid belts in orbital gaps
-    const asteroidBelts = this.generateAsteroidBelts(planets, star);
+    const asteroidBelts = this.generateAsteroidBelts(filteredPlanets, star);
     console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
 
     return {

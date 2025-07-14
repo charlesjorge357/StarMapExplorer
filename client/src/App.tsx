@@ -616,6 +616,7 @@ function App() {
       if (event.key === 'f' || event.key === 'F') {
         console.log(`F key detected - currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}, features: ${selectedPlanet?.surfaceFeatures?.length}`);
 
+
         if (currentView === 'system' && selectedPlanet) {
           event.preventDefault();
 
@@ -634,7 +635,7 @@ function App() {
 
             // Stop any orbital tracking when entering planetary view
             if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+              (window as any).homeToPlanet(selectedPlanet.position, 1, null, false);
             }
 
             // Disable galactic and system view keyboard controls
@@ -654,7 +655,7 @@ function App() {
           if ((window as any).homeToPlanet) {
             const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
             const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
-            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
+            (window as any).homeToPlanet(selectedPlanet.position, Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
             console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
           }
         }

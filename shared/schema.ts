@@ -99,6 +99,55 @@ export interface SurfaceFeature {
   size?: "small" | "medium" | "large"; // Affects light cluster size
   technology?: "primitive" | "industrial" | "advanced"; // Affects light color
   affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
+  faction?: Faction;
+  planet?: Planet;
+}
+
+export interface SpaceFeatures {
+  id: string;
+  type: "space_station" | "mining_station" | "orbital_defenses" | "research_station" | "megastructure";
+  name: string;
+  position: [number, number, number]; // 3D position in system
+  description?: string;
+  size?: "small" | "medium" | "large"; // Affects light cluster size
+  affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
+  faction?: Faction;
+}
+
+// future movable units for factions
+export interface Ships {
+  id: string;
+  type: "fighter_wing" | "bomber_wing" | "cruiser" | "destroyer" | "carrier" | "dreadnought" | "battleship" | "super_carrier";
+  name: string;
+  position: [number, number, number]; // 3D position in system
+  description?: string;
+  size?: "small" | "medium" | "large"; // Affects light cluster size
+  affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
+  faction?: Faction;
+}
+
+
+export interface Fleets {
+  id: string;
+  size: number; //ships[].length()
+  position: [number, number, number]; // 3D position in system
+  composition: ships[]; //ships inside fleet
+}
+
+
+export interface Divisions {
+  id: string;
+  size: number;
+  position: [number, number]; // 2D position on planet
+  affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
+  faction?: Faction
+}
+
+export interface Armies {
+  id: string;
+  size: number; //composition[].length()
+  position: [number, number]; // 2D position on planet
+  composition: Divisions[]; //divisions inside army
 }
 
 export type PlanetType =
@@ -184,13 +233,40 @@ export interface Faction {
   allies: string[];
   enemies: string[];
   goals: string[];
+  holdings: SurfaceFeature[];
   resources: {
     credits: number;
     minerals: number;
     energy: number;
     food: number;
   };
-  ships: Ship[];
-  forts: Fort[];
-  fleets: Fleet[];
+  ships: Ships[];
+  fleets: Fleets[];
+  divisions: Divisions[];
+  armies: Armies[];
+}
+
+export interface MinorFactions{
+  id: string;
+  name: string;
+  description: string;
+  leader: string;
+  homeworld: string;
+  population: number;
+  technology: string;
+  influence: number;
+  allies: string[];
+  enemies: string[];
+  goals: string[];
+  holdings: SurfaceFeature;
+  resources: {
+    credits: number;
+    minerals: number;
+    energy: number;
+    food: number;
+  };
+  ships: Ships[];
+  fleets: Fleets[];
+  divisions: Divisions[];
+  armies: Armies[];
 }
