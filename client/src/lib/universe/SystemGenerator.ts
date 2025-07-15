@@ -212,62 +212,66 @@ export class SystemGenerator {
       orbitRadius: number,
       type: string
     ): number {
-      const range = temperatureRanges[type];
-      if (!range) {
-        console.warn(`No temperature range for planet type: "${type}"`);
-        return NaN;
-      }
-
-      const [minBase, maxBase] = range;
-
-      if (minBase > maxBase) {
-        console.warn(`Invalid range for type ${type}: minBase > maxBase (${minBase} > ${maxBase})`);
-      }
-      if (minBase < 0 || maxBase < 0) {
-        console.warn(`Negative temperature range for type ${type}: (${minBase}, ${maxBase})`);
-      }
-
-      // Random base temperature within planet type range (Kelvin)
-      const baseTemp = minBase + Math.random() * (maxBase - minBase);
-
-      // Normalize star temp relative to Sun
+      const baseTemp = baseTemperatures[type] ?? 288; // fallback ~Earth
+      const distanceAU = Math.max(orbitRadius * 10, 0.1); // scale orbit, avoid div0
       const tempFactor = starTemp / SUN_TEMP;
+      const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
 
-      // Scale orbital distance (assuming AU scaled to your system, adjust if needed)
-      const scaledAU = orbitRadius / 64;
+      // Base temperature with inverse square law
+      let finalTemp = baseTemp * heatFactor;
 
-      // Inverse square falloff of heat from star (normalized)
-      const distanceFalloff = 1 / (scaledAU * scaledAU) / tempFactor;
+      // Modify finalTemp based on planet type to simulate atmospheres etc
+      if (type === 'nuclear_world') {
+        // Very hot volcanic/irradiated planet, boost temp significantly
+        finalTemp *= 2.5;
+      } else if (type === 'marshy_world' || type === 'jungle_world' || type === 'ocean_world') {
+        // Greenhouse effect for wet/habitable planets, mild boost
+        finalTemp *= 1.2;
+      } else if (type === 'methane_world' || type === 'frost_giant') {
+        // Thin or toxic atmosphere, colder than base
+        finalTemp *= 0.7;
+      } else if (type === 'dusty_world' || type === 'barren_world') {
+        // Less atmosphere, tends to lose heat faster
+        finalTemp *= 0.85;
+      }
+      else if (type === 'gas_giant' || type === 'snowy_world'){
+        finalTemp *= 0.5
+      }
+      else if (type === 'frost_giant' || type === 'tundra_world'){
+        finalTemp *= 0.8
+      }
 
-      // Final temperature scaled by star temp and orbit radius
-      const finalTemp = baseTemp * distanceFalloff;
+      // Clamp extremes for sanity
+      finalTemp = Math.min(Math.max(finalTemp, 30), 1500);
 
-      console.log(`Planet type: ${type}, Base temp generated: ${baseTemp.toFixed(2)} K`);
+      console.log(
+        `Type: ${type}, OrbitAU: ${distanceAU}, BaseTemp: ${baseTemp}, FinalTemp: ${finalTemp.toFixed(2)} K`
+      );
 
-      return baseTemp;
+      return finalTemp;
     }
 
 
     const SUN_TEMP = 5778;
 
 
-    const temperatureRanges: Record<string, [number, number]> = {
-      gas_giant: [50, 150],          // e.g. Jupiter ~110K, range covers colder/warmer gas giants
-      frost_giant: [40, 100],        // colder gas giants / ice giants
-      arid_world: [280, 320],        // deserts ~7°C to 47°C (280K - 320K)
-      barren_world: [200, 280],      // rocky, no atmosphere, cooler range
-      dusty_world: [240, 300],       // Mars-like dusty planets, ~-33°C to 27°C
-      grassland_world: [280, 310],   // Earth-like, ~7°C to 37°C
-      jungle_world: [290, 315],      // tropical, ~17°C to 42°C
-      marshy_world: [285, 310],      // swampy, ~12°C to 37°C
-      martian_world: [150, 240],     // Mars average ~210K (-63°C)
-      methane_world: [50, 90],       // Titan-like, very cold
-      sandy_world: [280, 310],       // similar to arid but more stable temps
-      snowy_world: [180, 240],       // icy planets, ~-93°C to -33°C
-      tundra_world: [200, 260],      // cold, ~-73°C to -13°C
-      nuclear_world: [600, 1500],    // extremely hot, volcanic or irradiated worlds
-      ocean_world: [275, 305],       // Earth ocean average ~2°C to 32°C
-    };
+    const baseTemperatures: Record<string, number> = {
+      gas_giant: 120,
+      frost_giant: 80,
+      arid_world: 300,
+      barren_world: 250,
+      dusty_world: 270,
+      grassland_world: 290,
+      jungle_world: 305,
+      marshy_world: 295,
+      martian_world: 210,
+      methane_world: 70,
+      sandy_world: 295,
+      snowy_world: 220,
+      tundra_world: 240,
+      nuclear_world: 1000,
+      ocean_world: 288,
+    }
 
     
     let temperature = baseTemp;
@@ -288,7 +292,7 @@ export class SystemGenerator {
       case 'tundra_world':
       case 'nuclear_world':
       case 'ocean_world':
-        let temperature = computePlanetTemperature(starTemp, orbitRadius, type);
+        temperature = computePlanetTemperature(starTemp, orbitRadius, type);
         console.log('Computed temperature:', temperature, 'for type:', type, 'at orbit radius:', orbitRadius, 'with star temperature:', starTemp, 'and base temperature:', baseTemp, 'and temperature range:', 'temperatureRanges[type],');
         break;
       default:
@@ -573,22 +577,17 @@ export class SystemGenerator {
     // 3) **Only now** generate surfaceFeatures (passing in factions):
     for (const planet of filteredPlanets) {
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
-
-      const matchedFaction = factions.find(f => f.homeworld === planet.name);
-      if (matchedFaction) {
-        // After features are assigned, immediately update holdings
-        matchedFaction.holdings.push(...planet.surfaceFeatures);
-
-        // Generate military immediately after holdings are updated
-        MilitaryGenerator.generateMilitaryForFaction(matchedFaction);
-
-      }
       
       const contestedZone = factions.find(f => f.name === 'Contested Zone');
       if (contestedZone) {
         contestedZone.holdings.push(...planet.surfaceFeatures);
         for (const feature of planet.surfaceFeatures) {
           if (!feature.affiliation) continue; // skip if no affiliation
+
+          if (!contestedZone.holdings.find(h => h.id === feature.id)) {
+              contestedZone.holdings.push(feature);
+          }
+          
           const nonContestedFactions = factions.filter(f => f.name !== 'Contested Zone');
           const owningFaction = nonContestedFactions.find(f => f.name === feature.affiliation);
           if (owningFaction) {
@@ -596,11 +595,24 @@ export class SystemGenerator {
             if (!Array.isArray(owningFaction.holdings)) {
               owningFaction.holdings = [];
             }
-            owningFaction.holdings.push(feature);
-              
+            if (!owningFaction.holdings.find(h => h.id === feature.id)) {
+                owningFaction.holdings.push(feature);
+            }
+            //owningFaction.holdings.push(feature);
+            
             // Push this feature to the faction's holdings if not already present
           }
         }
+      }
+      const matchedFaction = factions.find(f => f.homeworld === planet.name);
+      if (matchedFaction) {
+        // After features are assigned, immediately update holdings
+        matchedFaction.holdings.push(...planet.surfaceFeatures);
+
+        // Generate military immediately after holdings are updated
+        MilitaryGenerator.generateMilitaryForFaction(matchedFaction);
+        console.log(`Generated military for faction: ${matchedFaction.name}`, matchedFaction.armies);
+
       }
       
     }

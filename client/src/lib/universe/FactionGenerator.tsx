@@ -91,7 +91,7 @@ export class FactionGenerator {
       });
     } else {
       const shuffled = [...habitablePlanets, ...neutralPlanets].sort(() => Math.random() - 0.5);
-      const factionCount = Math.max(1, Math.floor(habitablePlanets.length * 0.75));
+      const factionCount = Math.min(Math.max(1, Math.floor(habitablePlanets.length * 0.75)), habitablePlanets.length);
 
       for (let i = 0; i < factionCount; i++) {
         const planet = shuffled[i];

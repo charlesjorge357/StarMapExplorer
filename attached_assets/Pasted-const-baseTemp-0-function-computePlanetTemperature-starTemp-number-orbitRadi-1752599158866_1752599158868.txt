@@ -1,0 +1,93 @@
+const baseTemp = 0;
+
+
+    function computePlanetTemperature(
+      starTemp: number,
+      orbitRadius: number,
+      type: string
+    ): number {
+      console.log(`computePlanetTemperature called with: starTemp=${starTemp}, orbitRadius=${orbitRadius}, type=${type}`);
+      const range = temperatureRanges[type];
+      if (!range) {
+        console.warn(`No temperature range for planet type: "${type}"`);
+        return NaN;
+      }
+
+      const [minBase, maxBase] = range;
+
+      if (minBase > maxBase) {
+        console.warn(`Invalid range for type ${type}: minBase > maxBase (${minBase} > ${maxBase})`);
+      }
+      if (minBase < 0 || maxBase < 0) {
+        console.warn(`Negative temperature range for type ${type}: (${minBase}, ${maxBase})`);
+      }
+
+      // Random base temperature within planet type range (Kelvin)
+      const baseTemp = minBase + Math.random() * (maxBase - minBase);
+
+      // Normalize star temp relative to Sun
+      const tempFactor = starTemp / SUN_TEMP;
+
+      // Scale orbital distance (assuming AU scaled to your system, adjust if needed)
+      const scaledAU = orbitRadius / 64;
+
+      // Inverse square falloff of heat from star (normalized)
+      const distanceFalloff = 1 / (scaledAU * scaledAU) / tempFactor;
+
+      // Final temperature scaled by star temp and orbit radius
+      const finalTemp = baseTemp * distanceFalloff;
+
+      console.log(`Planet type: ${type}, Base temp generated: ${baseTemp.toFixed(2)} K`);
+
+      return baseTemp;
+    }
+
+
+    const SUN_TEMP = 5778;
+
+
+    const temperatureRanges: Record<string, [number, number]> = {
+      gas_giant: [50, 150],          // e.g. Jupiter ~110K, range covers colder/warmer gas giants
+      frost_giant: [40, 100],        // colder gas giants / ice giants
+      arid_world: [280, 320],        // deserts ~7°C to 47°C (280K - 320K)
+      barren_world: [200, 280],      // rocky, no atmosphere, cooler range
+      dusty_world: [240, 300],       // Mars-like dusty planets, ~-33°C to 27°C
+      grassland_world: [280, 310],   // Earth-like, ~7°C to 37°C
+      jungle_world: [290, 315],      // tropical, ~17°C to 42°C
+      marshy_world: [285, 310],      // swampy, ~12°C to 37°C
+      martian_world: [150, 240],     // Mars average ~210K (-63°C)
+      methane_world: [50, 90],       // Titan-like, very cold
+      sandy_world: [280, 310],       // similar to arid but more stable temps
+      snowy_world: [180, 240],       // icy planets, ~-93°C to -33°C
+      tundra_world: [200, 260],      // cold, ~-73°C to -13°C
+      nuclear_world: [600, 1500],    // extremely hot, volcanic or irradiated worlds
+      ocean_world: [275, 305],       // Earth ocean average ~2°C to 32°C
+    };
+
+    
+    let temperature = baseTemp;
+
+    switch (type) {
+      case 'gas_giant':
+      case 'frost_giant':
+      case 'arid_world':
+      case 'barren_world':
+      case 'dusty_world':
+      case 'grassland_world':
+      case 'jungle_world':
+      case 'marshy_world':
+      case 'martian_world':
+      case 'methane_world':
+      case 'sandy_world':
+      case 'snowy_world':
+      case 'tundra_world':
+      case 'nuclear_world':
+      case 'ocean_world':
+        let temperature = computePlanetTemperature(starTemp, orbitRadius, type);
+        console.log('Computed temperature:', temperature, 'for type:', type, 'at orbit radius:', orbitRadius, 'with star temperature:', starTemp, 'and base temperature:', baseTemp, 'and temperature range:', 'temperatureRanges[type],');
+        break;
+      default:
+        console.warn(`Unknown planet type: ${type}`);
+        temperature = NaN;
+        break;
+    }
