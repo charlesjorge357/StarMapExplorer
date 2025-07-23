@@ -269,6 +269,12 @@ export function CameraController() {
 
   // Handle keyboard movement
   useFrame((state, delta) => {
+    // CRITICAL: Check if another component has taken camera control
+    if ((window as any).disableGalacticSystemControls) {
+      // Completely skip all camera updates when disabled
+      return;
+    }
+
     if (isTransitioning) {
       // During transitions, smooth the camera positioning
       const progress = useCamera.getState().getTransitionProgress();
