@@ -75,6 +75,15 @@ export const useCamera = create<CameraState>((set, get) => ({
 
     set({ position: newPosition, target: newTarget });
 
+    // Debug camera store updates
+    if (Math.random() < 0.01) { // 1% chance to log
+      console.log('Camera store transition update:', {
+        progress: progress.toFixed(3),
+        position: newPosition.toArray().map(n => n.toFixed(2)),
+        target: newTarget.toArray().map(n => n.toFixed(2))
+      });
+    }
+
     return { position: newPosition, target: newTarget };
   }
 }));

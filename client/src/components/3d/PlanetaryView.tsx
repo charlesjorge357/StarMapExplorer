@@ -216,6 +216,9 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     if (camera && planet) {
       console.log(`Setting up Google Earth camera for ${planet.name}`);
 
+      // Disable CameraController movement in planetary view
+      (window as any).disableGalacticSystemControls = true;
+      
       // Position camera close to planet surface
       const distance = planetRadius * 1.8;
       camera.position.set(0, 0, distance);
@@ -226,7 +229,15 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       // Reset rotation state
       mouseState.current.rotationX = 0;
       mouseState.current.rotationY = 0;
+      
+      console.log('Camera positioned for planetary view, disabled external controls');
     }
+
+    // Re-enable controls when leaving planetary view
+    return () => {
+      (window as any).disableGalacticSystemControls = false;
+      console.log('Re-enabled external camera controls');
+    };
   }, [camera, planet, planetRadius]);
 
   // Mouse controls for globe rotation

@@ -280,7 +280,8 @@ export function CameraController() {
     }
 
     // Handle orbital tracking - copy planet's movement data directly to camera
-    if (isOrbitalTrackingRef.current && orbitalTargetRef.current) {
+    // Disable orbital tracking in planetary view to prevent camera conflicts
+    if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope !== 'planetary') {
       const planetData = orbitalTargetRef.current;
       const time = Date.now() * 0.0001;
       const planetIndex = planetData.index || 0;
@@ -312,6 +313,14 @@ export function CameraController() {
       camera.lookAt(planetPos);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
+      
+      // Debug rapid camera updates
+      if (Math.random() < 0.01) { // 1% chance to log
+        console.log('Orbital tracking camera update:', {
+          position: cameraPos.toArray().map(n => n.toFixed(2)),
+          planetPos: planetPos.toArray().map(n => n.toFixed(2))
+        });
+      }
 
       // Skip movement controls when in orbital tracking
       return;
@@ -359,6 +368,15 @@ export function CameraController() {
       .map(([key, _]) => key);
 
     if (isMoving && !(window as any).disableGalacticSystemControls) {
+      // Debug camera movement conflicts
+      if (Math.random() < 0.005) { // 0.5% chance to log
+        console.log('CameraController movement update:', {
+          scope: currentScope,
+          position: camera.position.toArray().map(n => n.toFixed(2)),
+          isOrbitalTracking: isOrbitalTrackingRef.current,
+          activeControls
+        });
+      }
       // Reset target velocity and apply movement inputs
       targetVelocityRef.current.set(0, 0, 0);
 
