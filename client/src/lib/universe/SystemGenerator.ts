@@ -1014,7 +1014,8 @@ export class SystemGenerator {
         orbitSpeed: 0.01 + this.seededRandom(systemSeed + 4200 + i) * 0.02, // Very slow independent orbit
         orbitOffset: this.seededRandom(systemSeed + 4300 + i) * Math.PI * 2,
         size: this.seededRandom(systemSeed + 4400 + i) > 0.6 ? "large" : "medium",
-        affiliation: "Unknown"
+        affiliation: "Unknown",
+        description: "Derelict ships and wreckage from ancient battles"
       });
     }
 

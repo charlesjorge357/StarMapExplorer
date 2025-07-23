@@ -1062,7 +1062,7 @@ function App() {
                 {selectedSpaceFeature.population && (
                   <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Population:</span> {selectedSpaceFeature.population.toLocaleString()}</p>
                 )}
-                {selectedSpaceFeature.faction && (
+                {selectedSpaceFeature.faction && selectedSpaceFeature.faction.name && (
                   <div>
                     <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Faction:</span> {selectedSpaceFeature.faction.name}</p>
                     {selectedSpaceFeature.faction.leader && (
@@ -1072,6 +1072,9 @@ function App() {
                       <p className="text-xs text-gray-400 ml-4">Influence: {selectedSpaceFeature.faction.influence}</p>
                     )}
                   </div>
+                )}
+                {selectedSpaceFeature.affiliation && !selectedSpaceFeature.faction && (
+                  <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Affiliation:</span> {selectedSpaceFeature.affiliation}</p>
                 )}
                 {selectedSpaceFeature.description && (
                   <div className="mt-2">
