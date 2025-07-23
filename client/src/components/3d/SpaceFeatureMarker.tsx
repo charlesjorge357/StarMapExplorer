@@ -135,20 +135,220 @@ export function SpaceFeatureMarker({
     }
   };
 
+  // Create different geometries based on feature type
+  const renderGeometry = () => {
+    switch (feature.type) {
+      case 'space_station':
+        return (
+          <>
+            {/* Central hub */}
+            <mesh>
+              <cylinderGeometry args={[size * 0.6, size * 0.8, size * 1.2, 8]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+            {/* Rotating rings */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[size * 1.2, size * 0.15, 6, 12]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.2}
+                metalness={0.7}
+                roughness={0.3}
+              />
+            </mesh>
+            <mesh rotation={[Math.PI / 2, 0, Math.PI / 4]}>
+              <torusGeometry args={[size * 0.9, size * 0.1, 6, 12]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.2}
+                metalness={0.7}
+                roughness={0.3}
+              />
+            </mesh>
+          </>
+        );
+
+      case 'mining_station':
+        return (
+          <>
+            {/* Main processing unit */}
+            <mesh>
+              <boxGeometry args={[size * 1.2, size * 0.8, size * 1.2]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.4}
+                metalness={0.6}
+                roughness={0.4}
+              />
+            </mesh>
+            {/* Mining arms */}
+            <mesh position={[size * 0.8, 0, 0]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.1, size * 1.5, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.7}
+                roughness={0.3}
+              />
+            </mesh>
+            <mesh position={[-size * 0.8, 0, 0]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.1, size * 1.5, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.7}
+                roughness={0.3}
+              />
+            </mesh>
+          </>
+        );
+
+      case 'orbital_defenses':
+        return (
+          <>
+            {/* Main platform */}
+            <mesh>
+              <octahedronGeometry args={[size * 0.8]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.5}
+                metalness={0.9}
+                roughness={0.1}
+              />
+            </mesh>
+            {/* Weapon turrets */}
+            <mesh position={[0, size * 0.6, 0]}>
+              <coneGeometry args={[size * 0.3, size * 0.8, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.4}
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+            <mesh position={[0, -size * 0.6, 0]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[size * 0.3, size * 0.8, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.4}
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+          </>
+        );
+
+      case 'ship_graveyard':
+        return (
+          <>
+            {/* Scattered debris pieces */}
+            <mesh>
+              <dodecahedronGeometry args={[size * 0.6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.1}
+                metalness={0.3}
+                roughness={0.8}
+              />
+            </mesh>
+            <mesh position={[size * 0.5, size * 0.3, 0]} rotation={[1, 0.5, 0]}>
+              <boxGeometry args={[size * 0.4, size * 0.2, size * 0.8]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.1}
+                metalness={0.2}
+                roughness={0.9}
+              />
+            </mesh>
+            <mesh position={[-size * 0.4, -size * 0.2, size * 0.3]} rotation={[0.5, 1, 0.3]}>
+              <cylinderGeometry args={[size * 0.2, size * 0.3, size * 0.7, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.1}
+                metalness={0.2}
+                roughness={0.9}
+              />
+            </mesh>
+          </>
+        );
+
+      case 'research_station':
+        return (
+          <>
+            {/* Main sphere */}
+            <mesh>
+              <icosahedronGeometry args={[size * 0.8, 1]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.4}
+                metalness={0.5}
+                roughness={0.3}
+              />
+            </mesh>
+            {/* Research arrays */}
+            <mesh position={[size * 1.2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[size * 0.05, size * 0.05, size * 2, 8]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+            <mesh position={[-size * 1.2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[size * 0.05, size * 0.05, size * 2, 8]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+          </>
+        );
+
+      default:
+        return (
+          <mesh>
+            <sphereGeometry args={[size, 8, 8]} />
+            <meshStandardMaterial 
+              color={color}
+              emissive={emissiveColor}
+              emissiveIntensity={0.3}
+              metalness={0.7}
+              roughness={0.3}
+            />
+          </mesh>
+        );
+    }
+  };
+
   return (
-    <mesh
+    <group
       ref={meshRef}
       onClick={handleClick}
-      scale={[size, size, size]}
     >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={emissiveColor}
-        emissiveIntensity={0.3}
-        metalness={0.7}
-        roughness={0.3}
-      />
+      {renderGeometry()}
       
       {/* Selection ring */}
       {isSelected && (
@@ -157,6 +357,6 @@ export function SpaceFeatureMarker({
           <meshBasicMaterial color="#FFFF00" transparent opacity={0.6} side={THREE.DoubleSide} />
         </mesh>
       )}
-    </mesh>
+    </group>
   );
 }
