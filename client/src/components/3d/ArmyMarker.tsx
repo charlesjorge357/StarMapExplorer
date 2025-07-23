@@ -18,18 +18,22 @@ interface DivisionMarkerProps {
 export function DivisionMarker({ division, planetRadius, armyPosition }: DivisionMarkerProps) {
   const divisionRef = useRef<Mesh>(null);
   
-  // Convert 2D position to 3D sphere position
-  const [x, z] = division.position;
+  // Convert 2D position to 3D sphere position using spherical coordinates
+  const [lat, lon] = division.position;
+  
+  // Small offset from army position for division placement
+  const offsetLat = lat + (Math.random() - 0.5) * 0.2; // Small random offset
+  const offsetLon = lon + (Math.random() - 0.5) * 0.2;
+  
+  // Convert to spherical coordinates (exactly matching SurfaceFeatureMarker)
+  const phi = (90 - offsetLat) * (Math.PI / 180);
+  const theta = (offsetLon + 180) * (Math.PI / 180);
   const radius = planetRadius + 0.05; // Slightly above planet surface
   
-  // Normalize coordinates for sphere projection
-  const normalizedX = (x - armyPosition[0]) * 0.5; // Relative to army position
-  const normalizedZ = (z - armyPosition[1]) * 0.5;
-  
   const spherePos: [number, number, number] = [
-    normalizedX * radius,
-    0.1, // Slight height above surface
-    normalizedZ * radius
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
   ];
 
   useFrame((state) => {
@@ -64,15 +68,18 @@ export function DivisionMarker({ division, planetRadius, armyPosition }: Divisio
 export function ArmyMarker({ army, planetRadius, onArmyClick }: ArmyMarkerProps) {
   const armyRef = useRef<Mesh>(null);
   
-  // Convert 2D position to 3D sphere position
-  const [x, z] = army.position;
+  // Convert 2D position to 3D sphere position using spherical coordinates
+  const [lat, lon] = army.position;
+  
+  // Convert to spherical coordinates (exactly matching SurfaceFeatureMarker)
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
   const radius = planetRadius + 0.1; // Slightly above planet surface
   
-  // Simple cylindrical projection for now
   const spherePos: [number, number, number] = [
-    x * radius * 0.5,
-    0.2, // Higher than divisions
-    z * radius * 0.5
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
   ];
 
   useFrame((state) => {
