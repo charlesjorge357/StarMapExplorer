@@ -19,11 +19,11 @@ export function SpaceFeatureMarker({
   isSelected, 
   onFeatureClick 
 }: SpaceFeatureMarkerProps) {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<THREE.Group>(null);
 
-  // Calculate feature size and color based on type and size
+  // Calculate feature size and color based on type and size (all half size)
   const { size, color, emissiveColor } = useMemo(() => {
-    let baseSize = 0.5;
+    let baseSize = 0.25; // Half the original base size
     let baseColor = '#888888';
     let emissive = '#000000';
 
@@ -31,27 +31,27 @@ export function SpaceFeatureMarker({
       case 'space_station':
         baseColor = '#00AAFF';
         emissive = '#0044AA';
-        baseSize = feature.size === 'large' ? 1.2 : feature.size === 'medium' ? 0.8 : 0.5;
+        baseSize = feature.size === 'large' ? 0.6 : feature.size === 'medium' ? 0.4 : 0.25; // Half sizes
         break;
       case 'mining_station':
         baseColor = '#FFAA00';
         emissive = '#AA4400';
-        baseSize = 0.6;
+        baseSize = 0.3; // Half size
         break;
       case 'orbital_defenses':
         baseColor = '#FF4444';
         emissive = '#AA0000';
-        baseSize = 0.4;
+        baseSize = 0.2; // Half size
         break;
       case 'ship_graveyard':
         baseColor = '#666666';
         emissive = '#222222';
-        baseSize = feature.size === 'large' ? 1.5 : 1.0;
+        baseSize = feature.size === 'large' ? 0.75 : 0.5; // Half sizes
         break;
       case 'research_station':
         baseColor = '#44FF44';
         emissive = '#00AA00';
-        baseSize = 0.7;
+        baseSize = 0.35; // Half size
         break;
     }
 
@@ -228,7 +228,7 @@ export function SpaceFeatureMarker({
                 roughness={0.1}
               />
             </mesh>
-            {/* Weapon turrets */}
+            {/* Main weapon turrets */}
             <mesh position={[0, size * 0.6, 0]}>
               <coneGeometry args={[size * 0.3, size * 0.8, 6]} />
               <meshStandardMaterial 
@@ -247,6 +247,47 @@ export function SpaceFeatureMarker({
                 emissiveIntensity={0.4}
                 metalness={0.8}
                 roughness={0.2}
+              />
+            </mesh>
+            {/* Small defense cannons around the platform */}
+            <mesh position={[size * 0.8, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.05, size * 0.6, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.9}
+                roughness={0.1}
+              />
+            </mesh>
+            <mesh position={[-size * 0.8, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.05, size * 0.6, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.9}
+                roughness={0.1}
+              />
+            </mesh>
+            <mesh position={[0, 0, size * 0.8]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.05, size * 0.6, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.9}
+                roughness={0.1}
+              />
+            </mesh>
+            <mesh position={[0, 0, -size * 0.8]} rotation={[-Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[size * 0.1, size * 0.05, size * 0.6, 6]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={emissiveColor}
+                emissiveIntensity={0.3}
+                metalness={0.9}
+                roughness={0.1}
               />
             </mesh>
           </>
