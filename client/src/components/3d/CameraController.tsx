@@ -113,6 +113,12 @@ export function CameraController() {
   const resetToStar = () => {
     if (!camera) return;
 
+    // Don't reset camera if we're in planetary view or controls are disabled
+    if (currentScope === 'planetary' || (window as any).disableGalacticSystemControls) {
+      console.log('Skipping camera reset - in planetary view or controls disabled');
+      return;
+    }
+
     // Stop orbital tracking
     velocityRef.current.set(0, 0, 0);
     targetVelocityRef.current.set(0, 0, 0);

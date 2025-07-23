@@ -216,7 +216,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     if (camera && planet) {
       console.log(`Setting up Google Earth camera for ${planet.name}`);
 
-      // Disable CameraController movement in planetary view
+      // Ensure CameraController movement stays disabled in planetary view
       (window as any).disableGalacticSystemControls = true;
       
       // Position camera close to planet surface

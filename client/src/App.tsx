@@ -631,15 +631,17 @@ function App() {
           // Allow planetary view for all terrestrial planets (non-gas giants)
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
             console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
-            setCurrentView('planetary');
-
+            
+            // Disable controls FIRST to prevent camera conflicts during transition
+            (window as any).disableGalacticSystemControls = true;
+            
             // Stop any orbital tracking when entering planetary view
             if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(selectedPlanet.position, 1, null, false);
+              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
             }
-
-            // Disable galactic and system view keyboard controls
-            (window as any).disableGalacticSystemControls = true;
+            
+            // Switch to planetary view - let PlanetaryView handle camera positioning
+            setCurrentView('planetary');
           } else {
             console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
           }
