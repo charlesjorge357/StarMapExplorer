@@ -12,6 +12,8 @@ import { LazyTexturePlanet } from './LazyTexturePlanet';
 import { PlanetRings } from './PlanetRings';
 import { Console } from 'console';
 import { CometTrail } from './CometTrail';
+import { SpaceFeatureMarker } from './SpaceFeatureMarker';
+import { SpaceFeature } from '../../../../shared/schema';
 
 function MoonMesh({ 
   moon, 
@@ -234,6 +236,8 @@ interface SystemViewProps {
   system: any;
   selectedPlanet: any;
   onPlanetClick: (planet: any) => void;
+  selectedSpaceFeature?: SpaceFeature | null;
+  onSpaceFeatureClick?: (feature: SpaceFeature | null) => void;
 }
 
 // Selection ring component that follows the planet
@@ -385,10 +389,19 @@ function PlanetMesh({
   );
 }
 
-export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemViewProps) {
+export function SystemView({ 
+  system, 
+  selectedPlanet, 
+  onPlanetClick, 
+  selectedSpaceFeature: propSelectedSpaceFeature,
+  onSpaceFeatureClick: propOnSpaceFeatureClick 
+}: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  // Use either prop state or local state for space features
+  const selectedSpaceFeature = propSelectedSpaceFeature ?? useState<SpaceFeature | null>(null)[0];
+  const setSelectedSpaceFeature = propOnSpaceFeatureClick ?? useState<SpaceFeature | null>(null)[1];
   const { selectStar } = useUniverse();
 
 
@@ -534,6 +547,7 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
   // Use planets from the cached system
   const planets = system.planets || [];
   const asteroidBelts = system.asteroidBelts || [];
+  const spaceFeatures = system.spaceFeatures || [];
 
   // Optimized lazy texture loading - only load textures as needed
   const planetTextures = useMemo(() => {
@@ -621,7 +635,16 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
 
   // No longer needed - using currentSystem.star directly in UI
 
-  // Handle background click to deselect planets only
+  // Handle space feature selection
+  const handleSpaceFeatureClick = (feature: SpaceFeature | null) => {
+    if (propOnSpaceFeatureClick) {
+      propOnSpaceFeatureClick(feature);
+    } else {
+      setSelectedSpaceFeature(feature);
+    }
+  };
+
+  // Handle background click to deselect planets and space features
   const handleBackgroundClick = () => {
     if (selectedPlanet) {
       console.log('Deselecting planet');
@@ -630,6 +653,10 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
         (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
       }
       onPlanetClick(null);
+    }
+    if (selectedSpaceFeature) {
+      console.log('Deselecting space feature');
+      setSelectedSpaceFeature(null);
     }
   };
 
@@ -839,6 +866,18 @@ export function SystemView({ system, selectedPlanet, onPlanetClick }: SystemView
           {/* Individual asteroids (exponentially scaled by belt radius) */}
           <AsteroidField belt={belt} />
         </group>
+      ))}
+
+      {/* Space features */}
+      {spaceFeatures.map((feature: SpaceFeature) => (
+        <SpaceFeatureMarker
+          key={feature.id}
+          feature={feature}
+          planets={planets}
+          asteroidBelts={asteroidBelts}
+          isSelected={selectedSpaceFeature?.id === feature.id}
+          onFeatureClick={handleSpaceFeatureClick}
+        />
       ))}
     </group>
   );

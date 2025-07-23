@@ -103,14 +103,19 @@ export interface SurfaceFeature {
   planet?: Planet;
 }
 
-export interface SpaceFeatures {
+export interface SpaceFeature {
   id: string;
-  type: "space_station" | "mining_station" | "orbital_defenses" | "research_station" | "megastructure";
+  type: "space_station" | "mining_station" | "orbital_defenses" | "ship_graveyard" | "research_station";
   name: string;
-  position: [number, number, number]; // 3D position in system
+  orbitTarget: "planet" | "star" | "asteroid_belt" | "independent"; // What it orbits
+  orbitTargetId?: string; // ID of planet/asteroid belt it orbits
+  orbitRadius?: number; // Distance from orbit target
+  orbitSpeed?: number; // Orbital speed
+  orbitOffset?: number; // Starting angle offset
+  position?: [number, number, number]; // For independent orbits
   description?: string;
-  size?: "small" | "medium" | "large"; // Affects light cluster size
-  affiliation?: string; // Political/cultural affiliation (e.g., "Terran Federation", "Independent")
+  size?: "small" | "medium" | "large";
+  affiliation?: string;
   faction?: Faction;
 }
 
@@ -174,6 +179,7 @@ export interface StarSystem {
   starId: string;
   planets: Planet[];
   asteroidBelts: AsteroidBelt[];
+  spaceFeatures: SpaceFeature[];
   star?: any;
 }
 

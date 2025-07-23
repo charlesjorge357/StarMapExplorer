@@ -314,6 +314,7 @@ function App() {
   const [selectedNebula, setSelectedNebula] = useState<any>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [selectedSpaceFeature, setSelectedSpaceFeature] = useState<any>(null);
   // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system' | 'planetary'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
@@ -474,6 +475,17 @@ function App() {
       case 'M': return '#ffad51'; // Red
       default: return '#ffffff';
     }
+  }
+
+  // Helper function to get space feature type color
+  const getFeatureTypeColor = (type: string): string => {
+    const colorMap: Record<string, string> = {
+      'space_station': '#00ffff',      // Cyan for technological
+      'mining_station': '#ffaa00',     // Orange for industrial  
+      'ship_graveyard': '#888888',     // Gray for derelict
+      'orbital_defense': '#ff4444'     // Red for military
+    };
+    return colorMap[type] || '#ffffff';
   };
 
   // Function to get planet color for UI consistency
@@ -845,6 +857,8 @@ function App() {
                     system={currentSystem} 
                     selectedPlanet={selectedPlanet}
                     onPlanetClick={setSelectedPlanet}
+                    selectedSpaceFeature={selectedSpaceFeature}
+                    onSpaceFeatureClick={setSelectedSpaceFeature}
                   />
                 </>
               )}
@@ -1036,6 +1050,34 @@ function App() {
             </div>
           )}
 
+          {/* System view - space feature information */}
+          {currentView === 'system' && selectedSpaceFeature && (
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ marginTop: selectedPlanet ? '500px' : '280px' }}>
+              <h3 className="text-lg font-bold" style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>
+                {selectedSpaceFeature.name}
+              </h3>
+              <p className="text-sm text-gray-300 mb-2 capitalize">{selectedSpaceFeature.type.replace('_', ' ')}</p>
+              <div className="space-y-1 text-sm">
+                <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Type:</span> {selectedSpaceFeature.type.replace('_', ' ')}</p>
+                {selectedSpaceFeature.population && (
+                  <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Population:</span> {selectedSpaceFeature.population.toLocaleString()}</p>
+                )}
+                {selectedSpaceFeature.faction && (
+                  <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Faction:</span> {selectedSpaceFeature.faction}</p>
+                )}
+                {selectedSpaceFeature.description && (
+                  <div className="mt-2">
+                    <p style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Description:</p>
+                    <p className="text-xs text-gray-400">{selectedSpaceFeature.description}</p>
+                  </div>
+                )}
+                <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Location:</span> Orbital distance: {selectedSpaceFeature.orbitRadius?.toFixed(1) || 'N/A'} AU</p>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <p>Click background to deselect</p>
+              </div>
+            </div>
+          )}
 
           {/* Planetary view - planet information (persistent from system view) */}
           {currentView === 'planetary' && selectedPlanet && (

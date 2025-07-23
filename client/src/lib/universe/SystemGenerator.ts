@@ -1,6 +1,6 @@
 import { PlanetGenerator } from './PlanetGenerator';
 import { Faction } from '../../../../shared/schema';
-import { SurfaceFeature, Planet, Moon, PlanetRing, PlanetType } from '../../../../shared/schema';
+import { SurfaceFeature, Planet, Moon, PlanetRing, PlanetType, SpaceFeature } from '../../../../shared/schema';
 import { SurfaceFeatureMarker } from 'client/src/components/ui/SurfaceFeatures'
 import React, { useRef, useMemo } from 'react';
 import { FactionGenerator } from './FactionGenerator';
@@ -24,6 +24,7 @@ interface StarSystem {
   star?: any;
   planets: Planet[];
   asteroidBelts: AsteroidBelt[];
+  spaceFeatures: SpaceFeature[];
   factions: Faction[];
 }
 
@@ -689,12 +690,17 @@ export class SystemGenerator {
     const asteroidBelts = this.generateAsteroidBelts(filteredPlanets, star);
     console.log(`Generated ${asteroidBelts.length} asteroid belts for ${star.name}:`, asteroidBelts);
 
+    // Generate space features for the system
+    const spaceFeatures = this.generateSpaceFeatures(filteredPlanets, asteroidBelts, factions, star);
+    console.log(`Generated ${spaceFeatures.length} space features for ${star.name}:`, spaceFeatures);
+
     return {
       id: `system-${star.id}`,
       starId: star.id,
       star,
       planets,
       asteroidBelts,
+      spaceFeatures,
       factions : factions
     };
   }
@@ -906,6 +912,113 @@ export class SystemGenerator {
     
     console.log(`Generated ${rings.length} rings for ${planetName}:`, rings);
     return rings;
+  }
+
+  static generateSpaceFeatures(planets: Planet[], asteroidBelts: any[], factions: Faction[], star: any): SpaceFeature[] {
+    const features: SpaceFeature[] = [];
+    const systemSeed = this.hashString(star.name);
+
+    // Generate space stations around advanced faction homeworlds
+    const advancedFactions = factions.filter(f => parseInt(f.technology) >= 7);
+    for (const faction of advancedFactions) {
+      const homeworld = planets.find(p => p.name === faction.homeworld);
+      if (homeworld) {
+        const stationCount = Math.floor(this.seededRandom(systemSeed + 1000) * 2) + 1; // 1-2 stations
+        
+        for (let i = 0; i < stationCount; i++) {
+          const orbitRadius = homeworld.orbitRadius + (5 + i * 3); // Orbit close to planet
+          const orbitSpeed = homeworld.orbitSpeed * 0.8; // Slightly slower than planet
+          
+          features.push({
+            id: `station-${faction.name.replace(/\s+/g, '-')}-${i}`,
+            name: `${faction.name} Station ${String.fromCharCode(65 + i)}`,
+            type: "space_station",
+            orbitTarget: "planet",
+            orbitTargetId: homeworld.id,
+            orbitRadius,
+            orbitSpeed,
+            orbitOffset: this.seededRandom(systemSeed + 1100 + i) * Math.PI * 2,
+            size: this.seededRandom(systemSeed + 1200 + i) > 0.5 ? "large" : "medium",
+            affiliation: faction.name,
+            faction
+          });
+        }
+      }
+    }
+
+    // Generate orbital defenses around any faction homeworlds
+    for (const faction of factions) {
+      if (faction.name === 'Contested Zone') continue;
+      
+      const homeworld = planets.find(p => p.name === faction.homeworld);
+      if (homeworld) {
+        const defenseCount = Math.floor(this.seededRandom(systemSeed + 2000) * 3) + 1; // 1-3 defense platforms
+        
+        for (let i = 0; i < defenseCount; i++) {
+          const orbitRadius = homeworld.orbitRadius + (2 + i * 1.5); // Close defensive orbit
+          const orbitSpeed = homeworld.orbitSpeed * 1.2; // Faster than planet
+          
+          features.push({
+            id: `defense-${faction.name.replace(/\s+/g, '-')}-${i}`,
+            name: `${faction.name} Defense Platform ${i + 1}`,
+            type: "orbital_defenses",
+            orbitTarget: "planet",
+            orbitTargetId: homeworld.id,
+            orbitRadius,
+            orbitSpeed,
+            orbitOffset: this.seededRandom(systemSeed + 2100 + i) * Math.PI * 2,
+            size: "medium",
+            affiliation: faction.name,
+            faction
+          });
+        }
+      }
+    }
+
+    // Generate mining stations in asteroid belts for advanced factions
+    for (const belt of asteroidBelts) {
+      const miningFaction = advancedFactions[Math.floor(this.seededRandom(systemSeed + 3000) * advancedFactions.length)];
+      if (miningFaction && this.seededRandom(systemSeed + 3100) > 0.3) { // 70% chance
+        const avgRadius = (belt.innerRadius + belt.outerRadius) / 2;
+        
+        features.push({
+          id: `mining-${belt.id}`,
+          name: `${miningFaction.name} Mining Station`,
+          type: "mining_station",
+          orbitTarget: "asteroid_belt",
+          orbitTargetId: belt.id,
+          orbitRadius: avgRadius,
+          orbitSpeed: 0.02 + this.seededRandom(systemSeed + 3200) * 0.03, // Slow asteroid belt speed
+          orbitOffset: this.seededRandom(systemSeed + 3300) * Math.PI * 2,
+          size: "medium",
+          affiliation: miningFaction.name,
+          faction: miningFaction
+        });
+      }
+    }
+
+    // Generate ship graveyards at random orbital positions
+    const graveyardCount = Math.floor(this.seededRandom(systemSeed + 4000) * 3); // 0-2 graveyards
+    for (let i = 0; i < graveyardCount; i++) {
+      // Find empty orbital zones between planets
+      const minOrbit = planets.length > 0 ? Math.min(...planets.map(p => p.orbitRadius)) : 20;
+      const maxOrbit = planets.length > 0 ? Math.max(...planets.map(p => p.orbitRadius)) : 200;
+      const orbitRadius = minOrbit + this.seededRandom(systemSeed + 4100 + i) * (maxOrbit - minOrbit);
+      
+      features.push({
+        id: `graveyard-${star.id}-${i}`,
+        name: `${star.name} Ship Graveyard ${String.fromCharCode(65 + i)}`,
+        type: "ship_graveyard",
+        orbitTarget: "independent",
+        orbitRadius,
+        orbitSpeed: 0.01 + this.seededRandom(systemSeed + 4200 + i) * 0.02, // Very slow independent orbit
+        orbitOffset: this.seededRandom(systemSeed + 4300 + i) * Math.PI * 2,
+        size: this.seededRandom(systemSeed + 4400 + i) > 0.6 ? "large" : "medium",
+        affiliation: "Unknown"
+      });
+    }
+
+    return features;
   }
 
   static getStarColor(spectralClass: string): string {
