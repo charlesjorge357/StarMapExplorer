@@ -70,17 +70,20 @@ export function DivisionMarker({ division, planetRadius, armyPosition }: Divisio
 export function ArmyMarker({ army, planetRadius, isSelected, movementData, onArmyClick }: ArmyMarkerProps) {
   const armyRef = useRef<Mesh>(null);
   
-  // Handle movement animation
+  // Handle movement animation with better interpolation
   const currentPosition = useMemo(() => {
     if (movementData && movementData.progress < 1) {
-      // Interpolate between current and target position
+      // Spherical interpolation for more natural movement on sphere surface
       const [currentLat, currentLon] = army.position;
       const [targetLat, targetLon] = movementData.targetPosition;
       const progress = movementData.progress;
       
+      // Use smooth interpolation
+      const smoothProgress = progress * progress * (3.0 - 2.0 * progress); // Smooth step
+      
       return [
-        currentLat + (targetLat - currentLat) * progress,
-        currentLon + (targetLon - currentLon) * progress
+        currentLat + (targetLat - currentLat) * smoothProgress,
+        currentLon + (targetLon - currentLon) * smoothProgress
       ];
     }
     return army.position;

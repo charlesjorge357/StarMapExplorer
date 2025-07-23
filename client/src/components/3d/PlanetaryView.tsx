@@ -408,7 +408,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       
       for (const [armyId, movement] of newMovingArmies.entries()) {
         if (movement.progress < 1) {
-          movement.progress = Math.min(1, movement.progress + delta * 0.5); // Movement speed
+          movement.progress = Math.min(1, movement.progress + delta * 1.0); // Faster movement speed
           hasChanges = true;
           
           // Update army position when movement completes
@@ -418,6 +418,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
               const army = planet.faction.armies.find((a: any) => a.id === armyId);
               if (army) {
                 army.position = movement.targetPosition;
+                console.log(`Army ${armyId} reached destination:`, movement.targetPosition);
               }
             }
             newMovingArmies.delete(armyId);
@@ -464,9 +465,17 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             // Normalize the intersection point to get exact surface coordinates
             const normalizedPoint = intersectionPoint.clone().normalize();
             
-            // Convert normalized point to lat/lon (exact reverse of SurfaceFeatureMarker calculation)
-            const lat = Math.asin(normalizedPoint.y) * (180 / Math.PI);
-            const lon = Math.atan2(normalizedPoint.z, -normalizedPoint.x) * (180 / Math.PI) - 180;
+            // Convert normalized point to lat/lon using exact SurfaceFeatureMarker reverse calculation
+            // From SurfaceFeatureMarker: x = -planetRadius * Math.sin(phi) * Math.cos(theta)
+            // From SurfaceFeatureMarker: y = planetRadius * Math.cos(phi)  
+            // From SurfaceFeatureMarker: z = planetRadius * Math.sin(phi) * Math.sin(theta)
+            // Where phi = (90 - lat) * (Math.PI / 180) and theta = (lon + 180) * (Math.PI / 180)
+            
+            const phi = Math.acos(normalizedPoint.y); // phi from y coordinate
+            const lat = 90 - phi * (180 / Math.PI);   // Convert phi back to latitude
+            
+            const theta = Math.atan2(normalizedPoint.z, -normalizedPoint.x); // theta from x,z coordinates
+            const lon = theta * (180 / Math.PI) - 180; // Convert theta back to longitude
             
             console.log('Army movement target:', { lat, lon, point: intersectionPoint });
             
