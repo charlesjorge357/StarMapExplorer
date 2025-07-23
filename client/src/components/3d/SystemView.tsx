@@ -373,9 +373,9 @@ export function SystemView({
 
 
   const outermostOrbit = useMemo(() => {
-    if (!system.planets || system.planets.length === 0) return 0;
+    if (!system || !system.planets || system.planets.length === 0) return 0;
     return Math.max(...system.planets.map((p: any) => p.orbitRadius * 1.5));
-  }, [system.planets]);
+  }, [system?.planets]);
 
   const cometRef = useRef<THREE.Mesh>(null);
   const cometDataRef = useRef<{
@@ -473,8 +473,8 @@ export function SystemView({
 
   // Check if current star is inside any nebula (using scaled radius to match visual representation)
   const starInNebula = useMemo(() => {
-    if (!system.star || !system.star.position) {
-      console.log('No star or star position:', system.star);
+    if (!system?.star || !system.star.position) {
+      console.log('No star or star position:', system?.star);
       return null;
     }
 
@@ -497,7 +497,7 @@ export function SystemView({
     return null;
   }, [system.star, nebulas]);
 
-  const star = system.star || {
+  const star = system?.star || {
     radius: 1,
     spectralClass: 'G',
     temperature: 5778,
@@ -510,10 +510,10 @@ export function SystemView({
   const erisTexture = useTexture('/textures/eris.jpg');
   const oceanTexture = useTexture('/textures/ocean.jpg');
 
-  // Use planets from the cached system
-  const planets = system.planets || [];
-  const asteroidBelts = system.asteroidBelts || [];
-  const spaceFeatures = system.spaceFeatures || [];
+  // Use planets from the cached system with null checks
+  const planets = system?.planets || [];
+  const asteroidBelts = system?.asteroidBelts || [];
+  const spaceFeatures = system?.spaceFeatures || [];
 
   // Optimized lazy texture loading - only load textures as needed
   const planetTextures = useMemo(() => {
