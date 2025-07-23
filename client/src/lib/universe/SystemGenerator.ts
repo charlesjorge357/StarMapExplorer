@@ -435,8 +435,54 @@ export class SystemGenerator {
       const densityFactor = type === 'gas_giant' || type === 'frost_giant' ? 0.3 : 1.0;
       const mass = Math.pow(radius, 3) * densityFactor;
 
-      // Simplified temperature model
-      const temperature = 200 + Math.random() * 600;
+      // Physics-based temperature calculation
+      const baseTemperatures: Record<string, number> = {
+        gas_giant: 120,
+        frost_giant: 80,
+        arid_world: 300,
+        barren_world: 250,
+        dusty_world: 270,
+        grassland_world: 290,
+        jungle_world: 305,
+        marshy_world: 295,
+        martian_world: 210,
+        methane_world: 70,
+        sandy_world: 295,
+        snowy_world: 220,
+        tundra_world: 240,
+        nuclear_world: 1000,
+        ocean_world: 288,
+      };
+      
+      const computeTemperature = (starTemp: number, orbitRadius: number, type: string): number => {
+        const baseTemp = baseTemperatures[type] ?? 288;
+        const distanceAU = Math.max(orbitRadius / 64, 0.1); // Convert to AU
+        const SUN_TEMP = 5778;
+        const tempFactor = starTemp / SUN_TEMP;
+        const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
+        
+        let finalTemp = baseTemp * heatFactor;
+        
+        // Apply atmospheric effects
+        if (type === 'nuclear_world') {
+          finalTemp *= 2.5;
+        } else if (type === 'marshy_world' || type === 'jungle_world' || type === 'ocean_world') {
+          finalTemp *= 1.2;
+        } else if (type === 'methane_world' || type === 'frost_giant') {
+          finalTemp *= 0.7;
+        } else if (type === 'dusty_world' || type === 'barren_world') {
+          finalTemp *= 0.85;
+        } else if (type === 'gas_giant' || type === 'snowy_world') {
+          finalTemp *= 0.5;
+        } else if (type === 'frost_giant' || type === 'tundra_world') {
+          finalTemp *= 0.8;
+        }
+        
+        return Math.min(Math.max(finalTemp, 30), 1500);
+      };
+      
+      const temperature = computeTemperature(star.temperature, orbitRadius, type);
+      console.log(`System planet: ${type} at ${(orbitRadius/64).toFixed(2)} AU, temp: ${temperature.toFixed(1)}K`);
 
       // Generate atmosphere
       let atmosphere: string[] = [];
