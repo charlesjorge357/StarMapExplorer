@@ -126,8 +126,13 @@ export function SpaceFeatureMarker({
 
   // Handle click
   const handleClick = (event: any) => {
-    event.stopPropagation();
-    onFeatureClick(feature);
+    console.log('SpaceFeatureMarker clicked:', feature);
+    try {
+      event.stopPropagation();
+      onFeatureClick(feature);
+    } catch (error) {
+      console.error('Error in SpaceFeatureMarker click handler:', error);
+    }
   };
 
   return (

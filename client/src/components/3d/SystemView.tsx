@@ -358,8 +358,11 @@ export function SystemView({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   // Use either prop state or local state for space features
-  const selectedSpaceFeature = propSelectedSpaceFeature ?? useState<SpaceFeature | null>(null)[0];
-  const setSelectedSpaceFeature = propOnSpaceFeatureClick ?? useState<SpaceFeature | null>(null)[1];
+  const [localSelectedSpaceFeature, setLocalSelectedSpaceFeature] = useState<SpaceFeature | null>(null);
+  const selectedSpaceFeature = propSelectedSpaceFeature ?? localSelectedSpaceFeature;
+  const setSelectedSpaceFeature = propOnSpaceFeatureClick ? 
+    ((feature: SpaceFeature | null) => propOnSpaceFeatureClick(feature)) : 
+    setLocalSelectedSpaceFeature;
   // Add try-catch to handle useUniverse hook issues
   let universeStore;
   try {
@@ -603,10 +606,18 @@ export function SystemView({
 
   // Handle space feature selection
   const handleSpaceFeatureClick = (feature: SpaceFeature | null) => {
-    if (propOnSpaceFeatureClick) {
-      propOnSpaceFeatureClick(feature);
-    } else {
-      setSelectedSpaceFeature(feature);
+    console.log('handleSpaceFeatureClick called with:', feature);
+    try {
+      if (propOnSpaceFeatureClick) {
+        console.log('Using prop onSpaceFeatureClick');
+        propOnSpaceFeatureClick(feature);
+      } else {
+        console.log('Using local setSelectedSpaceFeature');
+        setSelectedSpaceFeature(feature);
+      }
+    } catch (error) {
+      console.error('Error in handleSpaceFeatureClick:', error);
+      console.error('Error stack:', error.stack);
     }
   };
 
