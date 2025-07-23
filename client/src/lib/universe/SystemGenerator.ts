@@ -918,8 +918,17 @@ export class SystemGenerator {
     const features: SpaceFeature[] = [];
     const systemSeed = this.hashString(star.name);
 
+    console.log(`Generating space features for ${star.name}:`, {
+      factionCount: factions.length,
+      planetCount: planets.length,
+      asteroidBeltCount: asteroidBelts.length,
+      factions: factions.map(f => ({ name: f.name, tech: f.technology, homeworld: f.homeworld }))
+    });
+
     // Generate space stations around advanced faction homeworlds
-    const advancedFactions = factions.filter(f => parseInt(f.technology) >= 7);
+    const advancedFactions = factions.filter(f => parseInt(f.technology) >= 5); // Lowered from 7 to 5
+    console.log(`Found ${advancedFactions.length} advanced factions (tech ≥5):`, advancedFactions.map(f => f.name));
+    
     for (const faction of advancedFactions) {
       const homeworld = planets.find(p => p.name === faction.homeworld);
       if (homeworld) {
@@ -946,8 +955,11 @@ export class SystemGenerator {
       }
     }
 
-    // Generate orbital defenses around any faction homeworlds
-    for (const faction of factions) {
+    // Generate orbital defenses around any faction homeworlds  
+    const militaryFactions = factions.filter(f => parseInt(f.technology) >= 3); // Military tech ≥3
+    console.log(`Found ${militaryFactions.length} military factions (tech ≥3):`, militaryFactions.map(f => f.name));
+    
+    for (const faction of militaryFactions) {
       if (faction.name === 'Contested Zone') continue;
       
       const homeworld = planets.find(p => p.name === faction.homeworld);
@@ -977,8 +989,10 @@ export class SystemGenerator {
 
     // Generate mining stations in asteroid belts for advanced factions
     for (const belt of asteroidBelts) {
-      const miningFaction = advancedFactions[Math.floor(this.seededRandom(systemSeed + 3000) * advancedFactions.length)];
-      if (miningFaction && this.seededRandom(systemSeed + 3100) > 0.3) { // 70% chance
+      const miningFaction = advancedFactions.length > 0 ? 
+        advancedFactions[Math.floor(this.seededRandom(systemSeed + 3000) * advancedFactions.length)] :
+        factions.length > 0 ? factions[Math.floor(this.seededRandom(systemSeed + 3001) * factions.length)] : null;
+      if (miningFaction && this.seededRandom(systemSeed + 3100) > 0.2) { // 80% chance (increased from 70%)
         const avgRadius = (belt.innerRadius + belt.outerRadius) / 2;
         
         features.push({
@@ -999,6 +1013,8 @@ export class SystemGenerator {
 
     // Generate ship graveyards at random orbital positions
     const graveyardCount = Math.floor(this.seededRandom(systemSeed + 4000) * 3); // 0-2 graveyards
+    console.log(`Generating ${graveyardCount} ship graveyards`);
+    
     for (let i = 0; i < graveyardCount; i++) {
       // Find empty orbital zones between planets
       const minOrbit = planets.length > 0 ? Math.min(...planets.map(p => p.orbitRadius)) : 20;
@@ -1019,6 +1035,31 @@ export class SystemGenerator {
       });
     }
 
+    // Generate research stations in outer system for advanced factions
+    const researchStationCount = Math.floor(this.seededRandom(systemSeed + 5000) * 2); // 0-1 research stations
+    console.log(`Generating ${researchStationCount} research stations`);
+    
+    for (let i = 0; i < researchStationCount && advancedFactions.length > 0; i++) {
+      const researchFaction = advancedFactions[Math.floor(this.seededRandom(systemSeed + 5100 + i) * advancedFactions.length)];
+      const maxPlanetOrbit = planets.length > 0 ? Math.max(...planets.map(p => p.orbitRadius)) : 100;
+      const orbitRadius = maxPlanetOrbit * (1.5 + this.seededRandom(systemSeed + 5200 + i) * 0.8); // 1.5-2.3x max planet orbit
+      
+      features.push({
+        id: `research-${star.id}-${i}`,
+        name: `${researchFaction.name} Research Station ${String.fromCharCode(65 + i)}`,
+        type: "research_station",
+        orbitTarget: "independent",
+        orbitRadius,
+        orbitSpeed: 0.005 + this.seededRandom(systemSeed + 5300 + i) * 0.01, // Very slow outer orbit
+        orbitOffset: this.seededRandom(systemSeed + 5400 + i) * Math.PI * 2,
+        size: "large",
+        affiliation: researchFaction.name,
+        faction: researchFaction,
+        description: "Advanced research facility studying stellar phenomena"
+      });
+    }
+
+    console.log(`Generated ${features.length} total space features:`, features.map(f => ({ type: f.type, name: f.name, affiliation: f.affiliation })));
     return features;
   }
 
