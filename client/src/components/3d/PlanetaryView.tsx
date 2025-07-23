@@ -460,15 +460,13 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             event.stopPropagation(); // Prevent other click handlers
             
             const intersectionPoint = event.point;
-            // Convert 3D intersection point to lat/lon coordinates (matching SurfaceFeatureMarker conversion)
-            const x = intersectionPoint.x;
-            const y = intersectionPoint.y; 
-            const z = intersectionPoint.z;
             
-            // Convert to spherical coordinates (matching SurfaceFeatureMarker)
-            const radius = Math.sqrt(x*x + y*y + z*z);
-            const lat = Math.asin(y / radius) * (180 / Math.PI);
-            const lon = Math.atan2(z, x) * (180 / Math.PI); // Fixed: removed -x and -180 offset
+            // Normalize the intersection point to get exact surface coordinates
+            const normalizedPoint = intersectionPoint.clone().normalize();
+            
+            // Convert normalized point to lat/lon (exact reverse of SurfaceFeatureMarker calculation)
+            const lat = Math.asin(normalizedPoint.y) * (180 / Math.PI);
+            const lon = Math.atan2(normalizedPoint.z, -normalizedPoint.x) * (180 / Math.PI) - 180;
             
             console.log('Army movement target:', { lat, lon, point: intersectionPoint });
             
