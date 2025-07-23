@@ -1063,7 +1063,15 @@ function App() {
                   <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Population:</span> {selectedSpaceFeature.population.toLocaleString()}</p>
                 )}
                 {selectedSpaceFeature.faction && (
-                  <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Faction:</span> {selectedSpaceFeature.faction}</p>
+                  <div>
+                    <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Faction:</span> {selectedSpaceFeature.faction.name}</p>
+                    {selectedSpaceFeature.faction.leader && (
+                      <p className="text-xs text-gray-400 ml-4">Leader: {selectedSpaceFeature.faction.leader}</p>
+                    )}
+                    {selectedSpaceFeature.faction.influence && (
+                      <p className="text-xs text-gray-400 ml-4">Influence: {selectedSpaceFeature.faction.influence}</p>
+                    )}
+                  </div>
                 )}
                 {selectedSpaceFeature.description && (
                   <div className="mt-2">
