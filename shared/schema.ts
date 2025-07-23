@@ -131,7 +131,8 @@ export interface Fleets {
   id: string;
   size: number; //ships[].length()
   position: [number, number, number]; // 3D position in system
-  composition: ships[]; //ships inside fleet
+  composition: Ships[]; //ships inside fleet
+  faction?: Faction;
 }
 
 
@@ -148,6 +149,7 @@ export interface Armies {
   size: number; //composition[].length()
   position: [number, number]; // 2D position on planet
   composition: Divisions[]; //divisions inside army
+  faction?: Faction;
 }
 
 export type PlanetType =

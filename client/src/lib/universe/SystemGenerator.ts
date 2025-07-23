@@ -213,7 +213,7 @@ export class SystemGenerator {
       type: string
     ): number {
       const baseTemp = baseTemperatures[type] ?? 288; // fallback ~Earth
-      const distanceAU = Math.max(orbitRadius * 10, 0.1); // scale orbit, avoid div0
+      const distanceAU = Math.max(orbitRadius * 100, 0.1); // scale orbit, avoid div0
       const tempFactor = starTemp / SUN_TEMP;
       const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
 

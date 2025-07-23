@@ -52,7 +52,7 @@ export const useUniverse = create<UniverseState>()(
     error: null,
 
     initialize: () => {
-      console.log("Initializing Universe Mapper");
+      console.log("Initializing Rogue Stars");
       const state = get();
       // Always generate new sandbox to ensure fresh data
       state.generateSandbox();

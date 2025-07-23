@@ -11,7 +11,7 @@ interface CameraState {
   toPosition: Vector3;
   fromTarget: Vector3;
   toTarget: Vector3;
-  
+
   // Actions
   setPosition: (position: Vector3) => void;
   setTarget: (target: Vector3) => void;
@@ -19,6 +19,7 @@ interface CameraState {
   endTransition: () => void;
   transitionTo: (fromPos: Vector3, toPos: Vector3, fromTarget: Vector3, toTarget: Vector3, duration?: number) => void;
   getTransitionProgress: () => number;
+  updateTransition: () => { position: Vector3; target: Vector3 };
 }
 
 export const useCamera = create<CameraState>((set, get) => ({
@@ -33,43 +34,48 @@ export const useCamera = create<CameraState>((set, get) => ({
   toTarget: new Vector3(0, 0, 0),
 
   setPosition: (position) => set({ position }),
-  
   setTarget: (target) => set({ target }),
-  
   startTransition: () => set({ isTransitioning: true }),
-  
   endTransition: () => set({ isTransitioning: false }),
-  
+
   transitionTo: (fromPos, toPos, fromTarget, toTarget, duration = 2000) => {
     const startTime = Date.now();
-    set({ 
+    set({
       fromPosition: fromPos.clone(),
       toPosition: toPos.clone(),
       fromTarget: fromTarget.clone(),
       toTarget: toTarget.clone(),
       transitionDuration: duration,
       transitionStartTime: startTime,
-      isTransitioning: true 
+      isTransitioning: true,
     });
-    
-    // Auto-end transition after duration
-    setTimeout(() => {
-      set({ 
-        isTransitioning: false,
-        position: toPos.clone(),
-        target: toTarget.clone()
-      });
-    }, duration);
   },
 
   getTransitionProgress: () => {
     const state = get();
     if (!state.isTransitioning) return 1;
-    
+
     const elapsed = Date.now() - state.transitionStartTime;
     const progress = Math.min(elapsed / state.transitionDuration, 1);
-    
-    // Smooth easing function
-    return progress * progress * (3 - 2 * progress);
+    const eased = progress * progress * (3 - 2 * progress);
+
+    if (progress >= 1) {
+      set({ isTransitioning: false });
+    }
+
+    return eased;
+  },
+
+  updateTransition: () => {
+    const state = get();
+    const progress = state.getTransitionProgress();
+
+    const newPosition = new Vector3().lerpVectors(state.fromPosition, state.toPosition, progress);
+    const newTarget = new Vector3().lerpVectors(state.fromTarget, state.toTarget, progress);
+
+    set({ position: newPosition, target: newTarget });
+
+    return { position: newPosition, target: newTarget };
   }
 }));
+
