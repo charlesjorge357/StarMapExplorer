@@ -5,6 +5,7 @@ import { useUniverse } from '../../lib/stores/useUniverse';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
+import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
 import { SystemNebulaSkybox } from './SystemNebulaSkybox';
 import { StarSkybox } from './StarSkybox';
@@ -92,39 +93,7 @@ function MoonMesh({
 }
 
 
-// Helper functions for planet materials
-function getPlanetColor(type: string, planetId?: string): string {
-  // Use the same color variation system as SystemGenerator
-  const seededRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const seed = (planetId || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const variation = (seededRandom(seed + 2000) - 0.5) * 0.3;
-
-  const baseColors: Record<string, [number, number, number]> = {
-    gas_giant: [30, 40, 50],        // Orange (reduced saturation)
-    frost_giant: [220, 30, 60],     // Sky blue (reduced saturation)
-    arid_world: [45, 35, 55],       // Goldenrod (reduced saturation)
-    barren_world: [35, 15, 45],     // Dark khaki (reduced saturation)
-    dusty_world: [35, 20, 65],      // Tan (reduced saturation)
-    grassland_world: [80, 30, 50],  // Yellow green (reduced saturation)
-    jungle_world: [120, 35, 35],    // Forest green (reduced saturation)
-    marshy_world: [80, 25, 35],     // Dark olive green (reduced saturation)
-    martian_world: [0, 25, 55],     // Indian red (reduced saturation)
-    methane_world: [300, 25, 70],   // Plum (reduced saturation)
-    sandy_world: [30, 35, 70],      // Sandy brown (reduced saturation)
-    snowy_world: [210, 10, 95],     // Alice blue (reduced saturation)
-    tundra_world: [210, 8, 55],     // Slate gray (reduced saturation)
-    nuclear_world: [10, 90, 50],    // Orange red (kept high for visibility)
-    ocean_world: [210, 40, 55]      // Deep blue (reduced saturation)
-  };
-
-  let [h, s, l] = baseColors[type] || [0, 0, 50];
-  h = (h + variation * 360 + 360) % 360;
-  return `hsl(${Math.round(h)}, ${s}%, ${l}%)`;
-}
+// Use SystemGenerator.getPlanetColor for consistency with generation
 
 // Texture cache to prevent re-loading the same texture multiple times
 const textureCache = new Map<string, THREE.Texture>();
@@ -218,19 +187,7 @@ function getPlanetGlow(type: string, planetId?: string): string {
 
 
 
-function getStarColor(spectralClass: string): string {
-  const firstChar = spectralClass.charAt(0).toUpperCase();
-  switch (firstChar) {
-    case 'O': return '#9bb0ff';
-    case 'B': return '#aabfff';
-    case 'A': return '#cad7ff';
-    case 'F': return '#f8f7ff';
-    case 'G': return '#fff4ea';
-    case 'K': return '#ffd2a1';
-    case 'M': return '#ffad51';
-    default: return '#ffffff';
-  }
-}
+// Use StarGenerator.getStarColor instead of local duplicate function
 
 interface SystemViewProps {
   system: any;
@@ -302,7 +259,8 @@ function PlanetMesh({
   });
 
   // Calculate planet properties
-  const planetColor = getPlanetColor(planet.type, planet.id || planet.name);
+  const planetSeed = (planet.id || planet.name).split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const planetColor = SystemGenerator.getPlanetColor(planet.type, planetSeed);
   const planetGlow = getPlanetGlow(planet.type, planet.id || planet.name);
   const planetRadius = planet.radius * 0.6; // Visual scaling
 
@@ -793,8 +751,8 @@ export function SystemView({
       >
         <sphereGeometry args={[Math.log((star.radius*1.1) + 1) * 6 + 4, 32, 32]} />
         <meshStandardMaterial 
-          color={getStarColor(star.spectralClass)}
-          emissive={getStarColor(star.spectralClass)}
+          color={StarGenerator.getStarColor(star.spectralClass)}
+          emissive={StarGenerator.getStarColor(star.spectralClass)}
           emissiveIntensity={2.0}
           toneMapped={false}
           // Star surface texture - fully opaque
@@ -810,7 +768,7 @@ export function SystemView({
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[Math.log(star.radius + 1) * 8 + 6, 16, 16]} />
         <meshBasicMaterial 
-          color={getStarColor(star.spectralClass)}
+          color={StarGenerator.getStarColor(star.spectralClass)}
           transparent
           opacity={0.1}
         />
