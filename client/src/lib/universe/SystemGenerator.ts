@@ -215,10 +215,13 @@ export class SystemGenerator {
       const baseTemp = baseTemperatures[type] ?? 288; // fallback ~Earth
       const distanceAU = Math.max(orbitRadius / 64, 0.1); // Convert to AU (orbitRadius / 64), avoid div0
       const tempFactor = starTemp / SUN_TEMP;
-      const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
-
-      // Base temperature with inverse square law
-      let finalTemp = baseTemp * heatFactor;
+      
+      // Use a more realistic temperature calculation
+      const stellarLuminosity = Math.pow(tempFactor, 4); // L ∝ T^4 (Stefan-Boltzmann)
+      const radiativeTemp = 278 * Math.pow(stellarLuminosity / (distanceAU * distanceAU), 0.25); // More realistic formula
+      
+      // Blend base temperature with radiative heating
+      let finalTemp = (baseTemp * 0.3) + (radiativeTemp * 0.7);
 
       // Modify finalTemp based on planet type to simulate atmospheres etc
       if (type === 'nuclear_world') {
@@ -241,11 +244,11 @@ export class SystemGenerator {
         finalTemp *= 0.8
       }
 
-      // Clamp extremes for sanity
-      finalTemp = Math.min(Math.max(finalTemp, 30), 1500);
+      // Clamp extremes for sanity with adjusted range
+      finalTemp = Math.min(Math.max(finalTemp, 50), 1200);
 
       console.log(
-        `Type: ${type}, OrbitAU: ${distanceAU}, BaseTemp: ${baseTemp}, FinalTemp: ${finalTemp.toFixed(2)} K`
+        `GeneratePlanet: ${type}, OrbitAU: ${distanceAU.toFixed(2)}, BaseTemp: ${baseTemp}, RadiativeTemp: ${radiativeTemp.toFixed(1)}, FinalTemp: ${finalTemp.toFixed(2)} K`
       );
 
       return finalTemp;
@@ -459,9 +462,17 @@ export class SystemGenerator {
         const distanceAU = Math.max(orbitRadius / 64, 0.1); // Convert to AU
         const SUN_TEMP = 5778;
         const tempFactor = starTemp / SUN_TEMP;
-        const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
         
-        let finalTemp = baseTemp * heatFactor;
+        // Use a more realistic temperature calculation
+        // Start with stellar luminosity effect, then apply distance
+        const stellarLuminosity = Math.pow(tempFactor, 4); // L ∝ T^4 (Stefan-Boltzmann)
+        const distanceEffect = 1 / Math.sqrt(distanceAU); // Less extreme than inverse square
+        const radiativeTemp = 278 * Math.pow(stellarLuminosity / (distanceAU * distanceAU), 0.25); // More realistic formula
+        
+        // Blend base temperature with radiative heating
+        let finalTemp = (baseTemp * 0.3) + (radiativeTemp * 0.7);
+        
+        console.log(`DEBUG: ${type} at ${distanceAU.toFixed(2)}AU - BaseTemp:${baseTemp}, RadiativeTemp:${radiativeTemp.toFixed(1)}, PreEffect:${finalTemp.toFixed(1)}`);
         
         // Apply atmospheric effects
         if (type === 'nuclear_world') {
@@ -478,7 +489,7 @@ export class SystemGenerator {
           finalTemp *= 0.8;
         }
         
-        return Math.min(Math.max(finalTemp, 30), 1500);
+        return Math.min(Math.max(finalTemp, 50), 1200); // Adjusted temperature range
       };
       
       const temperature = computeTemperature(star.temperature, orbitRadius, type);
