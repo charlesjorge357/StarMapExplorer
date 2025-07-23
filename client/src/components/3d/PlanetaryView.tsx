@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
+import { ArmyMarker } from './ArmyMarker';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
@@ -443,6 +444,23 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
           />
         ))}
       </group>
+
+      {/* Render armies for planet's faction */}
+      {planet.faction && planet.faction.armies && (
+        <group>
+          {planet.faction.armies.map((army: any) => (
+            <ArmyMarker
+              key={army.id}
+              army={army}
+              planetRadius={planetRadius}
+              onArmyClick={(army) => {
+                console.log('Army clicked:', army);
+                // Could add army inspection panel here
+              }}
+            />
+          ))}
+        </group>
+      )}
 
       {/* Planet Rings - render around this planet */}
       {planet.rings && planet.rings.length > 0 && (

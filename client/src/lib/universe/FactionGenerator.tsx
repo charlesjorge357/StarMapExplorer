@@ -8,7 +8,7 @@ export const ContestedFaction: Faction = {
   leader: "Unknown",
   homeworld: "",
   population: 0,
-  technology: 0,
+  technology: "0",
   influence: 0,
   allies: [],
   enemies: [],
@@ -128,7 +128,7 @@ export class FactionGenerator {
       leader: this.generateLeaderName(),
       homeworld: planet.name,
       population: 0, // You can update population later
-      technology: 1, // Default tech level or update later
+      technology: "1", // Default tech level or update later
       influence: Math.floor(Math.random() * 100),
       allies: [],
       enemies: [],

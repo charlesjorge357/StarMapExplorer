@@ -235,7 +235,7 @@ export class SystemGenerator {
         finalTemp *= 0.7;
       } else if (type === 'dusty_world' || type === 'barren_world') {
         // Less atmosphere, tends to lose heat faster
-        finalTemp *= 0.85;
+        finalTemp *= 0.9;
       }
       else if (type === 'gas_giant' || type === 'snowy_world'){
         finalTemp *= 0.5
@@ -631,47 +631,34 @@ export class SystemGenerator {
 
     
 
-    // 3) **Only now** generate surfaceFeatures (passing in factions):
+    // 3) Generate surfaceFeatures and assign to faction holdings efficiently
     for (const planet of filteredPlanets) {
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
       
-      const contestedZone = factions.find(f => f.name === 'Contested Zone');
-      if (contestedZone) {
-        contestedZone.holdings.push(...planet.surfaceFeatures);
-        for (const feature of planet.surfaceFeatures) {
-          if (!feature.affiliation) continue; // skip if no affiliation
-
-          if (!contestedZone.holdings.find(h => h.id === feature.id)) {
-              contestedZone.holdings.push(feature);
+      // Assign features to their respective faction holdings (no double counting)
+      for (const feature of planet.surfaceFeatures) {
+        if (!feature.affiliation) continue;
+        
+        const owningFaction = factions.find(f => f.name === feature.affiliation);
+        if (owningFaction) {
+          // Ensure holdings array exists
+          if (!Array.isArray(owningFaction.holdings)) {
+            owningFaction.holdings = [];
           }
-          
-          const nonContestedFactions = factions.filter(f => f.name !== 'Contested Zone');
-          const owningFaction = nonContestedFactions.find(f => f.name === feature.affiliation);
-          if (owningFaction) {
-            // Ensure holdings array exists
-            if (!Array.isArray(owningFaction.holdings)) {
-              owningFaction.holdings = [];
-            }
-            if (!owningFaction.holdings.find(h => h.id === feature.id)) {
-                owningFaction.holdings.push(feature);
-            }
-            //owningFaction.holdings.push(feature);
-            
-            // Push this feature to the faction's holdings if not already present
+          // Only add if not already present
+          if (!owningFaction.holdings.find(h => h.id === feature.id)) {
+            owningFaction.holdings.push(feature);
           }
         }
       }
-      const matchedFaction = factions.find(f => f.homeworld === planet.name);
-      if (matchedFaction) {
-        // After features are assigned, immediately update holdings
-        matchedFaction.holdings.push(...planet.surfaceFeatures);
+    }
 
-        // Generate military immediately after holdings are updated
-        MilitaryGenerator.generateMilitaryForFaction(matchedFaction);
-        console.log(`Generated military for faction: ${matchedFaction.name}`, matchedFaction.armies);
-
+    // 4) Generate military for ALL factions with holdings (not just homeworld factions)
+    for (const faction of factions) {
+      if (faction.name !== 'Contested Zone' && faction.holdings.length > 0) {
+        MilitaryGenerator.generateMilitaryForFaction(faction);
+        console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name}`);
       }
-      
     }
 
     for (const faction of factions){
