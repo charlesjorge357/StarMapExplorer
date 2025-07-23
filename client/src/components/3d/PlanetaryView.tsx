@@ -440,22 +440,37 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     <group ref={groupRef}>
       {/* Planet sphere with high detail */}
       <mesh ref={planetMeshRef}
-        onPointerDown={() => setIsHeld(true)}
-        onPointerUp={() => setIsHeld(false)}
+        onPointerDown={(event) => {
+          // Only handle drag if no army is selected
+          if (!armyMovement.selectedArmyId) {
+            setIsHeld(true);
+          } else {
+            event.stopPropagation(); // Prevent drag when army is selected
+          }
+        }}
+        onPointerUp={(event) => {
+          if (!armyMovement.selectedArmyId) {
+            setIsHeld(false);
+          }
+        }}
         onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
         onClick={(event) => {
           // Handle army movement when planet is clicked and army is selected
           if (armyMovement.selectedArmyId) {
+            event.stopPropagation(); // Prevent other click handlers
+            
             const intersectionPoint = event.point;
-            // Convert 3D intersection point to lat/lon coordinates
+            // Convert 3D intersection point to lat/lon coordinates (matching SurfaceFeatureMarker conversion)
             const x = intersectionPoint.x;
             const y = intersectionPoint.y; 
             const z = intersectionPoint.z;
             
-            // Convert to spherical coordinates
+            // Convert to spherical coordinates (matching SurfaceFeatureMarker)
             const radius = Math.sqrt(x*x + y*y + z*z);
             const lat = Math.asin(y / radius) * (180 / Math.PI);
-            const lon = Math.atan2(z, -x) * (180 / Math.PI) - 180;
+            const lon = Math.atan2(z, x) * (180 / Math.PI); // Fixed: removed -x and -180 offset
+            
+            console.log('Army movement target:', { lat, lon, point: intersectionPoint });
             
             // Start moving the selected army to this position
             setArmyMovement(prev => ({
