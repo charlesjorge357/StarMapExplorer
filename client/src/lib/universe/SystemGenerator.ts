@@ -213,7 +213,7 @@ export class SystemGenerator {
       type: string
     ): number {
       const baseTemp = baseTemperatures[type] ?? 288; // fallback ~Earth
-      const distanceAU = Math.max(orbitRadius * 100, 0.1); // scale orbit, avoid div0
+      const distanceAU = Math.max(orbitRadius / 64, 0.1); // Convert to AU (orbitRadius / 64), avoid div0
       const tempFactor = starTemp / SUN_TEMP;
       const heatFactor = 1 * tempFactor / (distanceAU * distanceAU);
 
@@ -510,7 +510,7 @@ export class SystemGenerator {
         rings: this.generatePlanetRings(type, radius, `${star.name} ${String.fromCharCode(945 + i)}`, i * 2000 + this.hashString(star.name)),
         textureIndex: this.generateTextureIndex(type, i, star.name),
         surfaceFeatures: [],
-        faction : null
+        faction : undefined
       };
 
 
