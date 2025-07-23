@@ -121,6 +121,8 @@ export class FactionGenerator {
     }
     
     const name = this.generateFactionName(planet);
+    const technology = this.generateTechnologyLevel(planet);
+    
     return {
       id: `faction-${planet.id}`,
       name,
@@ -128,7 +130,7 @@ export class FactionGenerator {
       leader: this.generateLeaderName(),
       homeworld: planet.name,
       population: 0, // You can update population later
-      technology: "1", // Default tech level or update later
+      technology, // Planet-based technology level
       influence: Math.floor(Math.random() * 100),
       allies: [],
       enemies: [],
@@ -146,9 +148,44 @@ export class FactionGenerator {
     faction.name = this.generateFactionName(planet);
     faction.description = `A faction based on the ${planet.type.replace("_", " ")} of ${planet.name}.`;
     faction.leader = this.generateLeaderName();
+    faction.technology = this.generateTechnologyLevel(planet); // Update tech based on homeworld
     faction.goals = this.generateGoals();
     faction.resources = this.generateResources(planet);
     return faction;
+  }
+
+  private static generateTechnologyLevel(planet: Planet): string {
+    // Technology levels based on planet type and habitability
+    const technologyMap: { [key: string]: [number, number] } = {
+      // Advanced worlds - high tech
+      'jungle_world': [8, 10],
+      'grassland_world': [7, 9], 
+      'ocean_world': [6, 8],
+      
+      // Moderate worlds - medium tech
+      'marshy_world': [5, 7],
+      'tundra_world': [4, 6],
+      'snowy_world': [4, 6],
+      'arid_world': [3, 6],
+      'dusty_world': [3, 5],
+      
+      // Harsh worlds - lower tech
+      'sandy_world': [2, 4],
+      'martian_world': [3, 5],
+      'barren_world': [1, 3],
+      
+      // Extreme worlds - specialized tech
+      'nuclear_world': [6, 9], // Advanced but dangerous tech
+      'methane_world': [4, 7], // Specialized atmospheric tech
+      'gas_giant': [2, 5], // Station-based tech
+      'frost_giant': [2, 4], // Cold-adapted tech
+    };
+
+    const range = technologyMap[planet.type] || [3, 6]; // Default medium tech
+    const [min, max] = range;
+    const techLevel = Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    return techLevel.toString();
   }
 
   private static generateFactionName(planet: Planet): string {

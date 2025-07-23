@@ -653,11 +653,27 @@ export class SystemGenerator {
       }
     }
 
-    // 4) Generate military for ALL factions with holdings (not just homeworld factions)
+    // 4) Assign faction technology to all holdings
     for (const faction of factions) {
       if (faction.name !== 'Contested Zone' && faction.holdings.length > 0) {
+        // Assign faction's technology level to all its holdings
+        for (const holding of faction.holdings) {
+          if (holding.technology !== undefined) {
+            // Map numeric technology level to technology enum
+            const techLevel = parseInt(faction.technology);
+            if (techLevel <= 3) {
+              holding.technology = "primitive";
+            } else if (techLevel <= 7) {
+              holding.technology = "industrial";
+            } else {
+              holding.technology = "advanced";
+            }
+          }
+        }
+        
+        // Generate military for factions with holdings
         MilitaryGenerator.generateMilitaryForFaction(faction);
-        console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name}`);
+        console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name} (Tech Level: ${faction.technology})`);
       }
     }
 
