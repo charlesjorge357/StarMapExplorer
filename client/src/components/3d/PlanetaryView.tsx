@@ -381,8 +381,8 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       }
     }
 
-    // Planet and features rotation (only if not being held by mouse)
-    if (!isHeld && !isFeatureTracking) {
+    // Planet and features rotation (only if not being held by mouse and no army selected)
+    if (!isHeld && !isFeatureTracking && !armyMovement.selectedArmyId) {
       // Rotate planet mesh
       if (planetMeshRef.current) {
         planetMeshRef.current.rotation.y += 0.001;
@@ -391,7 +391,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       if (featuresGroupRef.current) {
         featuresGroupRef.current.rotation.y += 0.001;
       }
-    } else if (!isHeld && isFeatureTracking) {
+    } else if (!isHeld && isFeatureTracking && !armyMovement.selectedArmyId) {
       // Still rotate planet even when tracking (camera moves with it)
       if (planetMeshRef.current) {
         planetMeshRef.current.rotation.y += 0.001;
@@ -464,7 +464,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
                 targetPosition: [lat, lon],
                 progress: 0
               }),
-              selectedArmyId: null // Deselect after giving move order
+              selectedArmyId: null // Deselect after giving move order (planet rotation will resume)
             }));
           }
         }}
