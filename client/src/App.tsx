@@ -534,6 +534,7 @@ function App() {
         setCurrentSystem(system);
         setLastVisitedStar(selectedStar); // Remember the star we're visiting
         setSelectedStar(null);
+        setSelectedSpaceFeature(null); // Clear space feature when entering system view
 
         // Ensure star info is available immediately in system view and set default camera
         setTimeout(() => {
@@ -568,10 +569,16 @@ function App() {
             console.log(`Unselected nebula: ${selectedNebula.name}`);
             setSelectedNebula(null);
           }
-        } else if (currentView === 'system' && selectedPlanet) {
-          // Only unselect planets in system view, not the central star
-          console.log(`Unselected planet: ${selectedPlanet.name}`);
-          setSelectedPlanet(null);
+        } else if (currentView === 'system' && (selectedPlanet || selectedSpaceFeature)) {
+          // Only unselect planets and space features in system view, not the central star
+          if (selectedPlanet) {
+            console.log(`Unselected planet: ${selectedPlanet.name}`);
+            setSelectedPlanet(null);
+          }
+          if (selectedSpaceFeature) {
+            console.log(`Unselected space feature: ${selectedSpaceFeature.name}`);
+            setSelectedSpaceFeature(null);
+          }
         } else if (currentView === 'planetary' && selectedFeature) {
           // Unselect surface features in planetary view
           console.log(`Unselected feature: ${selectedFeature.name}`);
@@ -584,6 +591,7 @@ function App() {
           console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
           setCurrentView('system');
           setSelectedFeature(null);
+          setSelectedSpaceFeature(null); // Clear space feature when returning to system view
 
           // Re-enable galactic and system view keyboard controls
           (window as any).disableGalacticSystemControls = false;
@@ -611,6 +619,7 @@ function App() {
           setCurrentView('galactic');
           setCurrentSystem(null);
           setSelectedPlanet(null);
+          setSelectedSpaceFeature(null);
           (window as any).systemStarSelected = false;
 
           // Position camera with offset from last visited star and select it
@@ -654,6 +663,7 @@ function App() {
             
             // Switch to planetary view - let PlanetaryView handle camera positioning
             setCurrentView('planetary');
+            setSelectedSpaceFeature(null); // Clear space feature when entering planetary view
           } else {
             console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
           }
