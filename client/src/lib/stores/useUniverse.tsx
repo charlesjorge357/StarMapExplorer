@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { ScopeType, ModeType, Star, StarSystem, Planet, UniverseData } from "../../shared/schema";
+import { ScopeType, ModeType, Star, StarSystem, Planet, UniverseData } from "../../../../shared/schema";
 import { StarGenerator } from "../universe/StarGenerator";
 import { SystemGenerator } from "../universe/SystemGenerator";
 import { SaveSystem } from "../universe/SaveSystem";
@@ -75,10 +75,10 @@ export const useUniverse = create<UniverseState>()(
       let newBreadcrumb = [{ scope: 'galactic' as ScopeType, name: 'Galaxy' }];
 
       if (scope === 'system' && selectedStar) {
-        newBreadcrumb.push({ scope: 'system', name: selectedStar.name, id: selectedStar.id });
+        newBreadcrumb.push({ scope: 'system', name: selectedStar.name });
       } else if (scope === 'planetary' && selectedStar && selectedPlanet) {
-        newBreadcrumb.push({ scope: 'system', name: selectedStar.name, id: selectedStar.id });
-        newBreadcrumb.push({ scope: 'planetary', name: selectedPlanet.name, id: selectedPlanet.id });
+        newBreadcrumb.push({ scope: 'system', name: selectedStar.name });
+        newBreadcrumb.push({ scope: 'planetary', name: selectedPlanet.name });
       }
 
       set({ breadcrumb: newBreadcrumb });
@@ -90,9 +90,9 @@ export const useUniverse = create<UniverseState>()(
       // Generate or get system data
       const { universeData } = get();
       if (universeData) {
-        let system = universeData.systems.find(s => s.starId === star.id);
+        let system = universeData.systems.find((s: any) => s.starId === star.id);
         if (!system) {
-          system = SystemGenerator.generateSystem(star);
+          system = SystemGenerator.generateSystem(star, Math.floor(Math.random() * 1000000));
           universeData.systems.push(system);
         }
         set({ selectedSystem: system, universeData: { ...universeData } });

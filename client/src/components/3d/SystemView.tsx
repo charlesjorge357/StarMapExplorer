@@ -360,7 +360,14 @@ export function SystemView({
   // Use either prop state or local state for space features
   const selectedSpaceFeature = propSelectedSpaceFeature ?? useState<SpaceFeature | null>(null)[0];
   const setSelectedSpaceFeature = propOnSpaceFeatureClick ?? useState<SpaceFeature | null>(null)[1];
-  const universeStore = useUniverse();
+  // Add try-catch to handle useUniverse hook issues
+  let universeStore;
+  try {
+    universeStore = useUniverse();
+  } catch (error) {
+    console.warn('useUniverse hook error:', error);
+    universeStore = null;
+  }
   const selectStar = universeStore?.selectStar || (() => {});
 
 
