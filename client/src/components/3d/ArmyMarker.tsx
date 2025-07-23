@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 import { Armies, Divisions } from '../../../shared/schema';
@@ -6,6 +6,8 @@ import { Armies, Divisions } from '../../../shared/schema';
 interface ArmyMarkerProps {
   army: Armies;
   planetRadius: number;
+  isSelected?: boolean;
+  movementData?: { targetPosition: [number, number]; progress: number };
   onArmyClick?: (army: Armies) => void;
 }
 
@@ -65,11 +67,27 @@ export function DivisionMarker({ division, planetRadius, armyPosition }: Divisio
   );
 }
 
-export function ArmyMarker({ army, planetRadius, onArmyClick }: ArmyMarkerProps) {
+export function ArmyMarker({ army, planetRadius, isSelected, movementData, onArmyClick }: ArmyMarkerProps) {
   const armyRef = useRef<Mesh>(null);
   
+  // Handle movement animation
+  const currentPosition = useMemo(() => {
+    if (movementData && movementData.progress < 1) {
+      // Interpolate between current and target position
+      const [currentLat, currentLon] = army.position;
+      const [targetLat, targetLon] = movementData.targetPosition;
+      const progress = movementData.progress;
+      
+      return [
+        currentLat + (targetLat - currentLat) * progress,
+        currentLon + (targetLon - currentLon) * progress
+      ];
+    }
+    return army.position;
+  }, [army.position, movementData]);
+
   // Convert 2D position to 3D sphere position using spherical coordinates
-  const [lat, lon] = army.position;
+  const [lat, lon] = currentPosition;
   
   // Convert to spherical coordinates (exactly matching SurfaceFeatureMarker)
   const phi = (90 - lat) * (Math.PI / 180);
@@ -108,8 +126,8 @@ export function ArmyMarker({ army, planetRadius, onArmyClick }: ArmyMarkerProps)
       >
         <cylinderGeometry args={[1, 1, 0.8, 8]} />
         <meshLambertMaterial 
-          color={army.faction?.name === 'Contested Zone' ? '#666666' : '#2222cc'} 
-          emissive={army.faction?.name === 'Contested Zone' ? '#333333' : '#000066'} 
+          color={isSelected ? '#ff6600' : (army.faction?.name === 'Contested Zone' ? '#666666' : '#2222cc')} 
+          emissive={isSelected ? '#ff3300' : (army.faction?.name === 'Contested Zone' ? '#333333' : '#000066')} 
         />
       </mesh>
 

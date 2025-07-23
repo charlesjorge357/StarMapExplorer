@@ -16,6 +16,11 @@ interface PlanetaryViewProps {
   system?: any; // Optional system data for asteroid belts
 }
 
+interface ArmyMovementState {
+  selectedArmyId: string | null;
+  movingArmies: Map<string, { targetPosition: [number, number]; progress: number }>;
+}
+
 // Component for planet rings in planetary view
 function PlanetaryRings({ rings, planetRadius }: { rings: any[]; planetRadius: number }) {
   return (
@@ -61,6 +66,10 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
   }
 
   const [isHeld, setIsHeld] = useState(false);
+  const [armyMovement, setArmyMovement] = useState<ArmyMovementState>({
+    selectedArmyId: null,
+    movingArmies: new Map()
+  });
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -391,6 +400,33 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         featuresGroupRef.current.rotation.y += 0.001;
       }
     }
+
+    // Update army movement progress
+    setArmyMovement(prev => {
+      const newMovingArmies = new Map(prev.movingArmies);
+      let hasChanges = false;
+      
+      for (const [armyId, movement] of newMovingArmies.entries()) {
+        if (movement.progress < 1) {
+          movement.progress = Math.min(1, movement.progress + delta * 0.5); // Movement speed
+          hasChanges = true;
+          
+          // Update army position when movement completes
+          if (movement.progress >= 1) {
+            // Find the army in planet.faction.armies and update its position
+            if (planet.faction && planet.faction.armies) {
+              const army = planet.faction.armies.find((a: any) => a.id === armyId);
+              if (army) {
+                army.position = movement.targetPosition;
+              }
+            }
+            newMovingArmies.delete(armyId);
+          }
+        }
+      }
+      
+      return hasChanges ? { ...prev, movingArmies: newMovingArmies } : prev;
+    });
   });
 
   if (!planet) {
@@ -407,6 +443,31 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         onPointerDown={() => setIsHeld(true)}
         onPointerUp={() => setIsHeld(false)}
         onPointerLeave={() => setIsHeld(false)} // in case the user drags out of bounds
+        onClick={(event) => {
+          // Handle army movement when planet is clicked and army is selected
+          if (armyMovement.selectedArmyId) {
+            const intersectionPoint = event.point;
+            // Convert 3D intersection point to lat/lon coordinates
+            const x = intersectionPoint.x;
+            const y = intersectionPoint.y; 
+            const z = intersectionPoint.z;
+            
+            // Convert to spherical coordinates
+            const radius = Math.sqrt(x*x + y*y + z*z);
+            const lat = Math.asin(y / radius) * (180 / Math.PI);
+            const lon = Math.atan2(z, -x) * (180 / Math.PI) - 180;
+            
+            // Start moving the selected army to this position
+            setArmyMovement(prev => ({
+              ...prev,
+              movingArmies: new Map(prev.movingArmies).set(prev.selectedArmyId!, {
+                targetPosition: [lat, lon],
+                progress: 0
+              }),
+              selectedArmyId: null // Deselect after giving move order
+            }));
+          }
+        }}
         >
         <sphereGeometry args={[planetRadius, 128, 64]} />
         <meshStandardMaterial
@@ -433,7 +494,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         </mesh>
       )}
 
-      {/* Surface Features - grouped to rotate with planet */}
+      {/* Surface Features and Armies - grouped to rotate with planet */}
       <group ref={featuresGroupRef}>
         {planet.surfaceFeatures && planet.surfaceFeatures.map((feature: any) => (
           <SurfaceFeatureMarker
@@ -443,24 +504,26 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             onFeatureClick={onFeatureClick}
           />
         ))}
+        
+        {/* Render armies for planet's faction - they rotate with the planet */}
+        {planet.faction && planet.faction.armies && planet.faction.armies.map((army: any) => (
+          <ArmyMarker
+            key={army.id}
+            army={army}
+            planetRadius={planetRadius}
+            isSelected={armyMovement.selectedArmyId === army.id}
+            movementData={armyMovement.movingArmies.get(army.id)}
+            onArmyClick={(army) => {
+              console.log('Army clicked:', army);
+              // Select/deselect army for movement
+              setArmyMovement(prev => ({
+                ...prev,
+                selectedArmyId: prev.selectedArmyId === army.id ? null : army.id
+              }));
+            }}
+          />
+        ))}
       </group>
-
-      {/* Render armies for planet's faction */}
-      {planet.faction && planet.faction.armies && (
-        <group>
-          {planet.faction.armies.map((army: any) => (
-            <ArmyMarker
-              key={army.id}
-              army={army}
-              planetRadius={planetRadius}
-              onArmyClick={(army) => {
-                console.log('Army clicked:', army);
-                // Could add army inspection panel here
-              }}
-            />
-          ))}
-        </group>
-      )}
 
       {/* Planet Rings - render around this planet */}
       {planet.rings && planet.rings.length > 0 && (
