@@ -903,73 +903,61 @@ export function SystemView({
         />
       ))}
       
-      {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
+      {/* Orbital selection disk - wireframe circle positioned below celestial objects */}
       {selectedFleet && (
         <mesh 
-          position={[0, 0, 1]}
+          position={[0, -5, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
-            console.log('Click event details:', {
-              point: event.point,
-              intersections: event.intersections?.length,
-              nativeEvent: !!event.nativeEvent
-            });
             event.stopPropagation();
             
-            // Get the click point from the intersection
-            const clickPoint = event.point || event.intersections?.[0]?.point;
-            if (clickPoint) {
-              const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z];
+            if (event.point) {
+              console.log('Click point:', event.point);
               
-              console.log('🎯 FLEET TELEPORTING:', {
-                fleetId: selectedFleet.id,
-                from: selectedFleet.position,
-                to: targetPos,
-                clickPoint: clickPoint
-              });
+              // Calculate orbital radius and angle from click point
+              const clickX = event.point.x;
+              const clickZ = event.point.z;
+              const orbitRadius = Math.sqrt(clickX * clickX + clickZ * clickZ);
+              const angle = Math.atan2(clickZ, clickX);
               
-              // Direct mutation approach - update the fleet object in place
-              console.log(`🎯 BEFORE UPDATE - Fleet ${selectedFleet.id}:`, selectedFleet.position);
+              console.log(`🎯 CALCULATED: radius=${orbitRadius.toFixed(2)}, angle=${angle.toFixed(2)}`);
               
-              // Find and update the fleet in the system data
-              const allFleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-              const targetFleet = allFleets.find((f: any) => f.id === selectedFleet.id);
+              // Update fleet position directly to click coordinates
+              const updatedFleet = {
+                ...selectedFleet,
+                orbitRadius,
+                angle,
+                position: [clickX, 0, clickZ]
+              };
               
-              if (targetFleet) {
-                // Directly mutate the fleet position
-                targetFleet.position[0] = targetPos[0];
-                targetFleet.position[1] = targetPos[1];
-                targetFleet.position[2] = targetPos[2];
-                
-                // Also update the selected fleet reference
-                selectedFleet.position[0] = targetPos[0];
-                selectedFleet.position[1] = targetPos[1]; 
-                selectedFleet.position[2] = targetPos[2];
-                
-                console.log(`🚀 AFTER UPDATE - Fleet ${selectedFleet.id}:`, targetFleet.position);
-                console.log(`✅ FLEET TELEPORTED SUCCESSFULLY`);
-                
-                // Force re-render by triggering a state update
-                setSelectedFleet({ ...selectedFleet });
-              } else {
-                console.error('❌ Fleet not found in system data!');
+              console.log(`📍 NEW FLEET POSITION: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+              
+              // Update in system data
+              const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
+              const fleetIndex = fleets.findIndex((f: any) => f.id === selectedFleet.id);
+              if (fleetIndex >= 0) {
+                fleets[fleetIndex] = updatedFleet;
+                console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA`);
               }
+              
+              // Update selected fleet state
+              setSelectedFleet(updatedFleet);
+              console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
             } else {
               console.error('No click point found in event');
             }
           }}
           visible={true}
           userData={{ isOrbitalDisk: true }}
-          renderOrder={1000} // Render in front to catch clicks first
         >
-          <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
+          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
           <meshBasicMaterial 
             transparent 
-            opacity={0.3}
+            opacity={0.05}
             color="#00ffff"
-            wireframe={false}
-            side={2}
+            wireframe={true}
+            depthTest={false}
           />
         </mesh>
       )}
