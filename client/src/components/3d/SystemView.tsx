@@ -976,7 +976,7 @@ export function SystemView({
           userData={{ isOrbitalDisk: true }}
           renderOrder={1000} // Render in front to catch clicks first
         >
-          <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
+          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
           <meshBasicMaterial 
             transparent 
             opacity={0.01}
