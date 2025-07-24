@@ -118,25 +118,21 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
 
   const [x, y, z] = currentPosition;
   
-  // Calculate orbital motion - fleet orbits the star at its current radius
+  // Calculate orbital motion using exact planet formula
   const orbitRadius = Math.sqrt(x * x + z * z);
   const orbitalSpeed = useMemo(() => {
-    // Same orbital mechanics as planets
-    const G = 6.67430e-11;
-    const M = starMass * 1.989e30;
-    const r = orbitRadius * 1.496e11;
-    const v = Math.sqrt(G * M / r);
-    return (v / r) * 1000; // Scale for game time
-  }, [orbitRadius, starMass]);
+    // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
+    return Math.sqrt(1 / orbitRadius) * 0.15;
+  }, [orbitRadius]);
 
   useFrame((state, delta) => {
     if (fleetRef.current && !movementData) {
-      // Orbital motion around star
-      const currentAngle = Math.atan2(fleetRef.current.position.z, fleetRef.current.position.x);
-      const newAngle = currentAngle + orbitalSpeed * delta;
+      // Use same time calculation as planets for consistency
+      const time = Date.now() * 0.0001;
+      const angle = time * orbitalSpeed;
       
-      fleetRef.current.position.x = orbitRadius * Math.cos(newAngle);
-      fleetRef.current.position.z = orbitRadius * Math.sin(newAngle);
+      fleetRef.current.position.x = orbitRadius * Math.cos(angle);
+      fleetRef.current.position.z = orbitRadius * Math.sin(angle);
       
       // Update fleet position data for ships
       fleet.position = [fleetRef.current.position.x, 0, fleetRef.current.position.z];

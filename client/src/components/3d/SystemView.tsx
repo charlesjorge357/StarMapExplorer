@@ -15,6 +15,7 @@ import { Console } from 'console';
 import { CometTrail } from './CometTrail';
 import { SpaceFeatureMarker } from './SpaceFeatureMarker';
 import { FleetMarker } from './FleetMarker';
+import { FleetInfoPanel } from '../ui/FleetInfoPanel';
 import { SpaceFeature } from '../../../../shared/schema';
 
 function MoonMesh({ 
@@ -964,6 +965,14 @@ export function SystemView({
             starMass={star.mass || 1}
           />
         )) || []
+      )}
+      
+      {/* Fleet Info Panel */}
+      {selectedFleet && (
+        <FleetInfoPanel 
+          fleet={selectedFleet} 
+          onClose={() => setSelectedFleet(null)} 
+        />
       )}
     </group>
   );

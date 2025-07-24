@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 import { ArmyMarker } from './ArmyMarker';
+import { ArmyInfoPanel } from '../ui/ArmyInfoPanel';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
@@ -70,6 +71,9 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     selectedArmyId: null,
     movingArmies: new Map()
   });
+  
+  // Selected army for info panel
+  const [selectedArmy, setSelectedArmy] = useState<any>(null);
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -598,13 +602,18 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
               isSelected={armyMovement.selectedArmyId === army.id}
               movementData={armyMovement.movingArmies.get(army.id)}
               onArmyClick={(army) => {
-                console.log('Army clicked for movement:', army);
+                console.log('Army clicked for movement and info:', army);
                 console.log('Current army movement state:', armyMovement);
-                // Select/deselect army for movement
-                setArmyMovement(prev => ({
-                  ...prev,
-                  selectedArmyId: prev.selectedArmyId === army.id ? null : army.id
-                }));
+                
+                // If clicking same army, toggle selection off
+                if (armyMovement.selectedArmyId === army.id) {
+                  setArmyMovement(prev => ({ ...prev, selectedArmyId: null }));
+                  setSelectedArmy(null);
+                } else {
+                  // Select new army for movement and show info panel
+                  setArmyMovement(prev => ({ ...prev, selectedArmyId: army.id }));
+                  setSelectedArmy(army);
+                }
                 console.log('Army selection toggled, new selected army:', army.id);
               }}
             />
@@ -645,6 +654,17 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         intensity={0.15}
         castShadow
       />
+      
+      {/* Army Info Panel */}
+      {selectedArmy && (
+        <ArmyInfoPanel 
+          army={selectedArmy} 
+          onClose={() => {
+            setSelectedArmy(null);
+            setArmyMovement(prev => ({ ...prev, selectedArmyId: null }));
+          }} 
+        />
+      )}
 
     </group>
   );
