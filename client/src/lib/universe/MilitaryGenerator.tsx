@@ -36,8 +36,8 @@ export class MilitaryGenerator {
         [fx, fy] = feature.position as [number, number];
       }
       
-      // Position army near the feature, not directly on it
-      const armyDistance = 0.3 + Math.random() * 0.5; // 0.3-0.8 units away
+      // Position army well away from the feature to avoid overlap
+      const armyDistance = 1.0 + Math.random() * 1.5; // 1.0-2.5 units away (much further)
       const armyAngle = Math.random() * Math.PI * 2; // Random angle around feature
       const armyX = fx + Math.cos(armyAngle) * armyDistance;
       const armyY = fy + Math.sin(armyAngle) * armyDistance;

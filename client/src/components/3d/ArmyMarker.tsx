@@ -28,7 +28,7 @@ export function DivisionMarker({ division, planetRadius, armyPosition, divisionI
   // Create consistent circular formation around army using division index
   const totalDivisions = 8; // Maximum expected divisions for circular formation
   const angle = (divisionIndex / totalDivisions) * (Math.PI * 2); // Even spacing around army
-  const distance = 0.08 + (divisionIndex % 2) * 0.03; // Two rings around army
+  const distance = 0.15 + (divisionIndex % 2) * 0.08; // Two rings around army (much larger)
   
   // Calculate offset in lat/lon coordinates
   const offsetLat = armyLat + Math.cos(angle) * distance;
@@ -47,7 +47,7 @@ export function DivisionMarker({ division, planetRadius, armyPosition, divisionI
   // Convert to spherical coordinates (exactly matching SurfaceFeatureMarker)
   const phi = (90 - offsetLat) * (Math.PI / 180);
   const theta = (offsetLon + 180) * (Math.PI / 180);
-  const radius = planetRadius + 0.05; // Slightly above planet surface
+  const radius = planetRadius + 0.08; // Higher above planet surface for visibility
   
   const spherePos: [number, number, number] = [
     -radius * Math.sin(phi) * Math.cos(theta),
@@ -64,8 +64,8 @@ export function DivisionMarker({ division, planetRadius, armyPosition, divisionI
     }
   });
 
-  // Size based on division size (smaller units)
-  const scale = Math.max(0.02, Math.min(0.08, division.size / 500));
+  // Size based on division size (larger for visibility)
+  const scale = Math.max(0.04, Math.min(0.12, division.size / 300));
 
   return (
     <mesh
@@ -77,10 +77,10 @@ export function DivisionMarker({ division, planetRadius, armyPosition, divisionI
         console.log(`Division ${division.id}: ${division.size} units`);
       }}
     >
-      <boxGeometry args={[1, 0.3, 1]} />
+      <boxGeometry args={[1, 0.5, 1]} />
       <meshLambertMaterial 
-        color={division.faction?.name === 'Contested Zone' ? '#888888' : '#6666ff'} 
-        emissive={division.faction?.name === 'Contested Zone' ? '#222222' : '#222266'} 
+        color={division.faction?.name === 'Contested Zone' ? '#888888' : '#00ff88'} 
+        emissive={division.faction?.name === 'Contested Zone' ? '#222222' : '#004422'} 
       />
     </mesh>
   );

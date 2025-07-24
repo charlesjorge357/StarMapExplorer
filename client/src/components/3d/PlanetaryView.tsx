@@ -583,7 +583,12 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             factionName: planet.faction?.name,
             hasArmies: !!planet.faction?.armies,
             armyCount: planet.faction?.armies?.length || 0,
-            armies: planet.faction?.armies
+            armies: planet.faction?.armies?.map((army: any) => ({
+              id: army.id,
+              position: army.position,
+              size: army.size,
+              divisionCount: army.composition?.length || 0
+            }))
           });
           return planet.faction && planet.faction.armies && planet.faction.armies.map((army: any) => (
             <ArmyMarker
