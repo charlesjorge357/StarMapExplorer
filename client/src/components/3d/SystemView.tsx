@@ -803,19 +803,7 @@ export function SystemView({
       {/* Background plane for deselection clicks - positioned way behind everything */}
       <mesh 
         position={[0, 0, -10000]}
-        onClick={(event) => {
-          // Only handle background clicks if NOT clicking on orbital disk
-          const isOrbitalDiskClick = event.intersections?.some((intersection: any) => 
-            intersection.object.userData?.isOrbitalDisk
-          );
-          
-          if (!isOrbitalDiskClick) {
-            console.log('🔵 BACKGROUND CLICKED - deselecting');
-            handleBackgroundClick(event);
-          } else {
-            console.log('🎯 ORBITAL DISK DETECTED - ignoring background');
-          }
-        }}
+        onClick={handleBackgroundClick}
         visible={false}
       >
         <planeGeometry args={[50000, 50000]} />
@@ -915,97 +903,89 @@ export function SystemView({
         />
       ))}
       
-      {/* Fleet movement system - invisible click disk + visible wireframe */}
+      {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
       {selectedFleet && (
-        <group>
-          {/* Invisible full disk for reliable click detection */}
-          <mesh 
-            position={[0, 0, 10]}
-            rotation={[Math.PI / 2, 0, 0]}
-            onClick={(event) => {
-              console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
-              event.stopPropagation();
-              event.nativeEvent?.stopImmediatePropagation();
+        <mesh 
+          position={[0, 0, 1]}
+          rotation={[Math.PI / 2, 0, 0]}
+          onClick={(event) => {
+            console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
+            console.log('Click event details:', {
+              point: event.point,
+              intersections: event.intersections?.length,
+              nativeEvent: !!event.nativeEvent
+            });
+            event.stopPropagation();
+            
+            // Get the click point from the intersection
+            const clickPoint = event.point || event.intersections?.[0]?.point;
+            if (clickPoint) {
+              // Calculate distance from star center to maintain proper orbital radius
+              const distanceFromCenter = Math.sqrt(clickPoint.x * clickPoint.x + clickPoint.z * clickPoint.z);
+              const normalizedX = clickPoint.x / distanceFromCenter;
+              const normalizedZ = clickPoint.z / distanceFromCenter;
               
-              // Get the click point from the intersection
-              const clickPoint = event.point || event.intersections?.[0]?.point;
-              if (clickPoint) {
-                // Calculate distance from star center to maintain proper orbital radius
-                const distanceFromCenter = Math.sqrt(clickPoint.x * clickPoint.x + clickPoint.z * clickPoint.z);
-                const normalizedX = clickPoint.x / distanceFromCenter;
-                const normalizedZ = clickPoint.z / distanceFromCenter;
+              // Use a reasonable orbital radius (similar to planet orbits)
+              const orbitalRadius = Math.max(outermostOrbit * 0.8, 50);
+              
+              const targetPos: [number, number, number] = [
+                normalizedX * orbitalRadius,
+                0, // Keep at orbital plane
+                normalizedZ * orbitalRadius
+              ];
+              
+              console.log('🎯 FLEET TELEPORTING:', {
+                fleetId: selectedFleet.id,
+                from: selectedFleet.position,
+                to: targetPos,
+                clickPoint: clickPoint,
+                orbitalRadius: orbitalRadius
+              });
+              
+              // Direct mutation approach - update the fleet object in place
+              console.log(`🎯 BEFORE UPDATE - Fleet ${selectedFleet.id}:`, selectedFleet.position);
+              
+              // Find and update the fleet in the system data
+              const allFleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
+              const targetFleet = allFleets.find((f: any) => f.id === selectedFleet.id);
+              
+              if (targetFleet) {
+                // Directly mutate the fleet position
+                targetFleet.position[0] = targetPos[0];
+                targetFleet.position[1] = targetPos[1];
+                targetFleet.position[2] = targetPos[2];
                 
-                // Use a reasonable orbital radius (similar to planet orbits)
-                const orbitalRadius = Math.max(outermostOrbit * 0.8, 50);
+                // Also update the selected fleet reference
+                selectedFleet.position[0] = targetPos[0];
+                selectedFleet.position[1] = targetPos[1]; 
+                selectedFleet.position[2] = targetPos[2];
                 
-                const targetPos: [number, number, number] = [
-                  normalizedX * orbitalRadius,
-                  0, // Keep at orbital plane
-                  normalizedZ * orbitalRadius
-                ];
+                console.log(`🚀 AFTER UPDATE - Fleet ${selectedFleet.id}:`, targetFleet.position);
+                console.log(`✅ FLEET TELEPORTED SUCCESSFULLY`);
                 
-                console.log('🎯 FLEET TELEPORTING:', {
-                  fleetId: selectedFleet.id,
-                  from: selectedFleet.position,
-                  to: targetPos,
-                  orbitalRadius: orbitalRadius
-                });
-                
-                // Direct mutation approach - update the fleet object in place
-                const allFleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-                const targetFleet = allFleets.find((f: any) => f.id === selectedFleet.id);
-                
-                if (targetFleet) {
-                  // Directly mutate the fleet position
-                  targetFleet.position[0] = targetPos[0];
-                  targetFleet.position[1] = targetPos[1];
-                  targetFleet.position[2] = targetPos[2];
-                  
-                  // Also update the selected fleet reference
-                  selectedFleet.position[0] = targetPos[0];
-                  selectedFleet.position[1] = targetPos[1]; 
-                  selectedFleet.position[2] = targetPos[2];
-                  
-                  console.log(`🚀 FLEET MOVED TO:`, targetFleet.position);
-                  
-                  // Force re-render by triggering a state update
-                  setSelectedFleet({ ...selectedFleet });
-                } else {
-                  console.error('❌ Fleet not found in system data!');
-                }
+                // Force re-render by triggering a state update
+                setSelectedFleet({ ...selectedFleet });
+              } else {
+                console.error('❌ Fleet not found in system data!');
               }
-            }}
-            visible={false}
-            userData={{ isOrbitalDisk: true }}
-            renderOrder={2000}
-          >
-            <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial 
-              transparent 
-              opacity={0}
-              depthTest={false}
-              depthWrite={false}
-            />
-          </mesh>
-          
-          {/* Visible wireframe circle for visual feedback */}
-          <mesh 
-            position={[0, 0, 9]}
-            rotation={[Math.PI / 2, 0, 0]}
-            visible={true}
-            renderOrder={1999}
-          >
-            <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial 
-              transparent 
-              opacity={0.15}
-              color="#00ffff"
-              wireframe={true}
-              depthTest={false}
-              depthWrite={false}
-            />
-          </mesh>
-        </group>
+            } else {
+              console.error('No click point found in event');
+            }
+          }}
+          visible={true}
+          userData={{ isOrbitalDisk: true }}
+          renderOrder={1000} // Render in front to catch clicks first
+        >
+          <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
+          <meshBasicMaterial 
+            transparent 
+            opacity={0.01}
+            color="#00ffff"
+            wireframe={true}
+            depthTest={true}
+            depthWrite={false}
+          />
+        </mesh>
       )}
 
 
