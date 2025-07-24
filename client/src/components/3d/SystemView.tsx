@@ -906,30 +906,51 @@ export function SystemView({
       {/* Orbital selection disk - clickable plane positioned above everything */}
       {selectedFleet && (
         <group>
-          {/* Invisible clickable plane for fleet movement - positioned way above background */}
+          {/* Invisible clickable plane for fleet movement - positioned high to catch clicks first */}
           <mesh 
-            position={[0, 0, 5000]}
+            position={[0, 10, 0]}
             rotation={[Math.PI / 2, 0, 0]}
             onClick={(event) => {
               console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
               event.stopPropagation();
               
               if (event.point) {
+                console.log('Click point:', event.point);
+                
+                // Calculate orbital radius and angle from click point
                 const clickX = event.point.x;
                 const clickZ = event.point.z;
+                const orbitRadius = Math.sqrt(clickX * clickX + clickZ * clickZ);
+                const angle = Math.atan2(clickZ, clickX);
                 
-                console.log(`📍 MOVING FLEET TO: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+                console.log(`🎯 CALCULATED: radius=${orbitRadius.toFixed(2)}, angle=${angle.toFixed(2)}`);
                 
-                // Direct mutation of fleet position - simple and direct
+                // Update fleet position directly to click coordinates
+                const updatedFleet = {
+                  ...selectedFleet,
+                  orbitRadius,
+                  angle,
+                  position: [clickX, 0, clickZ]
+                };
+                
+                console.log(`📍 NEW FLEET POSITION: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+                
+                // Update in system data by direct mutation
                 const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
                 const targetFleet = fleets.find((f: any) => f.id === selectedFleet.id);
                 if (targetFleet) {
+                  // Direct mutation of fleet position
                   targetFleet.position = [clickX, 0, clickZ];
-                  console.log(`✅ FLEET ${selectedFleet.id} MOVED TO:`, targetFleet.position);
-                  
-                  // Update selected fleet reference
-                  setSelectedFleet({ ...targetFleet });
+                  targetFleet.orbitRadius = orbitRadius;
+                  targetFleet.angle = angle;
+                  console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA:`, targetFleet.position);
                 }
+                
+                // Update selected fleet state
+                setSelectedFleet(updatedFleet);
+                console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
+              } else {
+                console.error('No click point found in event');
               }
             }}
             visible={false}
