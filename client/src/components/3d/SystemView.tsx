@@ -839,9 +839,9 @@ export function SystemView({
         />
       </mesh>
 
-      {/* Orbital paths (static) */}
+      {/* Orbital paths (static) - positioned behind orbital disk */}
       {planets.map((planet) => (
-        <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh key={`orbit-${planet.id}`} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.1]}>
           <ringGeometry args={[planet.orbitRadius * 2 - 0.05, planet.orbitRadius * 2 + 0.05, 128]} />
           <meshBasicMaterial 
             color="#444444" 
@@ -866,11 +866,11 @@ export function SystemView({
 
       {/* Rings are now rendered directly within each PlanetMesh component for proper tracking */}
 
-      {/* Asteroid belts */}
+      {/* Asteroid belts - positioned behind orbital disk */}
       {asteroidBelts.map((belt) => (
         <group key={belt.id}>
           {/* Belt ring visualization */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.1]}>
             <ringGeometry 
               args={[
                 belt.innerRadius * 2, 
@@ -912,6 +912,11 @@ export function SystemView({
             rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
+            console.log('Click event details:', {
+              point: event.point,
+              intersections: event.intersections?.length,
+              nativeEvent: !!event.nativeEvent
+            });
             event.stopPropagation();
             
             // Get the click point from the intersection
@@ -951,14 +956,13 @@ export function SystemView({
           userData={{ isOrbitalDisk: true }}
           renderOrder={1000} // Render in front to catch clicks first
         >
-          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
+          <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
           <meshBasicMaterial 
             transparent 
-            opacity={0.2}
+            opacity={0.3}
             color="#00ffff"
-            wireframe={true}
-            depthTest={true}
-            depthWrite={false}
+            wireframe={false}
+            side={2}
           />
           </mesh>
         </>
