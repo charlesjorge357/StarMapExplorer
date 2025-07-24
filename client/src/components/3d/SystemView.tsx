@@ -800,16 +800,10 @@ export function SystemView({
         starPosition={system.star?.position || [0, 0, 0]}
       />
 
-      {/* Background plane for deselection clicks - positioned behind orbital disk */}
+      {/* Background plane for deselection clicks - positioned way behind everything */}
       <mesh 
-        position={[0, 0, -5000]}
-        onClick={(event) => {
-          // Only handle background clicks if NOT clicking on orbital disk
-          const hasOrbitalDisk = event.intersections?.some((i: any) => i.object.userData.isOrbitalDisk);
-          if (!hasOrbitalDisk) {
-            handleBackgroundClick(event);
-          }
-        }}
+        position={[0, 0, -10000]}
+        onClick={handleBackgroundClick}
         visible={false}
       >
         <planeGeometry args={[50000, 50000]} />
@@ -912,7 +906,7 @@ export function SystemView({
       {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
       {selectedFleet && (
         <mesh 
-          position={[0, 0, 0]}
+          position={[0, 0, 1]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
@@ -958,10 +952,11 @@ export function SystemView({
           <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
           <meshBasicMaterial 
             transparent 
-            opacity={0.15}
+            opacity={0.2}
             color="#00ffff"
             wireframe={true}
-            depthTest={false} // Ensure it's always on top
+            depthTest={true}
+            depthWrite={false}
           />
         </mesh>
       )}
