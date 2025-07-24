@@ -100,10 +100,23 @@ export function ArmyMarker({ army, planetRadius, isSelected, movementData, onArm
       // Use smooth interpolation
       const smoothProgress = progress * progress * (3.0 - 2.0 * progress); // Smooth step
       
-      return [
+      const interpolatedPos = [
         currentLat + (targetLat - currentLat) * smoothProgress,
         currentLon + (targetLon - currentLon) * smoothProgress
       ];
+      
+      // Debug log movement progress
+      if (Math.random() < 0.01) {
+        console.log(`Army ${army.id} interpolation:`, {
+          progress: progress.toFixed(2),
+          smoothProgress: smoothProgress.toFixed(2),
+          currentPos: [currentLat, currentLon],
+          targetPos: [targetLat, targetLon],
+          interpolatedPos
+        });
+      }
+      
+      return interpolatedPos;
     }
     return army.position;
   }, [army.position, movementData]);

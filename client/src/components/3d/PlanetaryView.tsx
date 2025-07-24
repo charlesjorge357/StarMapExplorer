@@ -421,8 +421,10 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       const armyEntries = Array.from(newMovingArmies.entries());
       for (const [armyId, movement] of armyEntries) {
         if (movement.progress < 1) {
-          movement.progress = Math.min(1, movement.progress + delta * 1.0); // Faster movement speed
+          movement.progress = Math.min(1, movement.progress + delta * 0.8); // Moderate movement speed for visible animation
           hasChanges = true;
+          
+          console.log(`Army ${armyId} movement progress: ${movement.progress.toFixed(2)}`);
           
           // Update army position when movement completes
           if (movement.progress >= 1) {
@@ -516,7 +518,16 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             });
             console.log('Selected army before movement:', armyMovement.selectedArmyId);
             
+            // Find the selected army to get its current position for logging
+            const selectedArmy = planet.faction?.armies?.find((a: any) => a.id === armyMovement.selectedArmyId);
+            
             // Start moving the selected army to this position
+            console.log('Starting army movement:', {
+              armyId: armyMovement.selectedArmyId,
+              currentPos: selectedArmy?.position || 'unknown',
+              targetPos: [lat, lon]
+            });
+            
             setArmyMovement(prev => ({
               ...prev,
               movingArmies: new Map(prev.movingArmies).set(prev.selectedArmyId!, {

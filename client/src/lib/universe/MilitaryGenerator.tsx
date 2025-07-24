@@ -35,17 +35,23 @@ export class MilitaryGenerator {
       } else {
         [fx, fy] = feature.position as [number, number];
       }
+      
+      // Position army near the feature, not directly on it
+      const armyDistance = 0.3 + Math.random() * 0.5; // 0.3-0.8 units away
+      const armyAngle = Math.random() * Math.PI * 2; // Random angle around feature
+      const armyX = fx + Math.cos(armyAngle) * armyDistance;
+      const armyY = fy + Math.sin(armyAngle) * armyDistance;
 
       // Generate between 1–5 divisions for this army
       const numDivisions = Math.floor(Math.random() * 5) + 1;
       const divisions: Divisions[] = Array.from({ length: numDivisions }, () => {
         const divSize = Math.floor(Math.random() * 100) + 10;
-        const offsetX = (Math.random() - 0.5) * 0.1;
-        const offsetY = (Math.random() - 0.5) * 0.1;
+        const offsetX = (Math.random() - 0.5) * 0.15; // Slightly larger spread
+        const offsetY = (Math.random() - 0.5) * 0.15;
         return {
           id: MilitaryGenerator.generateId(),
           size: divSize,
-          position: [fx + offsetX, fy + offsetY], // 2D
+          position: [armyX + offsetX, armyY + offsetY], // 2D relative to army, not feature
           affiliation: faction.name,
           faction: faction,
         } as Divisions;
@@ -56,7 +62,7 @@ export class MilitaryGenerator {
       return {
         id: MilitaryGenerator.generateId(),
         size: armySize,
-        position: [fx, fy], // 2D
+        position: [armyX, armyY], // 2D positioned near feature
         affiliation: faction.name,
         faction: faction,
         composition: divisions,
