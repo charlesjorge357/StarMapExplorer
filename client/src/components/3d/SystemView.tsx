@@ -920,26 +920,13 @@ export function SystemView({
             // Get the click point from the intersection
             const clickPoint = event.point || event.intersections?.[0]?.point;
             if (clickPoint) {
-              // Calculate distance from star center to maintain proper orbital radius
-              const distanceFromCenter = Math.sqrt(clickPoint.x * clickPoint.x + clickPoint.z * clickPoint.z);
-              const normalizedX = clickPoint.x / distanceFromCenter;
-              const normalizedZ = clickPoint.z / distanceFromCenter;
-              
-              // Use a reasonable orbital radius (similar to planet orbits)
-              const orbitalRadius = Math.max(outermostOrbit * 0.8, 50);
-              
-              const targetPos: [number, number, number] = [
-                normalizedX * orbitalRadius,
-                0, // Keep at orbital plane
-                normalizedZ * orbitalRadius
-              ];
+              const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z];
               
               console.log('🎯 FLEET TELEPORTING:', {
                 fleetId: selectedFleet.id,
                 from: selectedFleet.position,
                 to: targetPos,
-                clickPoint: clickPoint,
-                orbitalRadius: orbitalRadius
+                clickPoint: clickPoint
               });
               
               // Direct mutation approach - update the fleet object in place
@@ -979,11 +966,10 @@ export function SystemView({
           <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
           <meshBasicMaterial 
             transparent 
-            opacity={0.01}
+            opacity={0.3}
             color="#00ffff"
-            wireframe={true}
-            depthTest={true}
-            depthWrite={false}
+            wireframe={false}
+            side={2}
           />
         </mesh>
       )}
