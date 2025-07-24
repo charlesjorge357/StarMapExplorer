@@ -16,17 +16,33 @@ interface DivisionMarkerProps {
   division: any; // Divisions type from schema
   planetRadius: number;
   armyPosition: [number, number];
+  divisionIndex: number;
 }
 
-export function DivisionMarker({ division, planetRadius, armyPosition }: DivisionMarkerProps) {
+export function DivisionMarker({ division, planetRadius, armyPosition, divisionIndex }: DivisionMarkerProps) {
   const divisionRef = useRef<Mesh>(null);
   
-  // Convert 2D position to 3D sphere position using spherical coordinates
-  const [lat, lon] = division.position;
+  // Use army position as base, then add calculated offset for this division
+  const [armyLat, armyLon] = armyPosition;
   
-  // Small offset from army position for division placement
-  const offsetLat = lat + (Math.random() - 0.5) * 0.2; // Small random offset
-  const offsetLon = lon + (Math.random() - 0.5) * 0.2;
+  // Create consistent circular formation around army using division index
+  const totalDivisions = 8; // Maximum expected divisions for circular formation
+  const angle = (divisionIndex / totalDivisions) * (Math.PI * 2); // Even spacing around army
+  const distance = 0.08 + (divisionIndex % 2) * 0.03; // Two rings around army
+  
+  // Calculate offset in lat/lon coordinates
+  const offsetLat = armyLat + Math.cos(angle) * distance;
+  const offsetLon = armyLon + Math.sin(angle) * distance;
+  
+  // Debug logging for division movement (occasional)
+  if (Math.random() < 0.001) {
+    console.log(`Division ${divisionIndex} following army:`, {
+      armyPos: [armyLat, armyLon],
+      divisionPos: [offsetLat, offsetLon],
+      angle: angle * (180 / Math.PI),
+      distance
+    });
+  }
   
   // Convert to spherical coordinates (exactly matching SurfaceFeatureMarker)
   const phi = (90 - offsetLat) * (Math.PI / 180);
@@ -41,8 +57,10 @@ export function DivisionMarker({ division, planetRadius, armyPosition }: Divisio
 
   useFrame((state) => {
     if (divisionRef.current) {
-      // Gentle floating animation
-      divisionRef.current.position.y = spherePos[1] + Math.sin(state.clock.elapsedTime * 2 + division.size * 0.1) * 0.02;
+      // Gentle floating animation, staggered by division index
+      divisionRef.current.position.y = spherePos[1] + Math.sin(state.clock.elapsedTime * 2 + divisionIndex * 0.5) * 0.02;
+      // Slight rotation for visual interest
+      divisionRef.current.rotation.y = state.clock.elapsedTime * 0.3 + divisionIndex;
     }
   });
 
@@ -59,10 +77,10 @@ export function DivisionMarker({ division, planetRadius, armyPosition }: Divisio
         console.log(`Division ${division.id}: ${division.size} units`);
       }}
     >
-      <boxGeometry args={[1, 0.5, 1]} />
+      <boxGeometry args={[1, 0.3, 1]} />
       <meshLambertMaterial 
-        color={division.faction?.name === 'Contested Zone' ? '#888888' : '#4444ff'} 
-        emissive={division.faction?.name === 'Contested Zone' ? '#222222' : '#111144'} 
+        color={division.faction?.name === 'Contested Zone' ? '#888888' : '#6666ff'} 
+        emissive={division.faction?.name === 'Contested Zone' ? '#222222' : '#222266'} 
       />
     </mesh>
   );
@@ -136,12 +154,13 @@ export function ArmyMarker({ army, planetRadius, isSelected, movementData, onArm
       </mesh>
 
       {/* Render division markers around the army */}
-      {army.composition && army.composition.map((division: any) => (
+      {army.composition && army.composition.map((division: any, index: number) => (
         <DivisionMarker
           key={division.id}
           division={division}
           planetRadius={planetRadius}
-          armyPosition={army.position}
+          armyPosition={currentPosition}
+          divisionIndex={index}
         />
       ))}
     </group>
