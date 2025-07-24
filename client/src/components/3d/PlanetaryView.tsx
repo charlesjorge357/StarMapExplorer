@@ -4,7 +4,6 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { SurfaceFeatureMarker } from '../ui/SurfaceFeatures';
 import { ArmyMarker } from './ArmyMarker';
-import { ArmyInfoPanel } from '../ui/ArmyInfoPanel';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
@@ -15,6 +14,8 @@ interface PlanetaryViewProps {
   selectedFeature: any;
   onFeatureClick: (feature: any) => void;
   system?: any; // Optional system data for asteroid belts
+  selectedArmy?: any;
+  onArmyClick?: (army: any) => void;
 }
 
 interface ArmyMovementState {
@@ -59,7 +60,14 @@ function PlanetaryRings({ rings, planetRadius }: { rings: any[]; planetRadius: n
   );
 }
 
-export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system }: PlanetaryViewProps) {
+export function PlanetaryView({ 
+  planet, 
+  selectedFeature, 
+  onFeatureClick, 
+  system,
+  selectedArmy: propSelectedArmy,
+  onArmyClick: propOnArmyClick
+}: PlanetaryViewProps) {
   // Early return if planet is not provided or invalid
   if (!planet || !planet.type) {
     console.error('PlanetaryView: Invalid or missing planet data');
@@ -72,8 +80,12 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
     movingArmies: new Map()
   });
   
-  // Selected army for info panel
-  const [selectedArmy, setSelectedArmy] = useState<any>(null);
+  // Use either prop state or local state for armies
+  const [localSelectedArmy, setLocalSelectedArmy] = useState<any>(null);
+  const selectedArmy = propSelectedArmy ?? localSelectedArmy;
+  const setSelectedArmy = propOnArmyClick ? 
+    ((army: any) => propOnArmyClick(army)) : 
+    setLocalSelectedArmy;
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -654,17 +666,6 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         intensity={0.15}
         castShadow
       />
-      
-      {/* Army Info Panel */}
-      {selectedArmy && (
-        <ArmyInfoPanel 
-          army={selectedArmy} 
-          onClose={() => {
-            setSelectedArmy(null);
-            setArmyMovement(prev => ({ ...prev, selectedArmyId: null }));
-          }} 
-        />
-      )}
 
     </group>
   );

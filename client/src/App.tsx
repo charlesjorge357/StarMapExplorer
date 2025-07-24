@@ -19,6 +19,8 @@ import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 import { useAudio } from './lib/stores/useAudio';
 import { MusicController } from './components/3d/musicController';
+import { FleetInfoPanel } from './components/ui/FleetInfoPanel';
+import { ArmyInfoPanel } from './components/ui/ArmyInfoPanel';
 
 // Simple star type to avoid import issues
 interface SimpleStar {
@@ -315,6 +317,8 @@ function App() {
   const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const [selectedSpaceFeature, setSelectedSpaceFeature] = useState<any>(null);
+  const [selectedFleet, setSelectedFleet] = useState<any>(null);
+  const [selectedArmy, setSelectedArmy] = useState<any>(null);
   // Navigation mode removed - all interactions now use direct mouse controls
   const [currentView, setCurrentView] = useState<'galactic' | 'system' | 'planetary'>('galactic');
   const [currentSystem, setCurrentSystem] = useState<any>(null);
@@ -569,8 +573,8 @@ function App() {
             console.log(`Unselected nebula: ${selectedNebula.name}`);
             setSelectedNebula(null);
           }
-        } else if (currentView === 'system' && (selectedPlanet || selectedSpaceFeature)) {
-          // Only unselect planets and space features in system view, not the central star
+        } else if (currentView === 'system' && (selectedPlanet || selectedSpaceFeature || selectedFleet)) {
+          // Only unselect planets, space features, and fleets in system view, not the central star
           if (selectedPlanet) {
             console.log(`Unselected planet: ${selectedPlanet.name}`);
             setSelectedPlanet(null);
@@ -579,10 +583,20 @@ function App() {
             console.log(`Unselected space feature: ${selectedSpaceFeature.name}`);
             setSelectedSpaceFeature(null);
           }
-        } else if (currentView === 'planetary' && selectedFeature) {
-          // Unselect surface features in planetary view
-          console.log(`Unselected feature: ${selectedFeature.name}`);
-          setSelectedFeature(null);
+          if (selectedFleet) {
+            console.log(`Unselected fleet: ${selectedFleet.name}`);
+            setSelectedFleet(null);
+          }
+        } else if (currentView === 'planetary' && (selectedFeature || selectedArmy)) {
+          // Unselect surface features and armies in planetary view
+          if (selectedFeature) {
+            console.log(`Unselected feature: ${selectedFeature.name}`);
+            setSelectedFeature(null);
+          }
+          if (selectedArmy) {
+            console.log(`Unselected army: ${selectedArmy.name}`);
+            setSelectedArmy(null);
+          }
         }
       }
 
@@ -591,6 +605,7 @@ function App() {
           console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
           setCurrentView('system');
           setSelectedFeature(null);
+          setSelectedArmy(null); // Clear army when returning to system view
           setSelectedSpaceFeature(null); // Clear space feature when returning to system view
 
           // Re-enable galactic and system view keyboard controls
@@ -620,6 +635,7 @@ function App() {
           setCurrentSystem(null);
           setSelectedPlanet(null);
           setSelectedSpaceFeature(null);
+          setSelectedFleet(null); // Clear fleet when returning to galactic view
           (window as any).systemStarSelected = false;
 
           // Position camera with offset from last visited star and select it
@@ -664,6 +680,7 @@ function App() {
             // Switch to planetary view - let PlanetaryView handle camera positioning
             setCurrentView('planetary');
             setSelectedSpaceFeature(null); // Clear space feature when entering planetary view
+            setSelectedFleet(null); // Clear fleet when entering planetary view
           } else {
             console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
           }
@@ -869,6 +886,8 @@ function App() {
                     onPlanetClick={setSelectedPlanet}
                     selectedSpaceFeature={selectedSpaceFeature}
                     onSpaceFeatureClick={setSelectedSpaceFeature}
+                    selectedFleet={selectedFleet}
+                    onFleetClick={setSelectedFleet}
                   />
                 </>
               )}
@@ -884,6 +903,8 @@ function App() {
                     selectedFeature={selectedFeature}
                     onFeatureClick={setSelectedFeature}
                     system={currentSystem}
+                    selectedArmy={selectedArmy}
+                    onArmyClick={setSelectedArmy}
                   />
                 </>
               )}
@@ -1123,6 +1144,26 @@ function App() {
               <div className="mt-3 text-xs text-gray-400">
                 <p>Backspace to return to system view</p>
               </div>
+            </div>
+          )}
+
+          {/* System view - fleet information */}
+          {currentView === 'system' && selectedFleet && (
+            <div className="absolute top-4 left-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <FleetInfoPanel 
+                fleet={selectedFleet} 
+                onClose={() => setSelectedFleet(null)} 
+              />
+            </div>
+          )}
+
+          {/* Planetary view - army information */}
+          {currentView === 'planetary' && selectedArmy && (
+            <div className="absolute top-4 left-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+              <ArmyInfoPanel 
+                army={selectedArmy} 
+                onClose={() => setSelectedArmy(null)} 
+              />
             </div>
           )}
 

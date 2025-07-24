@@ -197,6 +197,8 @@ interface SystemViewProps {
   onPlanetClick: (planet: any) => void;
   selectedSpaceFeature?: SpaceFeature | null;
   onSpaceFeatureClick?: (feature: SpaceFeature | null) => void;
+  selectedFleet?: any;
+  onFleetClick?: (fleet: any) => void;
 }
 
 // Selection ring component that follows the planet
@@ -354,7 +356,9 @@ export function SystemView({
   selectedPlanet, 
   onPlanetClick, 
   selectedSpaceFeature: propSelectedSpaceFeature,
-  onSpaceFeatureClick: propOnSpaceFeatureClick 
+  onSpaceFeatureClick: propOnSpaceFeatureClick,
+  selectedFleet: propSelectedFleet,
+  onFleetClick: propOnFleetClick
 }: SystemViewProps) {
   const [selectedStar, setSelectedStar] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -377,8 +381,12 @@ export function SystemView({
     progress: 0
   });
   
-  // Selected fleet state
-  const [selectedFleet, setSelectedFleet] = useState<any>(null);
+  // Use either prop state or local state for fleets
+  const [localSelectedFleet, setLocalSelectedFleet] = useState<any>(null);
+  const selectedFleet = propSelectedFleet ?? localSelectedFleet;
+  const setSelectedFleet = propOnFleetClick ? 
+    ((fleet: any) => propOnFleetClick(fleet)) : 
+    setLocalSelectedFleet;
   
   // Fleet movement animation
   useEffect(() => {
@@ -965,14 +973,6 @@ export function SystemView({
             starMass={star.mass || 1}
           />
         )) || []
-      )}
-      
-      {/* Fleet Info Panel */}
-      {selectedFleet && (
-        <FleetInfoPanel 
-          fleet={selectedFleet} 
-          onClose={() => setSelectedFleet(null)} 
-        />
       )}
     </group>
   );
