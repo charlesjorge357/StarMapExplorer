@@ -379,8 +379,13 @@ export function SystemView({
   
   // Handle fleet selection
   const handleFleetClick = (fleet: any) => {
+    console.log('🚀 FLEET CLICKED - selecting:', {
+      fleetId: fleet.id,
+      fleetPosition: fleet.position,
+      fleetSize: fleet.size
+    });
     setSelectedFleet(fleet);
-    console.log('Selected fleet:', fleet);
+    console.log('✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear');
   };
   // Add try-catch to handle useUniverse hook issues
   let universeStore;
@@ -910,7 +915,7 @@ export function SystemView({
           position={[0, 0, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
-            console.log('Orbital disk clicked directly - intercepting all other clicks');
+            console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             event.stopPropagation();
             
             // Get the click point from the intersection
@@ -918,7 +923,7 @@ export function SystemView({
             if (clickPoint) {
               const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z];
               
-              console.log('Fleet teleporting to:', {
+              console.log('🎯 FLEET TELEPORTING:', {
                 fleetId: selectedFleet.id,
                 from: selectedFleet.position,
                 to: targetPos,
@@ -936,12 +941,12 @@ export function SystemView({
               const fleetIndex = fleets.findIndex((f: any) => f.id === selectedFleet.id);
               if (fleetIndex >= 0) {
                 fleets[fleetIndex] = updatedFleet;
-                console.log(`Fleet ${selectedFleet.id} updated in system data`);
+                console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA`);
               }
               
               // Update selected fleet state
               setSelectedFleet(updatedFleet);
-              console.log(`Fleet ${selectedFleet.id} teleported successfully`);
+              console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
             } else {
               console.error('No click point found in event');
             }
