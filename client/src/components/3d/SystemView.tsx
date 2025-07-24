@@ -904,12 +904,10 @@ export function SystemView({
       ))}
       
       {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
-      {selectedFleet ? (
-        <>
-          {console.log('🟢 RENDERING ORBITAL DISK for fleet:', selectedFleet.id)}
-          <mesh 
-            position={[0, 0, 1]}
-            rotation={[Math.PI / 2, 0, 0]}
+      {selectedFleet && (
+        <mesh 
+          position={[0, 0, 1]}
+          rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             console.log('Click event details:', {
@@ -931,23 +929,32 @@ export function SystemView({
                 clickPoint: clickPoint
               });
               
-              // Force update fleet position with new object reference
-              const updatedFleet = {
-                ...selectedFleet,
-                position: targetPos
-              };
+              // Direct mutation approach - update the fleet object in place
+              console.log(`🎯 BEFORE UPDATE - Fleet ${selectedFleet.id}:`, selectedFleet.position);
               
-              // Update in system data
-              const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-              const fleetIndex = fleets.findIndex((f: any) => f.id === selectedFleet.id);
-              if (fleetIndex >= 0) {
-                fleets[fleetIndex] = updatedFleet;
-                console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA`);
+              // Find and update the fleet in the system data
+              const allFleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
+              const targetFleet = allFleets.find((f: any) => f.id === selectedFleet.id);
+              
+              if (targetFleet) {
+                // Directly mutate the fleet position
+                targetFleet.position[0] = targetPos[0];
+                targetFleet.position[1] = targetPos[1];
+                targetFleet.position[2] = targetPos[2];
+                
+                // Also update the selected fleet reference
+                selectedFleet.position[0] = targetPos[0];
+                selectedFleet.position[1] = targetPos[1]; 
+                selectedFleet.position[2] = targetPos[2];
+                
+                console.log(`🚀 AFTER UPDATE - Fleet ${selectedFleet.id}:`, targetFleet.position);
+                console.log(`✅ FLEET TELEPORTED SUCCESSFULLY`);
+                
+                // Force re-render by triggering a state update
+                setSelectedFleet({ ...selectedFleet });
+              } else {
+                console.error('❌ Fleet not found in system data!');
               }
-              
-              // Update selected fleet state
-              setSelectedFleet(updatedFleet);
-              console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
             } else {
               console.error('No click point found in event');
             }
@@ -964,12 +971,7 @@ export function SystemView({
             wireframe={false}
             side={2}
           />
-          </mesh>
-        </>
-      ) : (
-        <>
-          {console.log('🔴 NO FLEET SELECTED - orbital disk not rendered')}
-        </>
+        </mesh>
       )}
 
 
