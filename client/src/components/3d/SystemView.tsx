@@ -684,6 +684,9 @@ export function SystemView({
 
   // Handle background click to deselect planets, space features, and fleets
   const handleBackgroundClick = (event: any) => {
+    // Prevent event bubbling to avoid conflicts with other objects
+    event.stopPropagation();
+    
     // Check if this is an orbital disk click for fleet movement
     if (selectedFleet && event.intersections) {
       const intersection = event.intersections.find((i: any) => i.object.userData.isOrbitalDisk);
@@ -691,10 +694,14 @@ export function SystemView({
         const clickPoint = intersection.point;
         const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z]; // Keep on XZ plane
         
+        // Calculate orbital radius for the target position
+        const targetRadius = Math.sqrt(clickPoint.x * clickPoint.x + clickPoint.z * clickPoint.z);
+        
         console.log('Fleet movement ordered:', {
           fleetId: selectedFleet.id,
           currentPos: selectedFleet.position,
-          targetPos
+          targetPos,
+          targetRadius: targetRadius.toFixed(2) + ' units'
         });
         
         setFleetMovement({
@@ -702,10 +709,13 @@ export function SystemView({
           targetPosition: targetPos,
           progress: 0
         });
+        
+        // Don't deselect fleet after movement order - keep it selected for more orders
         return;
       }
     }
     
+    // Only deselect if not clicking on orbital disk
     if (selectedPlanet) {
       console.log('Deselecting planet');
       // Stop orbital tracking
@@ -944,17 +954,35 @@ export function SystemView({
         />
       ))}
       
-      {/* Orbital disk for fleet movement (invisible) */}
+      {/* Orbital disk for fleet movement (semi-transparent when fleet selected) */}
       {selectedFleet && (
         <mesh 
           position={[0, 0, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={handleBackgroundClick}
-          visible={false}
+          visible={true}
           userData={{ isOrbitalDisk: true }}
         >
           <circleGeometry args={[200, 64]} />
-          <meshBasicMaterial transparent opacity={0} />
+          <meshBasicMaterial 
+            transparent 
+            opacity={0.05}
+            color="#00ffff"
+            wireframe={true}
+          />
+        </mesh>
+      )}
+
+      {/* Fleet movement target indicator */}
+      {fleetMovement.targetPosition && (
+        <mesh position={fleetMovement.targetPosition}>
+          <ringGeometry args={[1, 2, 8]} />
+          <meshBasicMaterial 
+            color="#00ff00" 
+            transparent 
+            opacity={0.8}
+            side={2}
+          />
         </mesh>
       )}
 

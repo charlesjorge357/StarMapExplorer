@@ -72,6 +72,15 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
           <span className="ml-2">{fleet?.size || 0}</span>
         </div>
         
+        <div className="border-t border-gray-600 pt-2 mt-3">
+          <div className="text-cyan-400 text-xs font-bold mb-1">FLEET COMMANDS:</div>
+          <div className="text-xs text-gray-300 leading-relaxed">
+            • Click anywhere in the system to order fleet movement
+            • Fleet will move to the clicked position in space
+            • Green ring shows movement target location
+          </div>
+        </div>
+        
         <div>
           <span className="text-gray-400">Orbit Radius:</span>
           <span className="ml-2">{orbitRadius.toFixed(1)} AU</span>
