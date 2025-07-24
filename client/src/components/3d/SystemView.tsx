@@ -803,7 +803,19 @@ export function SystemView({
       {/* Background plane for deselection clicks - positioned way behind everything */}
       <mesh 
         position={[0, 0, -10000]}
-        onClick={handleBackgroundClick}
+        onClick={(event) => {
+          // Only handle background clicks if NOT clicking on orbital disk
+          const isOrbitalDiskClick = event.intersections?.some((intersection: any) => 
+            intersection.object.userData?.isOrbitalDisk
+          );
+          
+          if (!isOrbitalDiskClick) {
+            console.log('🔵 BACKGROUND CLICKED - deselecting');
+            handleBackgroundClick(event);
+          } else {
+            console.log('🎯 ORBITAL DISK DETECTED - ignoring background');
+          }
+        }}
         visible={false}
       >
         <planeGeometry args={[50000, 50000]} />
@@ -913,6 +925,7 @@ export function SystemView({
             onClick={(event) => {
               console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
               event.stopPropagation();
+              event.nativeEvent?.stopImmediatePropagation();
               
               // Get the click point from the intersection
               const clickPoint = event.point || event.intersections?.[0]?.point;
