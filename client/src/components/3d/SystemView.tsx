@@ -390,7 +390,15 @@ export function SystemView({
   
   // Fleet movement animation
   useEffect(() => {
+    console.log('Fleet movement useEffect triggered:', {
+      hasFleetId: !!fleetMovement.selectedFleetId,
+      hasTarget: !!fleetMovement.targetPosition,
+      progress: fleetMovement.progress,
+      shouldAnimate: fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1
+    });
+    
     if (fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1) {
+      console.log('Starting fleet movement animation interval...');
       const interval = setInterval(() => {
         setFleetMovement(prev => {
           const newProgress = Math.min(prev.progress + 0.03, 1); // Faster movement: 3% per frame
@@ -434,9 +442,14 @@ export function SystemView({
         });
       }, 16); // ~60fps
       
-      return () => clearInterval(interval);
+      return () => {
+        console.log('Clearing fleet movement interval');
+        clearInterval(interval);
+      };
+    } else {
+      console.log('Fleet movement animation not started - conditions not met');
     }
-  }, [fleetMovement.selectedFleetId, fleetMovement.targetPosition, system.factions]);
+  }, [fleetMovement.selectedFleetId, fleetMovement.targetPosition, fleetMovement.progress, system.factions]);
   
   // Handle fleet selection
   const handleFleetClick = (fleet: any) => {
@@ -707,8 +720,20 @@ export function SystemView({
     event.stopPropagation();
     
     // Check if this is an orbital disk click for fleet movement
+    console.log('Background click detected:', {
+      hasSelectedFleet: !!selectedFleet,
+      hasIntersections: !!event.intersections,
+      intersectionCount: event.intersections?.length || 0
+    });
+    
     if (selectedFleet && event.intersections) {
       const intersection = event.intersections.find((i: any) => i.object.userData.isOrbitalDisk);
+      console.log('Looking for orbital disk intersection:', {
+        foundIntersection: !!intersection,
+        totalIntersections: event.intersections.length,
+        intersectionData: event.intersections.map((i: any) => i.object.userData)
+      });
+      
       if (intersection) {
         const clickPoint = intersection.point;
         const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z]; // Keep on XZ plane
