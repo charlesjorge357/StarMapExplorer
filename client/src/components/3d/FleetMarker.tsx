@@ -118,14 +118,13 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
         currentZ + (targetZ - currentZ) * smoothProgress
       ];
       
-      // Debug log movement progress
-      if (Math.random() < 0.01) {
-        console.log(`Fleet ${fleet.id} interpolation:`, {
-          progress: progress.toFixed(2),
-          smoothProgress: smoothProgress.toFixed(2),
-          currentPos: [currentX, currentY, currentZ],
-          targetPos: [targetX, targetY, targetZ],
-          interpolatedPos
+      // More frequent debug logging
+      if (Math.random() < 0.1) {
+        console.log(`Fleet ${fleet.id} moving:`, {
+          progress: (progress * 100).toFixed(1) + '%',
+          from: [currentX.toFixed(1), currentZ.toFixed(1)],
+          to: [targetX.toFixed(1), targetZ.toFixed(1)],
+          current: [interpolatedPos[0].toFixed(1), interpolatedPos[2].toFixed(1)]
         });
       }
       
@@ -145,19 +144,22 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
 
   useFrame((state, delta) => {
     if (fleetRef.current) {
-      if (!movementData) {
-        // Normal orbital motion when not moving
+      // Always use currentPosition (which handles both movement and normal position)
+      const [posX, posY, posZ] = currentPosition;
+      
+      if (!movementData || movementData.progress >= 1) {
+        // Normal orbital motion when not moving - use currentPosition but add orbital rotation
         const time = Date.now() * 0.0001;
-        const angle = time * orbitalSpeed;
+        const currentRadius = Math.sqrt(posX * posX + posZ * posZ);
+        const currentAngle = Math.atan2(posZ, posX);
+        const orbitalMotion = time * orbitalSpeed;
         
-        fleetRef.current.position.x = orbitRadius * Math.cos(angle);
-        fleetRef.current.position.z = orbitRadius * Math.sin(angle);
-        
-        // Update fleet position data for ships
-        fleet.position = [fleetRef.current.position.x, 0, fleetRef.current.position.z];
+        fleetRef.current.position.x = currentRadius * Math.cos(currentAngle + orbitalMotion);
+        fleetRef.current.position.z = currentRadius * Math.sin(currentAngle + orbitalMotion);
+        fleetRef.current.position.y = 0;
       } else {
-        // During movement, use the interpolated position
-        fleetRef.current.position.set(currentPosition[0], 0, currentPosition[2]);
+        // During movement, use exact interpolated position
+        fleetRef.current.position.set(posX, 0, posZ);
       }
       
       // Always update real-time position for ships

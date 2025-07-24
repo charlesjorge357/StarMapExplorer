@@ -393,15 +393,28 @@ export function SystemView({
     if (fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1) {
       const interval = setInterval(() => {
         setFleetMovement(prev => {
-          const newProgress = Math.min(prev.progress + 0.02, 1); // 2% per frame = ~50 frames for 1 second at 60fps
+          const newProgress = Math.min(prev.progress + 0.03, 1); // Faster movement: 3% per frame
+          
+          console.log(`Fleet movement progress: ${(newProgress * 100).toFixed(1)}%`);
           
           if (newProgress >= 1) {
             // Movement complete - update the fleet's actual position
             const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
             const fleet = fleets.find((f: any) => f.id === prev.selectedFleetId);
             if (fleet && prev.targetPosition) {
+              const oldPosition = [...fleet.position];
               fleet.position = [...prev.targetPosition];
-              console.log(`Fleet movement completed to position:`, prev.targetPosition);
+              console.log(`Fleet ${fleet.id} movement completed:`, {
+                from: oldPosition,
+                to: prev.targetPosition,
+                fleetUpdated: fleet.position
+              });
+            } else {
+              console.error('Fleet not found or no target position:', {
+                fleetId: prev.selectedFleetId,
+                targetPosition: prev.targetPosition,
+                availableFleets: fleets.map(f => f.id)
+              });
             }
             
             return {
@@ -704,10 +717,11 @@ export function SystemView({
           targetRadius: targetRadius.toFixed(2) + ' units'
         });
         
+        // Ensure we start movement animation immediately
         setFleetMovement({
           selectedFleetId: selectedFleet.id,
           targetPosition: targetPos,
-          progress: 0
+          progress: 0.01 // Start with small progress to trigger animation
         });
         
         // Don't deselect fleet after movement order - keep it selected for more orders
