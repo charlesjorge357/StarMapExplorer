@@ -20,21 +20,30 @@ interface ShipMarkerProps {
 export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) {
   const shipRef = useRef<Mesh>(null);
   
-  // Calculate ship position relative to fleet center
-  const formationAngle = (shipIndex / 8) * Math.PI * 2;
-  const formationRadius = 0.5 + (shipIndex % 2) * 0.3;
-  
-  const shipPosition: [number, number, number] = [
-    fleetPosition[0] + formationRadius * Math.cos(formationAngle),
-    0,
-    fleetPosition[2] + formationRadius * Math.sin(formationAngle)
-  ];
+  // Calculate ship orbit parameters
+  const shipOrbitRadius = useMemo(() => 0.5 + (shipIndex % 3) * 0.3, [shipIndex]);
+  const shipOrbitalSpeed = useMemo(() => {
+    // Use same orbital formula as planets/fleets for consistency
+    return Math.sqrt(1 / Math.max(shipOrbitRadius, 0.1)) * 0.15;
+  }, [shipOrbitRadius]);
 
   useFrame((state) => {
-    if (shipRef.current) {
-      // Gentle rotation and floating
+    if (shipRef.current && fleetPosition) {
+      // Calculate orbital position using same mechanics as planets
+      const time = Date.now() * 0.0001; // Same time calculation as fleet
+      const shipAngle = time * shipOrbitalSpeed + shipIndex * (Math.PI * 2 / 8); // Stagger ships
+      
+      // Ship position relative to fleet center
+      const shipX = shipOrbitRadius * Math.cos(shipAngle);
+      const shipZ = shipOrbitRadius * Math.sin(shipAngle);
+      
+      // Apply fleet position as offset
+      shipRef.current.position.x = fleetPosition[0] + shipX;
+      shipRef.current.position.z = fleetPosition[2] + shipZ;
+      shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
+      
+      // Gentle rotation
       shipRef.current.rotation.y = state.clock.elapsedTime * 0.2 + shipIndex;
-      shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02;
     }
   });
 
@@ -58,18 +67,21 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
     }
   };
 
-  const shipColor = ship.faction?.name === 'Contested Zone' ? '#888888' : '#00ffff';
-  const shipEmissive = ship.faction?.name === 'Contested Zone' ? '#222222' : '#004444';
-  const scale = getShipScale(ship.type);
+  // Safe faction access with error handling
+  const shipColor = ship?.faction?.name === 'Contested Zone' ? '#888888' : '#00ffff';
+  const shipEmissive = ship?.faction?.name === 'Contested Zone' ? '#222222' : '#004444';
+  const scale = getShipScale(ship?.type || 'cruiser');
 
   return (
     <mesh
       ref={shipRef}
-      position={shipPosition}
+      position={fleetPosition || [0, 0, 0]} // Initial position, will be updated by useFrame
       scale={[scale, scale, scale]}
       onClick={(e) => {
         e.stopPropagation();
-        console.log(`Ship ${ship.name}: ${ship.type}`);
+        if (ship?.name && ship?.type) {
+          console.log(`Ship ${ship.name}: ${ship.type}`);
+        }
       }}
     >
       <boxGeometry args={[1.5, 0.4, 0.8]} />

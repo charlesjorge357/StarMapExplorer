@@ -9,7 +9,7 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
   if (!fleet) return null;
 
   const getFactionColor = (factionName: string) => {
-    if (factionName === 'Contested Zone') return '#888888';
+    if (!factionName || factionName === 'Contested Zone') return '#888888';
     // Generate consistent color based on faction name
     let hash = 0;
     for (let i = 0; i < factionName.length; i++) {
@@ -19,7 +19,7 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
     return `hsl(${hue}, 70%, 50%)`;
   };
 
-  const factionColor = getFactionColor(fleet.faction?.name || 'Unknown');
+  const factionColor = getFactionColor(fleet?.faction?.name || 'Unknown');
 
   const getShipTypeDisplay = (type: string) => {
     switch (type) {
@@ -35,9 +35,9 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
     }
   };
 
-  const orbitRadius = Math.sqrt(
+  const orbitRadius = fleet?.position ? Math.sqrt(
     fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]
-  );
+  ) : 0;
 
   return (
     <div className="fixed top-4 right-4 w-80 bg-black/90 border-2 rounded-lg p-4 text-white font-mono text-sm z-50"
@@ -57,19 +57,19 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
       <div className="space-y-2">
         <div>
           <span className="text-gray-400">Fleet ID:</span>
-          <span className="ml-2">{fleet.id}</span>
+          <span className="ml-2">{fleet?.id || 'Unknown'}</span>
         </div>
         
         <div>
           <span className="text-gray-400">Faction:</span>
           <span className="ml-2" style={{ color: factionColor }}>
-            {fleet.faction?.name || 'Unknown'}
+            {fleet?.faction?.name || 'Unknown'}
           </span>
         </div>
         
         <div>
           <span className="text-gray-400">Ships:</span>
-          <span className="ml-2">{fleet.size}</span>
+          <span className="ml-2">{fleet?.size || 0}</span>
         </div>
         
         <div>
@@ -80,24 +80,24 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
         <div>
           <span className="text-gray-400">Position:</span>
           <span className="ml-2">
-            [{fleet.position[0].toFixed(1)}, {fleet.position[2].toFixed(1)}]
+            [{fleet?.position?.[0]?.toFixed(1) || '0'}, {fleet?.position?.[2]?.toFixed(1) || '0'}]
           </span>
         </div>
         
-        {fleet.composition && fleet.composition.length > 0 && (
+        {fleet?.composition && fleet.composition.length > 0 && (
           <div>
             <span className="text-gray-400">Ship Composition:</span>
             <div className="ml-2 mt-1 space-y-1">
               {fleet.composition.map((ship: any, index: number) => (
-                <div key={ship.id} className="text-cyan-300">
-                  • {getShipTypeDisplay(ship.type)} - {ship.name}
+                <div key={ship?.id || index} className="text-cyan-300">
+                  • {getShipTypeDisplay(ship?.type || 'unknown')} - {ship?.name || 'Unnamed Ship'}
                 </div>
               ))}
             </div>
           </div>
         )}
         
-        {fleet.faction?.technology && (
+        {fleet?.faction?.technology && (
           <div>
             <span className="text-gray-400">Technology Level:</span>
             <span className="ml-2">{fleet.faction.technology}</span>
