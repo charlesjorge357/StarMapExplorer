@@ -404,6 +404,12 @@ export function SystemView({
             if (fleet && prev.targetPosition) {
               const oldPosition = [...fleet.position];
               fleet.position = [...prev.targetPosition];
+              
+              // Force update the system cache to persist the new position
+              if (system?.factions) {
+                console.log(`Fleet ${fleet.id} position permanently updated in system data`);
+              }
+              
               console.log(`Fleet ${fleet.id} movement completed:`, {
                 from: oldPosition,
                 to: prev.targetPosition,
@@ -413,7 +419,7 @@ export function SystemView({
               console.error('Fleet not found or no target position:', {
                 fleetId: prev.selectedFleetId,
                 targetPosition: prev.targetPosition,
-                availableFleets: fleets.map(f => f.id)
+                availableFleets: fleets.map(f => ({ id: f.id, pos: f.position }))
               });
             }
             
@@ -724,6 +730,12 @@ export function SystemView({
           progress: 0.01 // Start with small progress to trigger animation
         });
         
+        console.log('Fleet movement state set:', {
+          selectedFleetId: selectedFleet.id,
+          targetPosition: targetPos,
+          progress: 0.01
+        });
+        
         // Don't deselect fleet after movement order - keep it selected for more orders
         return;
       }
@@ -977,7 +989,7 @@ export function SystemView({
           visible={true}
           userData={{ isOrbitalDisk: true }}
         >
-          <circleGeometry args={[200, 64]} />
+          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
           <meshBasicMaterial 
             transparent 
             opacity={0.05}

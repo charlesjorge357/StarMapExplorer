@@ -102,6 +102,15 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
+  // Debug fleet data on render
+  if (movementData) {
+    console.log(`FleetMarker ${fleet.id} received movementData:`, {
+      progress: movementData.progress,
+      hasTarget: !!movementData.targetPosition,
+      fleetPos: fleet.position
+    });
+  }
+  
   // Handle movement animation with orbital mechanics
   const currentPosition = useMemo(() => {
     if (movementData && movementData.progress < 1) {
@@ -144,22 +153,22 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
 
   useFrame((state, delta) => {
     if (fleetRef.current) {
-      // Always use currentPosition (which handles both movement and normal position)
       const [posX, posY, posZ] = currentPosition;
       
-      if (!movementData || movementData.progress >= 1) {
-        // Normal orbital motion when not moving - use currentPosition but add orbital rotation
+      if (movementData && movementData.progress > 0 && movementData.progress < 1) {
+        // During movement, use exact interpolated position - no orbital motion
+        fleetRef.current.position.set(posX, 0, posZ);
+        console.log(`Fleet ${fleet.id} at movement position:`, [posX.toFixed(1), posZ.toFixed(1)]);
+      } else {
+        // Normal orbital motion when not moving
         const time = Date.now() * 0.0001;
         const currentRadius = Math.sqrt(posX * posX + posZ * posZ);
         const currentAngle = Math.atan2(posZ, posX);
-        const orbitalMotion = time * orbitalSpeed;
+        const orbitalMotion = time * Math.sqrt(1 / Math.max(currentRadius, 0.1)) * 0.15;
         
         fleetRef.current.position.x = currentRadius * Math.cos(currentAngle + orbitalMotion);
         fleetRef.current.position.z = currentRadius * Math.sin(currentAngle + orbitalMotion);
         fleetRef.current.position.y = 0;
-      } else {
-        // During movement, use exact interpolated position
-        fleetRef.current.position.set(posX, 0, posZ);
       }
       
       // Always update real-time position for ships
