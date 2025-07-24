@@ -568,9 +568,13 @@ export function SystemView({
         jungle_world: Array.from({length: 5}, (_, i) => 
           `/textures/Jungle/Jungle_${String(i + 1).padStart(2, '0')}-1024x512.png`
         ),
-        marshy_world: Array.from({length: 5}, (_, i) => 
-          `/textures/Marshy/Marshy_${String(i + 1).padStart(2, '0')}-1024x512.png`
-        ),
+        marshy_world: [
+          '/textures/Marshy/Marshy_01-1024x512.png',
+          '/textures/Marshy/Marshy_02-1024x512.png',
+          '/textures/Marshy/Marshy_03-1024x512.png',
+          '/textures/Marshy/Marshy_04-1024x512.png',
+          '/textures/Marshy/Marshy_05-1024-512.png'  // This one has different naming
+        ],
         martian_world: Array.from({length: 5}, (_, i) => 
           `/textures/Martian/Martian_${String(i + 1).padStart(2, '0')}-1024x512.png`
         ),
