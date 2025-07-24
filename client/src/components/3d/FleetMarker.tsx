@@ -42,8 +42,13 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
       shipRef.current.position.z = fleetPosition[2] + shipZ;
       shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
       
-      // Gentle rotation
-      shipRef.current.rotation.y = state.clock.elapsedTime * 0.2 + shipIndex;
+      // Fleet formation rotation - all ships face the direction of orbital movement
+      // Calculate the tangent to the orbit (direction of movement)
+      const fleetOrbitRadius = Math.sqrt(fleetPosition[0] * fleetPosition[0] + fleetPosition[2] * fleetPosition[2]);
+      const fleetAngle = Math.atan2(fleetPosition[2], fleetPosition[0]);
+      
+      // Ships face 90 degrees ahead of radial direction (tangent to orbit)
+      shipRef.current.rotation.y = fleetAngle + Math.PI / 2;
     }
   });
 
