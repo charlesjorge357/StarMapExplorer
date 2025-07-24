@@ -1149,7 +1149,7 @@ function App() {
 
           {/* System view - fleet information */}
           {currentView === 'system' && selectedFleet && (
-            <div className="absolute top-4 left-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+            <div className="absolute bottom-4 right-4 bg-black/90 text-white p-3 rounded-lg w-80 backdrop-blur border border-gray-600 z-40">
               <FleetInfoPanel 
                 fleet={selectedFleet} 
                 onClose={() => setSelectedFleet(null)} 
@@ -1159,7 +1159,7 @@ function App() {
 
           {/* Planetary view - army information */}
           {currentView === 'planetary' && selectedArmy && (
-            <div className="absolute top-4 left-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600">
+            <div className="absolute bottom-4 right-4 bg-black/90 text-white p-3 rounded-lg w-80 backdrop-blur border border-gray-600 z-40">
               <ArmyInfoPanel 
                 army={selectedArmy} 
                 onClose={() => setSelectedArmy(null)} 

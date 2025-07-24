@@ -27,7 +27,7 @@ export function ArmyInfoPanel({ army, onClose }: ArmyInfoPanelProps) {
   };
 
   return (
-    <div className="fixed top-4 left-4 w-80 bg-black/90 border-2 rounded-lg p-4 text-white font-mono text-sm z-50"
+    <div className="w-full bg-transparent border-2 rounded-lg p-4 text-white font-mono text-sm"
          style={{ borderColor: factionColor }}>
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold" style={{ color: factionColor }}>
