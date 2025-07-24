@@ -50,23 +50,29 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
 
   useFrame((state) => {
     if (shipRef.current && fleetPosition) {
-      // Calculate orbital position and rotation using enhanced function
       const time = Date.now() * 0.0001 + shipIndex * (Math.PI * 2 / 8); // Stagger ships
+      const theta = shipOrbitalSpeed * time;
       
-      // Update ship orbital position and rotation around fleet center
-      updateOrbitingObject(shipRef.current, shipOrbitRadius, shipOrbitalSpeed, time, false);
+      // Calculate ship position relative to fleet center
+      const shipX = shipOrbitRadius * Math.cos(theta);
+      const shipZ = shipOrbitRadius * Math.sin(theta);
       
-      // Apply fleet position as offset
-      shipRef.current.position.x += fleetPosition[0];
-      shipRef.current.position.z += fleetPosition[2];
+      // Calculate ship rotation (direction of movement)
+      const dx = -shipOrbitRadius * Math.sin(theta);
+      const dz = shipOrbitRadius * Math.cos(theta);
+      const shipRotation = Math.atan2(dz, dx);
+      
+      // Apply fleet position offset to get world position  
+      shipRef.current.position.x = fleetPosition[0] + shipX;
+      shipRef.current.position.z = fleetPosition[2] + shipZ;
       shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
       
-      // Apply fleet formation rotation - all ships also face fleet's orbital direction
+      // Calculate fleet's orbital direction for formation alignment
       const fleetOrbitRadius = Math.sqrt(fleetPosition[0] * fleetPosition[0] + fleetPosition[2] * fleetPosition[2]);
       const fleetAngle = Math.atan2(fleetPosition[2], fleetPosition[0]);
       
-      // Add fleet orbital direction to ship's individual rotation
-      shipRef.current.rotation.y += fleetAngle + Math.PI / 2;
+      // Combine ship's local rotation with fleet's orbital direction
+      shipRef.current.rotation.y = shipRotation + fleetAngle + Math.PI / 2;
     }
   });
 
