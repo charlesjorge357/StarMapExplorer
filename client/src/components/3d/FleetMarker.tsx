@@ -101,8 +101,11 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Calculate orbital motion using exact planet formula
-  const orbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+  // Recalculate orbital motion every time fleet.position changes
+  const orbitRadius = useMemo(() => {
+    return Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+  }, [fleet.position[0], fleet.position[2]]);
+  
   const orbitalSpeed = useMemo(() => {
     // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
