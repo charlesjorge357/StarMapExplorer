@@ -475,22 +475,45 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             
             const intersectionPoint = event.point;
             
-            // Normalize the intersection point to get exact surface coordinates
-            const normalizedPoint = intersectionPoint.clone().normalize();
+            // Transform the intersection point to account for planet group rotation
+            const worldPoint = new THREE.Vector3();
+            worldPoint.copy(intersectionPoint);
             
-            // Convert normalized point to lat/lon using exact SurfaceFeatureMarker reverse calculation
-            // From SurfaceFeatureMarker: x = -planetRadius * Math.sin(phi) * Math.cos(theta)
-            // From SurfaceFeatureMarker: y = planetRadius * Math.cos(phi)  
-            // From SurfaceFeatureMarker: z = planetRadius * Math.sin(phi) * Math.sin(theta)
-            // Where phi = (90 - lat) * (Math.PI / 180) and theta = (lon + 180) * (Math.PI / 180)
+            // Transform to account for the features group rotation (where armies are positioned)
+            if (featuresGroupRef.current) {
+              // Get the features group's world matrix and apply inverse transformation
+              const featuresMatrix = featuresGroupRef.current.matrixWorld.clone();
+              const inverseMatrix = featuresMatrix.invert();
+              worldPoint.applyMatrix4(inverseMatrix);
+            }
             
-            const phi = Math.acos(normalizedPoint.y); // phi from y coordinate
-            const lat = 90 - phi * (180 / Math.PI);   // Convert phi back to latitude
+            // Normalize to get surface coordinates
+            const normalizedPoint = worldPoint.clone().normalize();
             
-            const theta = Math.atan2(normalizedPoint.z, -normalizedPoint.x); // theta from x,z coordinates
-            const lon = theta * (180 / Math.PI) - 180; // Convert theta back to longitude
+            // Convert to lat/lon using the same coordinate system as SurfaceFeatureMarker
+            // SurfaceFeatureMarker uses: x = -radius * sin(phi) * cos(theta), y = radius * cos(phi), z = radius * sin(phi) * sin(theta)
+            // Where phi = (90 - lat) * PI/180 and theta = (lon + 180) * PI/180
             
-            console.log('Army movement target calculated:', { lat, lon, point: intersectionPoint });
+            const phi = Math.acos(Math.max(-1, Math.min(1, normalizedPoint.y))); // Clamp to avoid NaN
+            const lat = 90 - phi * (180 / Math.PI);
+            
+            // Handle theta calculation carefully to avoid edge cases
+            let theta = Math.atan2(normalizedPoint.z, -normalizedPoint.x);
+            let lon = theta * (180 / Math.PI) - 180;
+            
+            // Normalize longitude to [-180, 180] range
+            while (lon < -180) lon += 360;
+            while (lon > 180) lon -= 360;
+            
+            console.log('Army movement target calculated:', { 
+              lat, 
+              lon, 
+              worldPoint: worldPoint.toArray(),
+              normalizedPoint: normalizedPoint.toArray(),
+              intersectionPoint: intersectionPoint.toArray(),
+              featuresGroupRotation: featuresGroupRef.current?.rotation.y || 0,
+              planetMeshRotation: planetMeshRef.current?.rotation.y || 0
+            });
             console.log('Selected army before movement:', armyMovement.selectedArmyId);
             
             // Start moving the selected army to this position
