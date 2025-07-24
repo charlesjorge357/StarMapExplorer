@@ -935,13 +935,19 @@ export function SystemView({
                 
                 console.log(`📍 NEW FLEET POSITION: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
                 
-                // Update in system data
+                // Update in system data by direct mutation
                 const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-                const fleetIndex = fleets.findIndex((f: any) => f.id === selectedFleet.id);
-                if (fleetIndex >= 0) {
-                  fleets[fleetIndex] = updatedFleet;
-                  console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA`);
+                const targetFleet = fleets.find((f: any) => f.id === selectedFleet.id);
+                if (targetFleet) {
+                  // Direct mutation of fleet position
+                  targetFleet.position = [clickX, 0, clickZ];
+                  targetFleet.orbitRadius = orbitRadius;
+                  targetFleet.angle = angle;
+                  console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA:`, targetFleet.position);
                 }
+                
+                // Force re-render by updating system state
+                setSystem({ ...system });
                 
                 // Update selected fleet state
                 setSelectedFleet(updatedFleet);
@@ -957,12 +963,16 @@ export function SystemView({
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
           
-          {/* Visible wireframe circle for visual feedback */}
+          {/* Visible wireframe circle for visual feedback - non-interactive */}
           <mesh 
             position={[0, -5, 0]}
             rotation={[Math.PI / 2, 0, 0]}
             visible={true}
             userData={{ isVisualOnly: true }}
+            onPointerOver={undefined}
+            onPointerOut={undefined}
+            onClick={undefined}
+            raycast={() => null}
           >
             <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
             <meshBasicMaterial 
