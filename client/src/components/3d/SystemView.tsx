@@ -370,86 +370,12 @@ export function SystemView({
     ((feature: SpaceFeature | null) => propOnSpaceFeatureClick(feature)) : 
     setLocalSelectedSpaceFeature;
     
-  // Fleet movement state
-  const [fleetMovement, setFleetMovement] = useState<{
-    selectedFleetId: string | null;
-    targetPosition: [number, number, number] | null;
-    progress: number;
-  }>({
-    selectedFleetId: null,
-    targetPosition: null,
-    progress: 0
-  });
-  
   // Use either prop state or local state for fleets
   const [localSelectedFleet, setLocalSelectedFleet] = useState<any>(null);
   const selectedFleet = propSelectedFleet ?? localSelectedFleet;
   const setSelectedFleet = propOnFleetClick ? 
     ((fleet: any) => propOnFleetClick(fleet)) : 
     setLocalSelectedFleet;
-  
-  // Fleet movement animation
-  useEffect(() => {
-    console.log('Fleet movement useEffect triggered:', {
-      hasFleetId: !!fleetMovement.selectedFleetId,
-      hasTarget: !!fleetMovement.targetPosition,
-      progress: fleetMovement.progress,
-      shouldAnimate: fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1
-    });
-    
-    if (fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1) {
-      console.log('Starting fleet movement animation interval...');
-      const interval = setInterval(() => {
-        setFleetMovement(prev => {
-          const newProgress = Math.min(prev.progress + 0.03, 1); // Faster movement: 3% per frame
-          
-          console.log(`Fleet movement progress: ${(newProgress * 100).toFixed(1)}%`);
-          
-          if (newProgress >= 1) {
-            // Movement complete - update the fleet's actual position
-            const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-            const fleet = fleets.find((f: any) => f.id === prev.selectedFleetId);
-            if (fleet && prev.targetPosition) {
-              const oldPosition = [...fleet.position];
-              fleet.position = [...prev.targetPosition];
-              
-              // Force update the system cache to persist the new position
-              if (system?.factions) {
-                console.log(`Fleet ${fleet.id} position permanently updated in system data`);
-              }
-              
-              console.log(`Fleet ${fleet.id} movement completed:`, {
-                from: oldPosition,
-                to: prev.targetPosition,
-                fleetUpdated: fleet.position
-              });
-            } else {
-              console.error('Fleet not found or no target position:', {
-                fleetId: prev.selectedFleetId,
-                targetPosition: prev.targetPosition,
-                availableFleets: fleets.map(f => ({ id: f.id, pos: f.position }))
-              });
-            }
-            
-            return {
-              selectedFleetId: null,
-              targetPosition: null,
-              progress: 0
-            };
-          }
-          
-          return { ...prev, progress: newProgress };
-        });
-      }, 16); // ~60fps
-      
-      return () => {
-        console.log('Clearing fleet movement interval');
-        clearInterval(interval);
-      };
-    } else {
-      console.log('Fleet movement animation not started - conditions not met');
-    }
-  }, [fleetMovement.selectedFleetId, fleetMovement.targetPosition, fleetMovement.progress, system.factions]);
   
   // Handle fleet selection
   const handleFleetClick = (fleet: any) => {
@@ -741,25 +667,17 @@ export function SystemView({
         // Calculate orbital radius for the target position
         const targetRadius = Math.sqrt(clickPoint.x * clickPoint.x + clickPoint.z * clickPoint.z);
         
-        console.log('Fleet movement ordered:', {
+        console.log('Fleet teleporting to clicked position:', {
           fleetId: selectedFleet.id,
-          currentPos: selectedFleet.position,
-          targetPos,
+          from: selectedFleet.position,
+          to: targetPos,
           targetRadius: targetRadius.toFixed(2) + ' units'
         });
         
-        // Ensure we start movement animation immediately
-        setFleetMovement({
-          selectedFleetId: selectedFleet.id,
-          targetPosition: targetPos,
-          progress: 0.01 // Start with small progress to trigger animation
-        });
+        // Immediately teleport the fleet to the new position
+        selectedFleet.position = targetPos;
         
-        console.log('Fleet movement state set:', {
-          selectedFleetId: selectedFleet.id,
-          targetPosition: targetPos,
-          progress: 0.01
-        });
+        console.log(`Fleet ${selectedFleet.id} teleported successfully`);
         
         // Don't deselect fleet after movement order - keep it selected for more orders
         return;
@@ -1024,18 +942,7 @@ export function SystemView({
         </mesh>
       )}
 
-      {/* Fleet movement target indicator */}
-      {fleetMovement.targetPosition && (
-        <mesh position={fleetMovement.targetPosition}>
-          <ringGeometry args={[1, 2, 8]} />
-          <meshBasicMaterial 
-            color="#00ff00" 
-            transparent 
-            opacity={0.8}
-            side={2}
-          />
-        </mesh>
-      )}
+
 
       {/* Fleets */}
       {system.factions?.flatMap((faction: any) => 
@@ -1044,10 +951,6 @@ export function SystemView({
             key={fleet.id}
             fleet={fleet}
             isSelected={selectedFleet?.id === fleet.id}
-            movementData={fleetMovement.selectedFleetId === fleet.id ? {
-              targetPosition: fleetMovement.targetPosition!,
-              progress: fleetMovement.progress
-            } : undefined}
             onFleetClick={handleFleetClick}
             starMass={star.mass || 1}
           />

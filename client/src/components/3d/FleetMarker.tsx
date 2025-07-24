@@ -6,7 +6,6 @@ import * as THREE from 'three';
 interface FleetMarkerProps {
   fleet: any; // Fleets type from schema
   isSelected?: boolean;
-  movementData?: { targetPosition: [number, number, number]; progress: number };
   onFleetClick?: (fleet: any) => void;
   starMass: number;
 }
@@ -98,78 +97,29 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
   );
 }
 
-export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, starMass }: FleetMarkerProps) {
+export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: FleetMarkerProps) {
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Debug fleet data on render
-  if (movementData) {
-    console.log(`FleetMarker ${fleet.id} received movementData:`, {
-      progress: movementData.progress,
-      hasTarget: !!movementData.targetPosition,
-      fleetPos: fleet.position
-    });
-  }
-  
-  // Handle movement animation with orbital mechanics
-  const currentPosition = useMemo(() => {
-    if (movementData && movementData.progress < 1) {
-      const [currentX, currentY, currentZ] = fleet.position;
-      const [targetX, targetY, targetZ] = movementData.targetPosition;
-      const progress = movementData.progress;
-      
-      // Use smooth interpolation
-      const smoothProgress = progress * progress * (3.0 - 2.0 * progress);
-      
-      const interpolatedPos: [number, number, number] = [
-        currentX + (targetX - currentX) * smoothProgress,
-        0, // Keep on XZ plane
-        currentZ + (targetZ - currentZ) * smoothProgress
-      ];
-      
-      // More frequent debug logging
-      if (Math.random() < 0.1) {
-        console.log(`Fleet ${fleet.id} moving:`, {
-          progress: (progress * 100).toFixed(1) + '%',
-          from: [currentX.toFixed(1), currentZ.toFixed(1)],
-          to: [targetX.toFixed(1), targetZ.toFixed(1)],
-          current: [interpolatedPos[0].toFixed(1), interpolatedPos[2].toFixed(1)]
-        });
-      }
-      
-      return interpolatedPos;
-    }
-    return fleet.position;
-  }, [fleet.position, movementData]);
-
-  const [x, y, z] = currentPosition;
-  
   // Calculate orbital motion using exact planet formula
-  const orbitRadius = Math.sqrt(x * x + z * z);
+  const orbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
   const orbitalSpeed = useMemo(() => {
     // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
-    return Math.sqrt(1 / orbitRadius) * 0.15;
+    return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
 
   useFrame((state, delta) => {
     if (fleetRef.current) {
-      const [posX, posY, posZ] = currentPosition;
+      // Always use orbital motion around the fleet's current position
+      const time = Date.now() * 0.0001;
+      const [baseX, baseY, baseZ] = fleet.position;
+      const currentRadius = Math.sqrt(baseX * baseX + baseZ * baseZ);
+      const currentAngle = Math.atan2(baseZ, baseX);
+      const orbitalMotion = time * Math.sqrt(1 / Math.max(currentRadius, 0.1)) * 0.15;
       
-      if (movementData && movementData.progress > 0 && movementData.progress < 1) {
-        // During movement, use exact interpolated position - no orbital motion
-        fleetRef.current.position.set(posX, 0, posZ);
-        console.log(`Fleet ${fleet.id} at movement position:`, [posX.toFixed(1), posZ.toFixed(1)]);
-      } else {
-        // Normal orbital motion when not moving
-        const time = Date.now() * 0.0001;
-        const currentRadius = Math.sqrt(posX * posX + posZ * posZ);
-        const currentAngle = Math.atan2(posZ, posX);
-        const orbitalMotion = time * Math.sqrt(1 / Math.max(currentRadius, 0.1)) * 0.15;
-        
-        fleetRef.current.position.x = currentRadius * Math.cos(currentAngle + orbitalMotion);
-        fleetRef.current.position.z = currentRadius * Math.sin(currentAngle + orbitalMotion);
-        fleetRef.current.position.y = 0;
-      }
+      fleetRef.current.position.x = currentRadius * Math.cos(currentAngle + orbitalMotion);
+      fleetRef.current.position.z = currentRadius * Math.sin(currentAngle + orbitalMotion);
+      fleetRef.current.position.y = 0;
       
       // Always update real-time position for ships
       setRealTimePosition([fleetRef.current.position.x, 0, fleetRef.current.position.z]);
@@ -184,7 +134,7 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
       {/* Fleet command ship */}
       <mesh
         ref={fleetRef}
-        position={currentPosition}
+        position={fleet.position}
         scale={[scale, scale, scale]}
         onClick={(e) => {
           e.stopPropagation();
