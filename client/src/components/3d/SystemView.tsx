@@ -656,15 +656,8 @@ export function SystemView({
       intersectionCount: event.intersections?.length || 0
     });
     
-    // This background click handler should NOT handle orbital disk clicks
-    // Orbital disk has its own direct click handler to avoid conflicts
-    if (selectedFleet && event.intersections) {
-      const intersection = event.intersections.find((i: any) => i.object.userData.isOrbitalDisk);
-      if (intersection) {
-        console.log('Background click detected orbital disk, but disk should handle its own clicks');
-        return; // Let the orbital disk handle its own clicks
-      }
-    }
+    // Skip orbital disk handling in background - it has its own handler
+    console.log('Background click handler - checking for orbital disk conflicts');
     
     // Only deselect if not clicking on orbital disk
     if (selectedPlanet) {
@@ -802,10 +795,16 @@ export function SystemView({
         starPosition={system.star?.position || [0, 0, 0]}
       />
 
-      {/* Background plane for deselection clicks */}
+      {/* Background plane for deselection clicks - positioned behind orbital disk */}
       <mesh 
         position={[0, 0, -5000]}
-        onClick={handleBackgroundClick}
+        onClick={(event) => {
+          // Only handle background clicks if NOT clicking on orbital disk
+          const hasOrbitalDisk = event.intersections?.some((i: any) => i.object.userData.isOrbitalDisk);
+          if (!hasOrbitalDisk) {
+            handleBackgroundClick(event);
+          }
+        }}
         visible={false}
       >
         <planeGeometry args={[50000, 50000]} />
@@ -905,45 +904,59 @@ export function SystemView({
         />
       ))}
       
-      {/* Orbital disk for fleet movement (semi-transparent when fleet selected) */}
+      {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
       {selectedFleet && (
         <mesh 
           position={[0, 0, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
-            console.log('Orbital disk clicked directly');
+            console.log('Orbital disk clicked directly - intercepting all other clicks');
             event.stopPropagation();
             
-            if (event.intersections && event.intersections.length > 0) {
-              const clickPoint = event.intersections[0].point;
+            // Get the click point from the intersection
+            const clickPoint = event.point || event.intersections?.[0]?.point;
+            if (clickPoint) {
               const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z];
               
-              console.log('Direct orbital disk click - teleporting fleet:', {
+              console.log('Fleet teleporting to:', {
                 fleetId: selectedFleet.id,
                 from: selectedFleet.position,
-                to: targetPos
+                to: targetPos,
+                clickPoint: clickPoint
               });
               
-              // Update fleet position in system data
+              // Force update fleet position with new object reference
+              const updatedFleet = {
+                ...selectedFleet,
+                position: targetPos
+              };
+              
+              // Update in system data
               const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
               const fleetIndex = fleets.findIndex((f: any) => f.id === selectedFleet.id);
               if (fleetIndex >= 0) {
-                fleets[fleetIndex].position = targetPos;
-                selectedFleet.position = targetPos;
-                setSelectedFleet({ ...selectedFleet, position: targetPos });
-                console.log(`Fleet ${selectedFleet.id} teleported via direct disk click`);
+                fleets[fleetIndex] = updatedFleet;
+                console.log(`Fleet ${selectedFleet.id} updated in system data`);
               }
+              
+              // Update selected fleet state
+              setSelectedFleet(updatedFleet);
+              console.log(`Fleet ${selectedFleet.id} teleported successfully`);
+            } else {
+              console.error('No click point found in event');
             }
           }}
           visible={true}
           userData={{ isOrbitalDisk: true }}
+          renderOrder={1000} // Render in front to catch clicks first
         >
           <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
           <meshBasicMaterial 
             transparent 
-            opacity={0.1}
+            opacity={0.15}
             color="#00ffff"
             wireframe={true}
+            depthTest={false} // Ensure it's always on top
           />
         </mesh>
       )}
