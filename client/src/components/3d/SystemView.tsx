@@ -903,12 +903,12 @@ export function SystemView({
         />
       ))}
       
-      {/* Orbital selection disk - invisible clickable plane with wireframe visual */}
+      {/* Orbital selection disk - clickable plane positioned above everything */}
       {selectedFleet && (
         <group>
-          {/* Invisible clickable plane for fleet movement */}
+          {/* Invisible clickable plane for fleet movement - positioned high to catch clicks first */}
           <mesh 
-            position={[0, -5, 0]}
+            position={[0, 10, 0]}
             rotation={[Math.PI / 2, 0, 0]}
             onClick={(event) => {
               console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
@@ -946,9 +946,6 @@ export function SystemView({
                   console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA:`, targetFleet.position);
                 }
                 
-                // Force re-render by updating system state
-                setSystem({ ...system });
-                
                 // Update selected fleet state
                 setSelectedFleet(updatedFleet);
                 console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
@@ -958,9 +955,10 @@ export function SystemView({
             }}
             visible={false}
             userData={{ isOrbitalDisk: true }}
+            renderOrder={999}
           >
             <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial transparent opacity={0} />
+            <meshBasicMaterial transparent opacity={0} depthTest={false} />
           </mesh>
           
           {/* Visible wireframe circle for visual feedback - non-interactive */}
