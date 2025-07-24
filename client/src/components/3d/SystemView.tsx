@@ -800,11 +800,41 @@ export function SystemView({
         starPosition={system.star?.position || [0, 0, 0]}
       />
 
-      {/* Background plane for deselection clicks - positioned way behind everything */}
+      {/* Orbital selection disk - positioned first to catch clicks before background */}
+      {selectedFleet && (
+        <mesh 
+          position={[0, 0, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          onClick={(event) => {
+            console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
+            event.stopPropagation();
+            
+            if (event.point) {
+              // Update fleet position directly
+              const targetFleet = system.factions?.flatMap((f: any) => f.fleets || [])
+                .find((f: any) => f.id === selectedFleet.id);
+              
+              if (targetFleet) {
+                targetFleet.position = [event.point.x, 0, event.point.z];
+                setSelectedFleet({ ...targetFleet });
+                console.log(`🚀 FLEET MOVED TO: [${event.point.x.toFixed(2)}, 0, ${event.point.z.toFixed(2)}]`);
+              }
+            }
+          }}
+          visible={false}
+          renderOrder={1000}
+        >
+          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
+          <meshBasicMaterial transparent opacity={0} depthTest={false} />
+        </mesh>
+      )}
+
+      {/* Background plane for deselection clicks - positioned behind orbital disk */}
       <mesh 
         position={[0, 0, -10000]}
         onClick={handleBackgroundClick}
         visible={false}
+        renderOrder={-1000}
       >
         <planeGeometry args={[50000, 50000]} />
         <meshBasicMaterial transparent opacity={0} />
@@ -903,85 +933,26 @@ export function SystemView({
         />
       ))}
       
-      {/* Orbital selection disk - clickable plane positioned above everything */}
+      {/* Visible wireframe circle for visual feedback - non-interactive */}
       {selectedFleet && (
-        <group>
-          {/* Invisible clickable plane for fleet movement - positioned high to catch clicks first */}
-          <mesh 
-            position={[0, 10, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-            onClick={(event) => {
-              console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
-              event.stopPropagation();
-              
-              if (event.point) {
-                console.log('Click point:', event.point);
-                
-                // Calculate orbital radius and angle from click point
-                const clickX = event.point.x;
-                const clickZ = event.point.z;
-                const orbitRadius = Math.sqrt(clickX * clickX + clickZ * clickZ);
-                const angle = Math.atan2(clickZ, clickX);
-                
-                console.log(`🎯 CALCULATED: radius=${orbitRadius.toFixed(2)}, angle=${angle.toFixed(2)}`);
-                
-                // Update fleet position directly to click coordinates
-                const updatedFleet = {
-                  ...selectedFleet,
-                  orbitRadius,
-                  angle,
-                  position: [clickX, 0, clickZ]
-                };
-                
-                console.log(`📍 NEW FLEET POSITION: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
-                
-                // Update in system data by direct mutation
-                const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
-                const targetFleet = fleets.find((f: any) => f.id === selectedFleet.id);
-                if (targetFleet) {
-                  // Direct mutation of fleet position
-                  targetFleet.position = [clickX, 0, clickZ];
-                  targetFleet.orbitRadius = orbitRadius;
-                  targetFleet.angle = angle;
-                  console.log(`✅ FLEET ${selectedFleet.id} UPDATED IN SYSTEM DATA:`, targetFleet.position);
-                }
-                
-                // Update selected fleet state
-                setSelectedFleet(updatedFleet);
-                console.log(`🚀 FLEET ${selectedFleet.id} TELEPORTED SUCCESSFULLY`);
-              } else {
-                console.error('No click point found in event');
-              }
-            }}
-            visible={false}
-            userData={{ isOrbitalDisk: true }}
-            renderOrder={999}
-          >
-            <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial transparent opacity={0} depthTest={false} />
-          </mesh>
-          
-          {/* Visible wireframe circle for visual feedback - non-interactive */}
-          <mesh 
-            position={[0, -5, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-            visible={true}
-            userData={{ isVisualOnly: true }}
-            onPointerOver={undefined}
-            onPointerOut={undefined}
-            onClick={undefined}
-            raycast={() => null}
-          >
-            <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial 
-              transparent 
-              opacity={0.1}
-              color="#00ffff"
-              wireframe={true}
-              depthTest={false}
-            />
-          </mesh>
-        </group>
+        <mesh 
+          position={[0, -5, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          visible={true}
+          onPointerOver={undefined}
+          onPointerOut={undefined}
+          onClick={undefined}
+          raycast={() => null}
+        >
+          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
+          <meshBasicMaterial 
+            transparent 
+            opacity={0.1}
+            color="#00ffff"
+            wireframe={true}
+            depthTest={false}
+          />
+        </mesh>
       )}
 
 
