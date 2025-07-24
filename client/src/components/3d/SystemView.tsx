@@ -14,6 +14,7 @@ import { PlanetRings } from './PlanetRings';
 import { Console } from 'console';
 import { CometTrail } from './CometTrail';
 import { SpaceFeatureMarker } from './SpaceFeatureMarker';
+import { FleetMarker } from './FleetMarker';
 import { SpaceFeature } from '../../../../shared/schema';
 
 function MoonMesh({ 
@@ -363,6 +364,57 @@ export function SystemView({
   const setSelectedSpaceFeature = propOnSpaceFeatureClick ? 
     ((feature: SpaceFeature | null) => propOnSpaceFeatureClick(feature)) : 
     setLocalSelectedSpaceFeature;
+    
+  // Fleet movement state
+  const [fleetMovement, setFleetMovement] = useState<{
+    selectedFleetId: string | null;
+    targetPosition: [number, number, number] | null;
+    progress: number;
+  }>({
+    selectedFleetId: null,
+    targetPosition: null,
+    progress: 0
+  });
+  
+  // Selected fleet state
+  const [selectedFleet, setSelectedFleet] = useState<any>(null);
+  
+  // Fleet movement animation
+  useEffect(() => {
+    if (fleetMovement.selectedFleetId && fleetMovement.targetPosition && fleetMovement.progress < 1) {
+      const interval = setInterval(() => {
+        setFleetMovement(prev => {
+          const newProgress = Math.min(prev.progress + 0.02, 1); // 2% per frame = ~50 frames for 1 second at 60fps
+          
+          if (newProgress >= 1) {
+            // Movement complete - update the fleet's actual position
+            const fleets = system.factions?.flatMap((f: any) => f.fleets || []) || [];
+            const fleet = fleets.find((f: any) => f.id === prev.selectedFleetId);
+            if (fleet && prev.targetPosition) {
+              fleet.position = [...prev.targetPosition];
+              console.log(`Fleet movement completed to position:`, prev.targetPosition);
+            }
+            
+            return {
+              selectedFleetId: null,
+              targetPosition: null,
+              progress: 0
+            };
+          }
+          
+          return { ...prev, progress: newProgress };
+        });
+      }, 16); // ~60fps
+      
+      return () => clearInterval(interval);
+    }
+  }, [fleetMovement.selectedFleetId, fleetMovement.targetPosition, system.factions]);
+  
+  // Handle fleet selection
+  const handleFleetClick = (fleet: any) => {
+    setSelectedFleet(fleet);
+    console.log('Selected fleet:', fleet);
+  };
   // Add try-catch to handle useUniverse hook issues
   let universeStore;
   try {
@@ -621,8 +673,30 @@ export function SystemView({
     }
   };
 
-  // Handle background click to deselect planets and space features
-  const handleBackgroundClick = () => {
+  // Handle background click to deselect planets, space features, and fleets
+  const handleBackgroundClick = (event: any) => {
+    // Check if this is an orbital disk click for fleet movement
+    if (selectedFleet && event.intersections) {
+      const intersection = event.intersections.find((i: any) => i.object.userData.isOrbitalDisk);
+      if (intersection) {
+        const clickPoint = intersection.point;
+        const targetPos: [number, number, number] = [clickPoint.x, 0, clickPoint.z]; // Keep on XZ plane
+        
+        console.log('Fleet movement ordered:', {
+          fleetId: selectedFleet.id,
+          currentPos: selectedFleet.position,
+          targetPos
+        });
+        
+        setFleetMovement({
+          selectedFleetId: selectedFleet.id,
+          targetPosition: targetPos,
+          progress: 0
+        });
+        return;
+      }
+    }
+    
     if (selectedPlanet) {
       console.log('Deselecting planet');
       // Stop orbital tracking
@@ -634,6 +708,10 @@ export function SystemView({
     if (selectedSpaceFeature) {
       console.log('Deselecting space feature');
       setSelectedSpaceFeature(null);
+    }
+    if (selectedFleet) {
+      console.log('Deselecting fleet');
+      setSelectedFleet(null);
     }
   };
 
@@ -856,6 +934,37 @@ export function SystemView({
           onFeatureClick={handleSpaceFeatureClick}
         />
       ))}
+      
+      {/* Orbital disk for fleet movement (invisible) */}
+      {selectedFleet && (
+        <mesh 
+          position={[0, 0, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          onClick={handleBackgroundClick}
+          visible={false}
+          userData={{ isOrbitalDisk: true }}
+        >
+          <circleGeometry args={[200, 64]} />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
+      )}
+
+      {/* Fleets */}
+      {system.factions?.flatMap((faction: any) => 
+        faction.fleets?.map((fleet: any) => (
+          <FleetMarker
+            key={fleet.id}
+            fleet={fleet}
+            isSelected={selectedFleet?.id === fleet.id}
+            movementData={fleetMovement.selectedFleetId === fleet.id ? {
+              targetPosition: fleetMovement.targetPosition!,
+              progress: fleetMovement.progress
+            } : undefined}
+            onFleetClick={handleFleetClick}
+            starMass={star.mass || 1}
+          />
+        )) || []
+      )}
     </group>
   );
 }

@@ -6,6 +6,7 @@ import React, { useRef, useMemo } from 'react';
 import { FactionGenerator } from './FactionGenerator';
 import {PlanetNameGenerator} from './PlanetNameGenerator';
 import { MilitaryGenerator } from "./MilitaryGenerator";
+import { FleetGenerator } from "./FleetGenerator";
 
 // Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
@@ -675,6 +676,10 @@ export class SystemGenerator {
         // Generate military for factions with holdings
         MilitaryGenerator.generateMilitaryForFaction(faction);
         console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name} (Tech Level: ${faction.technology})`);
+        
+        // Generate fleets for faction homeworlds
+        FleetGenerator.generateFleetForFaction(faction, star.id);
+        console.log(`Generated ${faction.fleets?.length || 0} fleets for faction: ${faction.name}`);
       }
     }
 
