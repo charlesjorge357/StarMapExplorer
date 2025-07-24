@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 import * as THREE from 'three';
@@ -95,6 +95,7 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
 
 export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, starMass }: FleetMarkerProps) {
   const fleetRef = useRef<Mesh>(null);
+  const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
   // Handle movement animation with orbital mechanics
   const currentPosition = useMemo(() => {
@@ -138,16 +139,24 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
   }, [orbitRadius]);
 
   useFrame((state, delta) => {
-    if (fleetRef.current && !movementData) {
-      // Use same time calculation as planets for consistency
-      const time = Date.now() * 0.0001;
-      const angle = time * orbitalSpeed;
+    if (fleetRef.current) {
+      if (!movementData) {
+        // Normal orbital motion when not moving
+        const time = Date.now() * 0.0001;
+        const angle = time * orbitalSpeed;
+        
+        fleetRef.current.position.x = orbitRadius * Math.cos(angle);
+        fleetRef.current.position.z = orbitRadius * Math.sin(angle);
+        
+        // Update fleet position data for ships
+        fleet.position = [fleetRef.current.position.x, 0, fleetRef.current.position.z];
+      } else {
+        // During movement, use the interpolated position
+        fleetRef.current.position.set(currentPosition[0], 0, currentPosition[2]);
+      }
       
-      fleetRef.current.position.x = orbitRadius * Math.cos(angle);
-      fleetRef.current.position.z = orbitRadius * Math.sin(angle);
-      
-      // Update fleet position data for ships
-      fleet.position = [fleetRef.current.position.x, 0, fleetRef.current.position.z];
+      // Always update real-time position for ships
+      setRealTimePosition([fleetRef.current.position.x, 0, fleetRef.current.position.z]);
     }
   });
 
@@ -179,7 +188,7 @@ export function FleetMarker({ fleet, isSelected, movementData, onFleetClick, sta
         <ShipMarker
           key={ship.id}
           ship={ship}
-          fleetPosition={currentPosition}
+          fleetPosition={realTimePosition}
           shipIndex={index}
         />
       ))}

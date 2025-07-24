@@ -4,13 +4,20 @@ export class FleetGenerator {
   /**
    * Generate fleets for a faction's homeworld system
    */
-  static generateFleetForFaction(faction: Faction, systemId: string): Fleets[] {
+  static generateFleetForFaction(faction: Faction, systemId: string, planets: any[]): Fleets[] {
     if (!faction.homeworld || faction.name === 'Contested Zone') {
       return [];
     }
 
+    // Find the homeworld planet to position fleet near it
+    const homeworld = planets.find(p => p.name === faction.homeworld);
+    if (!homeworld) {
+      console.warn(`Could not find homeworld ${faction.homeworld} for faction ${faction.name}`);
+      return [];
+    }
+
     // Generate one fleet per faction homeworld
-    const fleet = this.createFleet(faction, systemId);
+    const fleet = this.createFleet(faction, systemId, homeworld);
     faction.fleets = [fleet];
     return [fleet];
   }
@@ -18,10 +25,14 @@ export class FleetGenerator {
   /**
    * Create a single fleet with multiple ships
    */
-  private static createFleet(faction: Faction, systemId: string): Fleets {
-    // Position fleet at a random orbital distance (between inner and outer system)
-    const orbitRadius = 8 + Math.random() * 16; // 8-24 AU range
-    const orbitAngle = Math.random() * Math.PI * 2; // Random angle around star
+  private static createFleet(faction: Faction, systemId: string, homeworld: any): Fleets {
+    // Position fleet near the homeworld planet's orbital radius
+    const planetOrbitRadius = homeworld.orbitRadius || homeworld.displayOrbit || 10;
+    // Fleet orbits slightly closer to star than the planet (0.8-0.9x planet's orbit)
+    const orbitRadius = planetOrbitRadius * (0.8 + Math.random() * 0.1);
+    // Start at same angle as homeworld but offset by 30-60 degrees
+    const planetAngle = Math.atan2(homeworld.position[2], homeworld.position[0]);
+    const orbitAngle = planetAngle + (Math.PI / 6) + (Math.random() * Math.PI / 6); // 30-60 degree offset
     
     const fleetPosition: [number, number, number] = [
       orbitRadius * Math.cos(orbitAngle),
@@ -46,7 +57,7 @@ export class FleetGenerator {
       faction: faction
     };
 
-    console.log(`Generated fleet for ${faction.name}: ${ships.length} ships at orbit ${orbitRadius.toFixed(1)} AU`);
+    console.log(`Generated fleet for ${faction.name}: ${ships.length} ships at orbit ${orbitRadius.toFixed(1)} AU near homeworld ${homeworld.name}`);
     return fleet;
   }
 

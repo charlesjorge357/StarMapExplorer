@@ -678,7 +678,7 @@ export class SystemGenerator {
         console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name} (Tech Level: ${faction.technology})`);
         
         // Generate fleets for faction homeworlds
-        FleetGenerator.generateFleetForFaction(faction, star.id);
+        FleetGenerator.generateFleetForFaction(faction, star.id, filteredPlanets);
         console.log(`Generated ${faction.fleets?.length || 0} fleets for faction: ${faction.name}`);
       }
     }
