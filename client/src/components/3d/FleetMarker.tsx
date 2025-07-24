@@ -16,6 +16,28 @@ interface ShipMarkerProps {
   shipIndex: number;
 }
 
+// Enhanced orbital rotation helper based on your updateOrbitingObject function
+function updateOrbitingObject(
+  mesh: THREE.Object3D,
+  radius: number,
+  angularSpeed: number,
+  time: number,
+  clockwise: boolean = false
+) {
+  const theta = angularSpeed * time;
+  const x = radius * Math.cos(theta);
+  const z = radius * Math.sin(theta); // Using z instead of y for 3D space
+  let dx = -radius * Math.sin(theta);
+  let dz = radius * Math.cos(theta);
+  if (clockwise) {
+    dx = -dx;
+    dz = -dz;
+  }
+  const angle = Math.atan2(dz, dx);
+  mesh.position.set(x, mesh.position.y, z); // Preserve y position
+  mesh.rotation.y = angle; // Rotate around y-axis for 3D
+}
+
 export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) {
   const shipRef = useRef<Mesh>(null);
   
@@ -28,26 +50,23 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
 
   useFrame((state) => {
     if (shipRef.current && fleetPosition) {
-      // Calculate orbital position using same mechanics as planets
-      const time = Date.now() * 0.0001; // Same time calculation as fleet
-      const shipAngle = time * shipOrbitalSpeed + shipIndex * (Math.PI * 2 / 8); // Stagger ships
+      // Calculate orbital position and rotation using enhanced function
+      const time = Date.now() * 0.0001 + shipIndex * (Math.PI * 2 / 8); // Stagger ships
       
-      // Ship position relative to fleet center
-      const shipX = shipOrbitRadius * Math.cos(shipAngle);
-      const shipZ = shipOrbitRadius * Math.sin(shipAngle);
+      // Update ship orbital position and rotation around fleet center
+      updateOrbitingObject(shipRef.current, shipOrbitRadius, shipOrbitalSpeed, time, false);
       
       // Apply fleet position as offset
-      shipRef.current.position.x = fleetPosition[0] + shipX;
-      shipRef.current.position.z = fleetPosition[2] + shipZ;
+      shipRef.current.position.x += fleetPosition[0];
+      shipRef.current.position.z += fleetPosition[2];
       shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
       
-      // Fleet formation rotation - all ships face the direction of orbital movement
-      // Calculate the tangent to the orbit (direction of movement)
+      // Apply fleet formation rotation - all ships also face fleet's orbital direction
       const fleetOrbitRadius = Math.sqrt(fleetPosition[0] * fleetPosition[0] + fleetPosition[2] * fleetPosition[2]);
       const fleetAngle = Math.atan2(fleetPosition[2], fleetPosition[0]);
       
-      // Ships face 90 degrees ahead of radial direction (tangent to orbit)
-      shipRef.current.rotation.y = fleetAngle + Math.PI / 2;
+      // Add fleet orbital direction to ship's individual rotation
+      shipRef.current.rotation.y += fleetAngle + Math.PI / 2;
     }
   });
 
