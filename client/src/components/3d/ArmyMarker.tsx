@@ -1,18 +1,19 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
-import { Armies, Divisions } from '../../../shared/schema';
+// Using any types for now to fix the schema import issue
+// import { Armies, Divisions } from '../../../shared/schema';
 
 interface ArmyMarkerProps {
-  army: Armies;
+  army: any; // Armies type from schema
   planetRadius: number;
   isSelected?: boolean;
   movementData?: { targetPosition: [number, number]; progress: number };
-  onArmyClick?: (army: Armies) => void;
+  onArmyClick?: (army: any) => void;
 }
 
 interface DivisionMarkerProps {
-  division: Divisions;
+  division: any; // Divisions type from schema
   planetRadius: number;
   armyPosition: [number, number];
 }
@@ -135,7 +136,7 @@ export function ArmyMarker({ army, planetRadius, isSelected, movementData, onArm
       </mesh>
 
       {/* Render division markers around the army */}
-      {army.composition && army.composition.map((division) => (
+      {army.composition && army.composition.map((division: any) => (
         <DivisionMarker
           key={division.id}
           division={division}

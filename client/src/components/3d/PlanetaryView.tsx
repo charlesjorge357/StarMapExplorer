@@ -166,7 +166,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
 
     // If no computed values exist (planet with features might be missing them), generate them
     if (!color || color === '#ffffff' || color === '#000000') {
-      const planetSeed = (planet?.id || planet?.name || 'default').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const planetSeed = (planet?.id || planet?.name || 'default').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
       color = SystemGenerator.getPlanetColor(planet?.type, planetSeed);
     }
 
@@ -354,7 +354,7 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       if (featureMesh) {
         // Get the actual world position of the rendered feature
         const worldFeaturePosition = new THREE.Vector3();
-        featureMesh.getWorldPosition(worldFeaturePosition);
+        (featureMesh as any).getWorldPosition(worldFeaturePosition);
         
         // Calculate camera position - offset from the feature
         const distance = trackingDistanceRef.current;
@@ -417,7 +417,9 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
       const newMovingArmies = new Map(prev.movingArmies);
       let hasChanges = false;
       
-      for (const [armyId, movement] of newMovingArmies.entries()) {
+      // Convert map entries to array to avoid iteration issues
+      const armyEntries = Array.from(newMovingArmies.entries());
+      for (const [armyId, movement] of armyEntries) {
         if (movement.progress < 1) {
           movement.progress = Math.min(1, movement.progress + delta * 1.0); // Faster movement speed
           hasChanges = true;
@@ -488,7 +490,8 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
             const theta = Math.atan2(normalizedPoint.z, -normalizedPoint.x); // theta from x,z coordinates
             const lon = theta * (180 / Math.PI) - 180; // Convert theta back to longitude
             
-            console.log('Army movement target:', { lat, lon, point: intersectionPoint });
+            console.log('Army movement target calculated:', { lat, lon, point: intersectionPoint });
+            console.log('Selected army before movement:', armyMovement.selectedArmyId);
             
             // Start moving the selected army to this position
             setArmyMovement(prev => ({
@@ -539,23 +542,35 @@ export function PlanetaryView({ planet, selectedFeature, onFeatureClick, system 
         ))}
         
         {/* Render armies for planet's faction - they rotate with the planet */}
-        {planet.faction && planet.faction.armies && planet.faction.armies.map((army: any) => (
-          <ArmyMarker
-            key={army.id}
-            army={army}
-            planetRadius={planetRadius}
-            isSelected={armyMovement.selectedArmyId === army.id}
-            movementData={armyMovement.movingArmies.get(army.id)}
-            onArmyClick={(army) => {
-              console.log('Army clicked:', army);
-              // Select/deselect army for movement
-              setArmyMovement(prev => ({
-                ...prev,
-                selectedArmyId: prev.selectedArmyId === army.id ? null : army.id
-              }));
-            }}
-          />
-        ))}
+        {(() => {
+          console.log('PlanetaryView army rendering debug:', {
+            planetName: planet.name,
+            hasFaction: !!planet.faction,
+            factionName: planet.faction?.name,
+            hasArmies: !!planet.faction?.armies,
+            armyCount: planet.faction?.armies?.length || 0,
+            armies: planet.faction?.armies
+          });
+          return planet.faction && planet.faction.armies && planet.faction.armies.map((army: any) => (
+            <ArmyMarker
+              key={army.id}
+              army={army}
+              planetRadius={planetRadius}
+              isSelected={armyMovement.selectedArmyId === army.id}
+              movementData={armyMovement.movingArmies.get(army.id)}
+              onArmyClick={(army) => {
+                console.log('Army clicked for movement:', army);
+                console.log('Current army movement state:', armyMovement);
+                // Select/deselect army for movement
+                setArmyMovement(prev => ({
+                  ...prev,
+                  selectedArmyId: prev.selectedArmyId === army.id ? null : army.id
+                }));
+                console.log('Army selection toggled, new selected army:', army.id);
+              }}
+            />
+          ));
+        })()}
       </group>
 
       {/* Planet Rings - render around this planet */}
@@ -607,7 +622,7 @@ function PlanetaryMoon({ moon, planetRadius, moonIndex, planetId }: { moon: any;
       return x - Math.floor(x);
     };
 
-    const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const seed = planetId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     const moonSeed = seed + moonIndex * 1000;
     
     // Create varied moon colors - some rocky, some icy, some metallic
@@ -679,7 +694,7 @@ function AsteroidBelts({ belts, planet }: { belts: any[]; planet: any }) {
   ];
 
   return (
-    <group position={starPosition}>
+    <group position={starPosition as [number, number, number]}>
       {belts.map((belt: any, beltIndex: number) => (
         <AsteroidBelt key={belt.id} belt={belt} beltIndex={beltIndex} />
       ))}
