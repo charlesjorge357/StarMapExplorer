@@ -800,13 +800,36 @@ export function SystemView({
         starPosition={system.star?.position || [0, 0, 0]}
       />
 
-      {/* Orbital selection disk - positioned first to catch clicks before background */}
+      {/* Background plane for deselection clicks - positioned behind orbital disk */}
+      <mesh 
+        position={[0, 0, -10000]}
+        onClick={(event) => {
+          // Only handle background clicks if no orbital disk is active
+          if (!selectedFleet) {
+            handleBackgroundClick(event);
+          } else {
+            console.log('🚫 BACKGROUND CLICK BLOCKED - orbital disk is active');
+          }
+        }}
+        visible={false}
+        renderOrder={-1000}
+      >
+        <planeGeometry args={[50000, 50000]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
+      {/* Orbital selection disk - positioned at camera level to intercept all clicks */}
       {selectedFleet && (
         <mesh 
-          position={[0, 0, 0]}
+          position={[0, 0, 100]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
+            console.log('Event details:', {
+              point: event.point,
+              distance: event.distance,
+              intersections: event.intersections?.length
+            });
             event.stopPropagation();
             
             if (event.point) {
@@ -822,23 +845,18 @@ export function SystemView({
             }
           }}
           visible={false}
-          renderOrder={1000}
+          renderOrder={2000}
         >
           <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-          <meshBasicMaterial transparent opacity={0} depthTest={false} />
+          <meshBasicMaterial 
+            transparent 
+            opacity={0} 
+            depthTest={false}
+            depthWrite={false}
+            side={2}
+          />
         </mesh>
       )}
-
-      {/* Background plane for deselection clicks - positioned behind orbital disk */}
-      <mesh 
-        position={[0, 0, -10000]}
-        onClick={handleBackgroundClick}
-        visible={false}
-        renderOrder={-1000}
-      >
-        <planeGeometry args={[50000, 50000]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
 
       {/* Central Star - non-interactive, info shown permanently */}
       <mesh 
