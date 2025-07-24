@@ -920,7 +920,7 @@ export function SystemView({
         <group>
           {/* Invisible full disk for reliable click detection */}
           <mesh 
-            position={[0, 0, 1]}
+            position={[0, 0, 10]}
             rotation={[Math.PI / 2, 0, 0]}
             onClick={(event) => {
               console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
@@ -977,18 +977,23 @@ export function SystemView({
             }}
             visible={false}
             userData={{ isOrbitalDisk: true }}
-            renderOrder={1000}
+            renderOrder={2000}
           >
             <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
-            <meshBasicMaterial transparent opacity={0} />
+            <meshBasicMaterial 
+              transparent 
+              opacity={0}
+              depthTest={false}
+              depthWrite={false}
+            />
           </mesh>
           
           {/* Visible wireframe circle for visual feedback */}
           <mesh 
-            position={[0, 0, 0.5]}
+            position={[0, 0, 9]}
             rotation={[Math.PI / 2, 0, 0]}
             visible={true}
-            renderOrder={999}
+            renderOrder={1999}
           >
             <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
             <meshBasicMaterial 
@@ -996,7 +1001,7 @@ export function SystemView({
               opacity={0.15}
               color="#00ffff"
               wireframe={true}
-              depthTest={true}
+              depthTest={false}
               depthWrite={false}
             />
           </mesh>
