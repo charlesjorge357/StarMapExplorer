@@ -904,10 +904,12 @@ export function SystemView({
       ))}
       
       {/* Orbital disk for fleet movement - positioned in front to intercept clicks */}
-      {selectedFleet && (
-        <mesh 
-          position={[0, 0, 1]}
-          rotation={[Math.PI / 2, 0, 0]}
+      {selectedFleet ? (
+        <>
+          {console.log('🟢 RENDERING ORBITAL DISK for fleet:', selectedFleet.id)}
+          <mesh 
+            position={[0, 0, 1]}
+            rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             event.stopPropagation();
@@ -958,7 +960,12 @@ export function SystemView({
             depthTest={true}
             depthWrite={false}
           />
-        </mesh>
+          </mesh>
+        </>
+      ) : (
+        <>
+          {console.log('🔴 NO FLEET SELECTED - orbital disk not rendered')}
+        </>
       )}
 
 
