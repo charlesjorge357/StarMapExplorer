@@ -126,55 +126,82 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Orbit center and base parameters - these should NOT change during orbital motion
+  // Movement state tracking
+  const [isMoving, setIsMoving] = useState(false);
+  const [movementStartTime, setMovementStartTime] = useState(0);
+  const lastPositionRef = useRef<[number, number, number]>(fleet.position);
+  
+  // Detect when fleet position changes (user clicked to move it)
+  useEffect(() => {
+    const hasPositionChanged = 
+      fleet.position[0] !== lastPositionRef.current[0] || 
+      fleet.position[2] !== lastPositionRef.current[2];
+      
+    if (hasPositionChanged) {
+      console.log(`🚀 Fleet ${fleet.id} position changed - stopping orbital motion`);
+      console.log(`Old: [${lastPositionRef.current.join(', ')}]`);
+      console.log(`New: [${fleet.position.join(', ')}]`);
+      
+      setIsMoving(true);
+      setMovementStartTime(Date.now());
+      lastPositionRef.current = [...fleet.position];
+      
+      // Resume orbital motion after 1 second
+      setTimeout(() => {
+        console.log(`🌀 Fleet ${fleet.id} resuming orbital motion from new position`);
+        setIsMoving(false);
+      }, 1000);
+    }
+  }, [fleet.position[0], fleet.position[2], fleet.id]);
+  
+  // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
-  // Calculate orbit radius from fleet.position - this will update when fleet is moved to new location
+  // Calculate orbit radius from fleet.position
   const orbitRadius = useMemo(() => {
     const dx = fleet.position[0] - orbitCenter[0];
     const dz = fleet.position[2] - orbitCenter[2];
     const radius = Math.sqrt(dx * dx + dz * dz);
-    console.log(`📐 Fleet ${fleet.id} orbit radius calculated: ${radius.toFixed(2)} AU from position [${fleet.position.join(', ')}]`);
+    console.log(`📐 Fleet ${fleet.id} orbit radius: ${radius.toFixed(2)} AU`);
     return radius;
-  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2], fleet.id]);
+  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2]]);
   
   const orbitalSpeed = useMemo(() => {
-    // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
 
-  // Calculate initial angle based on fleet.position to start at the clicked location
+  // Calculate initial angle from current position
   const initialAngle = useMemo(() => {
     const dx = fleet.position[0] - orbitCenter[0];
     const dz = fleet.position[2] - orbitCenter[2];
-    const angle = Math.atan2(dz, dx);
-    console.log(`🎯 Fleet ${fleet.id} position: [${fleet.position.join(', ')}]`);
-    console.log(`🎯 Orbit center: [${orbitCenter.join(', ')}]`);
-    console.log(`🎯 Delta: dx=${dx.toFixed(2)}, dz=${dz.toFixed(2)}`);
-    console.log(`🎯 Initial angle: ${angle.toFixed(2)} rad (${(angle * 180 / Math.PI).toFixed(1)}°)`);
-    return angle;
-  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2], fleet.id]);
+    return Math.atan2(dz, dx);
+  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2]]);
 
   useFrame(() => {
     if (fleetRef.current) {
-      const time = Date.now() * 0.0001;
-      const angle = time * orbitalSpeed + initialAngle;
+      if (isMoving) {
+        // During movement, position fleet exactly at the target coordinates
+        fleetRef.current.position.set(fleet.position[0], 0, fleet.position[2]);
+        setRealTimePosition([fleet.position[0], 0, fleet.position[2]]);
+        
+        if (isSelected) {
+          console.log(`🎯 Fleet ${fleet.id} holding position at [${fleet.position.join(', ')}]`);
+        }
+      } else {
+        // Normal orbital motion - calculate time since movement ended
+        const currentTime = Date.now();
+        const timeSinceMovement = (currentTime - movementStartTime) * 0.0001;
+        const angle = timeSinceMovement * orbitalSpeed + initialAngle;
 
-      // Calculate orbital position using fixed radius and orbit center
-      const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
-      const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
+        const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
+        const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
 
-      // Set position dynamically - this will work now that we removed the static position prop
-      fleetRef.current.position.set(x, 0, z);
-
-      // Pass real-time fleet center to ShipMarkers
-      setRealTimePosition([x, 0, z]);
-      
-      // Debug: log current position every few seconds for selected fleet
-      if (isSelected && Math.floor(time * 10) % 30 === 0) {
-        console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] (angle: ${angle.toFixed(2)}°)`);
-        console.log(`🌀 Expected position: [${fleet.position[0].toFixed(1)}, 0, ${fleet.position[2].toFixed(1)}]`);
-        console.log(`🌀 Distance from expected: ${Math.sqrt((x - fleet.position[0])**2 + (z - fleet.position[2])**2).toFixed(2)}`);
+        fleetRef.current.position.set(x, 0, z);
+        setRealTimePosition([x, 0, z]);
+        
+        if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
+          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}]`);
+        }
       }
     }
   });
