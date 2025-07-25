@@ -88,7 +88,7 @@ export function PlanetaryView({
     ((army: any) => propOnArmyClick(army)) : 
     setLocalSelectedArmy;
     
-  // Universe store for position persistence
+  // Get universe store for position persistence
   const universeStore = useUniverse();
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
@@ -455,8 +455,8 @@ export function PlanetaryView({
                 army.position = movement.targetPosition;
                 
                 // Persist army position in universe store
-                if (universeStore?.updateArmyPosition) {
-                  universeStore.updateArmyPosition(planet.id, armyId, movement.targetPosition);
+                if (universeStore?.updateArmyPosition && system?.id) {
+                  universeStore.updateArmyPosition(system.id, planet.id, armyId, movement.targetPosition);
                 }
                 
                 console.log(`Army ${armyId} reached destination:`, movement.targetPosition);

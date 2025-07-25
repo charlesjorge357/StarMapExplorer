@@ -18,6 +18,7 @@ import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 import { useAudio } from './lib/stores/useAudio';
+import { useUniverse } from './lib/stores/useUniverse';
 import { MusicController } from './components/3d/musicController';
 import { FleetInfoPanel } from './components/ui/FleetInfoPanel';
 import { ArmyInfoPanel } from './components/ui/ArmyInfoPanel';
@@ -460,6 +461,28 @@ function App() {
     console.log(`Generating system for ${star.name} with seed ${seed}`);
     const system = SystemGenerator.generateSystem(star, seed);
     console.log('SystemGenerator returned:', system);
+    
+    // Restore saved fleet positions from universe store
+    if (universeStore?.universeData?.systems) {
+      const savedSystem = universeStore.universeData.systems.find(s => s.id === `system-${star.id}`);
+      if (savedSystem?.fleets) {
+        console.log(`🔄 Restoring ${savedSystem.fleets.length} saved fleet positions for system ${star.name}`);
+        
+        // Update fleet positions in the generated system
+        system.factions?.forEach((faction: any) => {
+          if (faction.fleets) {
+            faction.fleets.forEach((fleet: any) => {
+              const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+              if (savedFleet) {
+                fleet.position = savedFleet.position;
+                console.log(`🎯 Restored fleet ${fleet.id} position:`, savedFleet.position);
+              }
+            });
+          }
+        });
+      }
+    }
+    
     return system;
   };
 
