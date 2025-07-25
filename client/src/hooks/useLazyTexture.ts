@@ -79,7 +79,7 @@ export function getPlanetTexturePath(planetType: string, textureIndex: number = 
     marshy_world: [
       '/textures/Marshy/Marshy_01-1024x512.png', '/textures/Marshy/Marshy_02-1024x512.png',
       '/textures/Marshy/Marshy_03-1024x512.png', '/textures/Marshy/Marshy_04-1024x512.png',
-      '/textures/Marshy/Marshy_05-1024-512.png'
+      '/textures/Marshy/Marshy_05-1024x512.png'
     ],
     martian_world: [
       '/textures/Martian/Martian_01-1024x512.png', '/textures/Martian/Martian_02-1024x512.png',

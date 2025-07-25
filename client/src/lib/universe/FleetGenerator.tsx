@@ -34,10 +34,11 @@ export class FleetGenerator {
     const planetAngle = Math.atan2(homeworld.position[2], homeworld.position[0]);
     const orbitAngle = planetAngle + (Math.PI / 6) + (Math.random() * Math.PI / 6); // 30-60 degree offset
     
+    // Use same visual scaling as planets (orbitRadius * 2) for consistency
     const fleetPosition: [number, number, number] = [
-      orbitRadius * Math.cos(orbitAngle),
+      orbitRadius * 2 * Math.cos(orbitAngle), // Match planet visual scaling
       0, // Keep fleets on XZ plane
-      orbitRadius * Math.sin(orbitAngle)
+      orbitRadius * 2 * Math.sin(orbitAngle)  // Match planet visual scaling
     ];
 
     // Generate 3-8 ships for the fleet based on faction technology
