@@ -531,11 +531,29 @@ export function SystemView({
     name: 'Central Star'
   };
 
-  // Load only essential textures immediately
+  // Load only essential textures immediately with error handling
   const starBumpMap = useTexture('/textures/star_surface.jpg');
   const ceresTexture = useTexture('/textures/ceres.jpg');
   const erisTexture = useTexture('/textures/eris.jpg');
-  const oceanTexture = useTexture('/textures/ocean.jpg');
+  
+  // Use lazy loading for ocean texture to prevent blocking
+  const [oceanTexture, setOceanTexture] = useState<THREE.Texture | null>(null);
+  
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      '/textures/ocean.jpg',
+      (texture) => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        setOceanTexture(texture);
+      },
+      undefined,
+      (error) => {
+        console.warn('Failed to load ocean texture:', error);
+        setOceanTexture(null);
+      }
+    );
+  }, []);
 
   // Use planets from the cached system with null checks
   const planets = system?.planets || [];
@@ -546,7 +564,7 @@ export function SystemView({
   const planetTextures = useMemo(() => {
     const textures: any = {
       nuclear_world: [ceresTexture, erisTexture],
-      ocean_world: oceanTexture
+      ocean_world: oceanTexture || null
     };
     
     // Return texture path getter instead of loading all textures upfront
