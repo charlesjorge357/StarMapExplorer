@@ -818,10 +818,10 @@ export function SystemView({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Orbital selection disk - horizontal plane at y=0 for accurate click detection */}
+      {/* Orbital selection disk - positioned at fleet's current height for accurate click detection */}
       {selectedFleet && (
         <mesh 
-          position={[0, 0, 0]}
+          position={[0, selectedFleet.position[1], 0]}
           rotation={[0, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
@@ -831,11 +831,12 @@ export function SystemView({
             event.stopPropagation();
             
             if (event.point) {
-              // Use x and z coordinates directly - no rotation transform needed
+              // Use x and z coordinates directly - Y comes from the plane position
               const clickX = event.point.x;
+              const clickY = event.point.y; // This should now be the fleet's Y position
               const clickZ = event.point.z;
               
-              console.log(`🎯 CLICK TARGET: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+              console.log(`🎯 CLICK TARGET: [${clickX.toFixed(2)}, ${clickY.toFixed(2)}, ${clickZ.toFixed(2)}]`);
               
               // Update fleet position directly in system data
               const targetFleet = system.factions?.flatMap((f: any) => f.fleets || [])
@@ -844,13 +845,13 @@ export function SystemView({
               if (targetFleet) {
                 console.log(`📍 OLD FLEET POSITION: [${targetFleet.position.join(', ')}]`);
                 
-                // Update the fleet's position in the system data - preserve Y coordinate
-                targetFleet.position = [clickX, targetFleet.position[1], clickZ];
+                // Update the fleet's position in the system data - use click Y coordinate
+                targetFleet.position = [clickX, clickY, clickZ];
                 
                 // Update selected fleet state to trigger re-render
                 setSelectedFleet({ ...targetFleet });
                 
-                console.log(`🚀 FLEET MOVED TO: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+                console.log(`🚀 FLEET MOVED TO: [${clickX.toFixed(2)}, ${clickY.toFixed(2)}, ${clickZ.toFixed(2)}]`);
                 console.log(`📊 Updated targetFleet.position:`, targetFleet.position);
                 console.log(`📊 Updated selectedFleet will be:`, { ...targetFleet });
               } else {
