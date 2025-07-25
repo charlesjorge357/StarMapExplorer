@@ -65,15 +65,15 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
       const velocityX = nextX - currentX;
       const velocityZ = nextZ - currentZ;
       
-      // Ship faces its acceleration direction
-      const accelerationAngle = Math.atan2(velocityZ, velocityX);
+      // Ship faces its acceleration direction (add π/2 to correct 90-degree offset)
+      const accelerationAngle = Math.atan2(velocityZ, velocityX) + Math.PI / 2;
       
       // Apply fleet position offset to get world position  
       shipRef.current.position.x = fleetPosition[0] + currentX;
       shipRef.current.position.z = fleetPosition[2] + currentZ;
       shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
       
-      // Simple rotation: face the direction of acceleration/movement
+      // Rotation corrected: face the direction of acceleration/movement
       shipRef.current.rotation.y = accelerationAngle;
     }
   });
