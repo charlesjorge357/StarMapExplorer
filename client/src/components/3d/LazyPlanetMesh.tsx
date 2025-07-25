@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useTexture } from '@react-three/drei';
-import { getPlanetTexturePath, loadTexture } from '../../hooks/useLazyTexture';
+import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 // Helper functions copied from SystemView to avoid circular imports
 function getPlanetColor(type: string, planetId?: string): string {
   const seededRandom = (seed: number): number => {
@@ -53,15 +53,23 @@ interface LazyPlanetMeshProps {
   onClick: (planet: any) => void;
 }
 
-// Optimized texture loading function
-function getPlanetTexture(planet: any): THREE.Texture | null {
+// Texture loading component that only loads when rendered
+function PlanetTexture({ planet }: { planet: any }) {
   const texturePath = getPlanetTexturePath(planet.type, planet.textureIndex || 0);
-  return texturePath ? loadTexture(texturePath) : null;
+  const texture = texturePath ? useTexture(texturePath) : null;
+
+  useEffect(() => {
+    if (texture) {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    }
+  }, [texture]);
+
+  return texture;
 }
 
 // Planet mesh component that loads textures lazily
 function PlanetMeshContent({ planet, isSelected, index, onClick }: LazyPlanetMeshProps) {
-  const texture = getPlanetTexture(planet);
+  const texture = PlanetTexture({ planet });
 
   const planetColor = useMemo(() => 
     getPlanetColor(planet.type, planet.id || planet.name), 

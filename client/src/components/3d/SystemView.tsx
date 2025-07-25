@@ -97,17 +97,59 @@ function MoonMesh({
 
 // Use SystemGenerator.getPlanetColor for consistency with generation
 
-// Import the shared texture loading system
-import { getPlanetTexturePath, loadTexture } from '../../hooks/useLazyTexture';
+// Texture cache to prevent re-loading the same texture multiple times
+const textureCache = new Map<string, THREE.Texture>();
 
-// Optimized texture loading function
-function getPlanetTexture(type: string, textureIndex: number): THREE.Texture | null {
-  const texturePath = getPlanetTexturePath(type, textureIndex);
-  if (!texturePath) return null;
-  return loadTexture(texturePath);
+function getPlanetTexture(type: string, planetTextures: any, textureIndex: number): any {
+  // For legacy textures (nuclear_world, ocean_world) that are already loaded
+  const textures = planetTextures[type as keyof typeof planetTextures];
+  if (textures) {
+    if (Array.isArray(textures)) {
+      return textures[textureIndex % textures.length];
+    }
+    return textures;
+  }
+
+  // For new planet types, use lazy loading with cache
+  if (planetTextures.getTextureForPlanet) {
+    const texturePath = planetTextures.getTextureForPlanet(type, textureIndex);
+    if (texturePath) {
+      // Check cache first
+      if (textureCache.has(texturePath)) {
+        return textureCache.get(texturePath);
+      }
+      
+      try {
+        const texture = new THREE.TextureLoader().load(texturePath);
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        textureCache.set(texturePath, texture);
+        return texture;
+      } catch (e) {
+        console.log(`Failed to load texture: ${texturePath}`);
+        return null;
+      }
+    }
+  }
+  
+  return null;
 }
 
+// Helper function to get texture for a planet - moved to top level
+function getPlanetTextureForMaterial(planetType: string, planetTextures: any, planetId: string) {
+  const textures = planetTextures[planetType as keyof typeof planetTextures];
+  if (!textures) return undefined;
 
+  // Handle array of textures (deterministic selection based on planet ID)
+  if (Array.isArray(textures)) {
+    if (textures.length === 0) return undefined;
+    // Use planet ID hash for consistent texture selection
+    const hash = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return textures[hash % textures.length];
+  }
+
+  // Single texture
+  return textures;
+}
 
 
 
@@ -264,7 +306,7 @@ function PlanetMesh({
           color={planetColor}
           emissive={planet.type === 'nuclear_world' ? '#330000' : '#000000'}
           emissiveIntensity={planet.type === 'nuclear_world' ? 0.3 : 0}
-          map={getPlanetTexture(planet.type, planet.textureIndex || 0)}
+          map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
           transparent={false}

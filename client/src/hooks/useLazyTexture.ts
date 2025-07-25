@@ -1,27 +1,27 @@
-import * as THREE from 'three';
+import { useTexture } from '@react-three/drei';
+import { useMemo } from 'react';
 
-// Global texture cache and loader for efficiency
-const textureCache = new Map<string, THREE.Texture>();
-const textureLoader = new THREE.TextureLoader();
+// Cache for loaded textures to prevent re-loading
+const textureCache = new Map<string, any>();
 
-// Synchronous texture loading with caching
-export function loadTexture(texturePath: string): THREE.Texture | null {
-  if (!texturePath) return null;
-  
-  // Check cache first
-  if (textureCache.has(texturePath)) {
-    return textureCache.get(texturePath)!;
-  }
-  
-  try {
-    const texture = textureLoader.load(texturePath);
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    textureCache.set(texturePath, texture);
-    return texture;
-  } catch (error) {
-    console.warn(`Failed to load texture: ${texturePath}`, error);
-    return null;
-  }
+export function useLazyTexture(texturePath: string | null) {
+  return useMemo(() => {
+    if (!texturePath) return null;
+    
+    // Check cache first
+    if (textureCache.has(texturePath)) {
+      return textureCache.get(texturePath);
+    }
+    
+    try {
+      const texture = useTexture(texturePath);
+      textureCache.set(texturePath, texture);
+      return texture;
+    } catch (error) {
+      console.warn(`Failed to load texture: ${texturePath}`, error);
+      return null;
+    }
+  }, [texturePath]);
 }
 
 // Helper to get texture path without loading
@@ -79,7 +79,7 @@ export function getPlanetTexturePath(planetType: string, textureIndex: number = 
     marshy_world: [
       '/textures/Marshy/Marshy_01-1024x512.png', '/textures/Marshy/Marshy_02-1024x512.png',
       '/textures/Marshy/Marshy_03-1024x512.png', '/textures/Marshy/Marshy_04-1024x512.png',
-      '/textures/Marshy/Marshy_05-1024x512.png'
+      '/textures/Marshy/Marshy_05-1024-512.png'
     ],
     martian_world: [
       '/textures/Martian/Martian_01-1024x512.png', '/textures/Martian/Martian_02-1024x512.png',
