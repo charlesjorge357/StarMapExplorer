@@ -179,19 +179,39 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
     let minRadiusDiff = Infinity;
     const fleetOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]) / 2;
     
+    // Enhanced proximity check: also check actual distance for close fleets
+    const fleetPos = fleet.position;
+    let proximityBonus = 0;
+    
     for (const planet of systemPlanets) {
       if (!planet.orbitRadius || !planet.orbitSpeed) continue;
       
       const radiusDiff = Math.abs(planet.orbitRadius - fleetOrbitRadius);
       
-      if (radiusDiff < minRadiusDiff) {
-        minRadiusDiff = radiusDiff;
+      // Calculate actual 3D distance to planet's current position
+      const planetPos = planet.position || [planet.orbitRadius * 2, 0, 0]; // Fallback position
+      const actualDistance = Math.sqrt(
+        Math.pow(fleetPos[0] - planetPos[0], 2) + 
+        Math.pow(fleetPos[2] - planetPos[2], 2)
+      );
+      
+      // If fleet is within 8 units of a planet, strongly prefer that planet for speed sync
+      const isInProximity = actualDistance < 8.0;
+      const adjustedRadiusDiff = isInProximity ? radiusDiff * 0.1 : radiusDiff; // 90% bonus for proximity
+      
+      if (adjustedRadiusDiff < minRadiusDiff) {
+        minRadiusDiff = adjustedRadiusDiff;
         closestPlanet = planet;
+        proximityBonus = isInProximity ? actualDistance : 0;
       }
     }
     
     if (closestPlanet) {
-      console.log(`🌍 Fleet ${fleet.id} adopting orbital speed from closest planet: ${closestPlanet.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`);
+      const logMessage = proximityBonus > 0 
+        ? `🌍 Fleet ${fleet.id} syncing with nearby planet ${closestPlanet.name} (distance: ${proximityBonus.toFixed(1)} units)`
+        : `🌍 Fleet ${fleet.id} adopting orbital speed from closest planet: ${closestPlanet.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`;
+      console.log(logMessage);
+      
       return {
         orbitalSpeed: closestPlanet.orbitSpeed,
         closestPlanet: closestPlanet
