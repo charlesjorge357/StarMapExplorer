@@ -818,24 +818,22 @@ export function SystemView({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Orbital selection disk - positioned at system center to intercept all clicks */}
+      {/* Orbital selection disk - horizontal plane at y=0 for accurate click detection */}
       {selectedFleet && (
         <mesh 
           position={[0, 0, 0]}
-          rotation={[Math.PI / 2, 0, 0]}
+          rotation={[0, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             console.log('Raw click point:', event.point);
-            console.log('Camera position:', event.camera?.position);
             event.stopPropagation();
             
             if (event.point) {
-              // The click point is in world coordinates
-              // Since the disk is rotated, we need to use the x and z correctly
+              // Use x and z coordinates directly - no rotation transform needed
               const clickX = event.point.x;
               const clickZ = event.point.z;
               
-              console.log(`Interpreted click coordinates: x=${clickX.toFixed(2)}, z=${clickZ.toFixed(2)}`);
+              console.log(`Target coordinates: x=${clickX.toFixed(2)}, z=${clickZ.toFixed(2)}`);
               
               // Update fleet position directly
               const targetFleet = system.factions?.flatMap((f: any) => f.fleets || [])
@@ -852,7 +850,7 @@ export function SystemView({
           visible={false}
           renderOrder={2000}
         >
-          <circleGeometry args={[Math.max(outermostOrbit * 2.5, 100), 64]} />
+          <planeGeometry args={[Math.max(outermostOrbit * 5, 200), Math.max(outermostOrbit * 5, 200)]} />
           <meshBasicMaterial 
             transparent 
             opacity={0} 
