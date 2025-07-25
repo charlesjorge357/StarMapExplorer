@@ -120,17 +120,32 @@ function getPlanetTexture(type: string, planetTextures: any, textureIndex: numbe
       }
       
       try {
-        const texture = new THREE.TextureLoader().load(texturePath);
+        const texture = new THREE.TextureLoader().load(
+          texturePath,
+          // onLoad callback
+          (loadedTexture) => {
+            console.log(`✓ Successfully loaded texture: ${texturePath}`);
+            loadedTexture.wrapS = loadedTexture.wrapT = THREE.RepeatWrapping;
+          },
+          // onProgress callback
+          undefined,
+          // onError callback
+          (error) => {
+            console.error(`✗ Failed to load texture: ${texturePath}`, error);
+            textureCache.delete(texturePath); // Remove failed texture from cache
+          }
+        );
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         textureCache.set(texturePath, texture);
         return texture;
       } catch (e) {
-        console.log(`Failed to load texture: ${texturePath}`);
+        console.error(`✗ Exception loading texture: ${texturePath}`, e);
         return null;
       }
     }
   }
   
+  console.warn(`⚠ No texture found for planet type: ${type}, using fallback`);
   return null;
 }
 
@@ -262,7 +277,7 @@ function PlanetMesh({
     }
   });
 
-  // Calculate planet properties
+  // Calculate planet properties with debug logging
   const planetSeed = (planet.id || planet.name).split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
   const planetColor = SystemGenerator.getPlanetColor(planet.type, planetSeed);
   const planetGlow = getPlanetGlow(planet.type, planet.id || planet.name);
@@ -271,6 +286,15 @@ function PlanetMesh({
   // Store these computed values directly on the planet object for planetary view
   planet.computedColor = planetColor;
   planet.computedGlow = planetGlow;
+
+  // Debug texture loading for this specific planet
+  const planetTexture = getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0);
+  console.log(`🎨 Planet ${planet.name} (${planet.type}) texture info:`, {
+    textureIndex: planet.textureIndex,
+    hasTexture: !!planetTexture,
+    color: planetColor,
+    textureStatus: planetTexture ? 'loaded' : 'missing'
+  });
 
  const handleClick = (event: any) => {
     event.stopPropagation();
@@ -306,7 +330,7 @@ function PlanetMesh({
           color={planetColor}
           emissive={planet.type === 'nuclear_world' ? '#330000' : '#000000'}
           emissiveIntensity={planet.type === 'nuclear_world' ? 0.3 : 0}
-          map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0)}
+          map={getPlanetTexture(planet.type, planetTextures, planet.textureIndex || 0) || undefined}
           roughness={planet.type === 'gas_giant' || planet.type === 'frost_giant' ? 0.1 : 0.8}
           metalness={planet.type === 'nuclear_world' ? 0.7 : 0.1}
           transparent={false}
@@ -596,7 +620,7 @@ export function SystemView({
           '/textures/Marshy/Marshy_02-1024x512.png',
           '/textures/Marshy/Marshy_03-1024x512.png',
           '/textures/Marshy/Marshy_04-1024x512.png',
-          '/textures/Marshy/Marshy_05-1024-512.png'  // This one has different naming
+          '/textures/Marshy/Marshy_05-1024x512.png'  // Fixed naming - was 1024-512 instead of 1024x512
         ],
         martian_world: Array.from({length: 5}, (_, i) => 
           `/textures/Martian/Martian_${String(i + 1).padStart(2, '0')}-1024x512.png`
@@ -625,10 +649,11 @@ export function SystemView({
     return textures;
   }, [ceresTexture, erisTexture, oceanTexture]);
 
-  // Debug planet data including surface features
+  // Debug planet data including texture information
   console.log('SystemView planets data:', planets.map(p => ({ 
     name: p.name, 
     type: p.type,
+    textureIndex: p.textureIndex,
     moonCount: p.moons?.length || 0,
     surfaceFeatureCount: p.surfaceFeatures?.length || 0,
     surfaceFeatures: p.surfaceFeatures?.map(f => f.name) || []
