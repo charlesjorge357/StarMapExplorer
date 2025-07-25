@@ -157,18 +157,53 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
-  // Calculate logical orbit radius (divide visual position by 2 to match planet system)
-  const orbitRadius = useMemo(() => {
+  // Find the closest planet and adopt its orbital speed
+  const { orbitalSpeed, closestPlanet } = useMemo(() => {
+    // Get planets from system data
+    const systemPlanets = (window as any).systemPlanets || [];
+    
+    if (systemPlanets.length === 0) {
+      // Fallback to calculated speed if no planets available
+      const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+      const logicalRadius = visualRadius / 2;
+      return {
+        orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
+        closestPlanet: null
+      };
+    }
+    
+    // Find closest planet by orbital radius (more reliable than position)
+    let closestPlanet = null;
+    let minRadiusDiff = Infinity;
+    const fleetOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]) / 2;
+    
+    for (const planet of systemPlanets) {
+      if (!planet.orbitRadius || !planet.orbitSpeed) continue;
+      
+      const radiusDiff = Math.abs(planet.orbitRadius - fleetOrbitRadius);
+      
+      if (radiusDiff < minRadiusDiff) {
+        minRadiusDiff = radiusDiff;
+        closestPlanet = planet;
+      }
+    }
+    
+    if (closestPlanet) {
+      console.log(`🌍 Fleet ${fleet.id} adopting orbital speed from closest planet: ${closestPlanet.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`);
+      return {
+        orbitalSpeed: closestPlanet.orbitSpeed,
+        closestPlanet: closestPlanet
+      };
+    }
+    
+    // Fallback if no closest planet found
     const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-    const logicalRadius = visualRadius / 2; // Convert from visual to logical radius like planets
-    console.log(`📐 Fleet ${fleet.id} visual radius: ${visualRadius.toFixed(2)}, logical radius: ${logicalRadius.toFixed(2)} AU`);
-    return logicalRadius;
+    const logicalRadius = visualRadius / 2;
+    return {
+      orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
+      closestPlanet: null
+    };
   }, [fleet.position[0], fleet.position[2]]);
-  
-  // Use exact same orbital speed formula as planets in SystemGenerator
-  const orbitalSpeed = useMemo(() => {
-    return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
-  }, [orbitRadius]);
 
   // Calculate initial angle from current position
   const initialAngle = useMemo(() => {
@@ -191,16 +226,16 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         const timeSinceMovement = (currentTime - movementStartTime) * 0.0001;
         const angle = timeSinceMovement * orbitalSpeed + initialAngle;
 
-        // Use visual radius (logical * 2) for positioning to match planets
-        const visualRadius = orbitRadius * 2;
-        const x = visualRadius * Math.cos(angle);
-        const z = visualRadius * Math.sin(angle);
+        // Calculate current orbit radius from position for positioning
+        const currentOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+        const x = currentOrbitRadius * Math.cos(angle);
+        const z = currentOrbitRadius * Math.sin(angle);
 
         fleetRef.current.position.set(x, fleet.position[1], z);
         setRealTimePosition([x, fleet.position[1], z]);
         
         if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
-          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}]`);
+          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestPlanet?.name || 'calculated'}`);
         }
       }
     }
