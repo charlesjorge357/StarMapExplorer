@@ -161,10 +161,16 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
       const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
       const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
 
+      // Set position dynamically - this will work now that we removed the static position prop
       fleetRef.current.position.set(x, 0, z);
 
       // Pass real-time fleet center to ShipMarkers
       setRealTimePosition([x, 0, z]);
+      
+      // Debug: log current position every few seconds for selected fleet
+      if (isSelected && Math.floor(time * 10) % 30 === 0) {
+        console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] (angle: ${angle.toFixed(2)})`);
+      }
     }
   });
 
@@ -176,7 +182,6 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
       {/* Fleet command ship */}
       <mesh
         ref={fleetRef}
-        position={fleet.position}
         scale={[scale, scale, scale]}
         onClick={(e) => {
           e.stopPropagation();

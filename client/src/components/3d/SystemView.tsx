@@ -826,6 +826,8 @@ export function SystemView({
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             console.log('Raw click point:', event.point);
+            console.log('Camera position:', event.camera.position);
+            console.log('Event object properties:', Object.keys(event));
             event.stopPropagation();
             
             if (event.point) {
@@ -833,18 +835,30 @@ export function SystemView({
               const clickX = event.point.x;
               const clickZ = event.point.z;
               
-              console.log(`Target coordinates: x=${clickX.toFixed(2)}, z=${clickZ.toFixed(2)}`);
+              console.log(`🎯 CLICK TARGET: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
               
-              // Update fleet position directly
+              // Update fleet position directly in system data
               const targetFleet = system.factions?.flatMap((f: any) => f.fleets || [])
                 .find((f: any) => f.id === selectedFleet.id);
               
               if (targetFleet) {
-                console.log(`Old fleet position: [${targetFleet.position.join(', ')}]`);
+                console.log(`📍 OLD FLEET POSITION: [${targetFleet.position.join(', ')}]`);
+                
+                // Update the fleet's position in the system data
                 targetFleet.position = [clickX, 0, clickZ];
+                
+                // Update selected fleet state to trigger re-render
                 setSelectedFleet({ ...targetFleet });
+                
                 console.log(`🚀 FLEET MOVED TO: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
+                console.log(`📊 Updated targetFleet.position:`, targetFleet.position);
+                console.log(`📊 Updated selectedFleet will be:`, { ...targetFleet });
+              } else {
+                console.error('❌ TARGET FLEET NOT FOUND in system data');
+                console.log('Available fleets:', system.factions?.flatMap((f: any) => f.fleets || []).map((f: any) => ({ id: f.id, position: f.position })));
               }
+            } else {
+              console.error('❌ NO CLICK POINT DETECTED');
             }
           }}
           visible={false}
