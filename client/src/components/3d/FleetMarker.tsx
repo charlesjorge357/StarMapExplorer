@@ -157,15 +157,18 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
-  // Calculate orbit radius from fleet.position
+  // Calculate logical orbit radius from fleet.position (accounting for 2x display scaling)
   const orbitRadius = useMemo(() => {
     const dx = fleet.position[0] - orbitCenter[0];
     const dz = fleet.position[2] - orbitCenter[2];
-    const radius = Math.sqrt(dx * dx + dz * dz);
-    console.log(`📐 Fleet ${fleet.id} orbit radius: ${radius.toFixed(2)} AU`);
-    return radius;
+    const visualRadius = Math.sqrt(dx * dx + dz * dz);
+    // Convert from visual radius to logical radius (planets display at orbitRadius * 2)
+    const logicalRadius = visualRadius / 2;
+    console.log(`📐 Fleet ${fleet.id} visual radius: ${visualRadius.toFixed(2)}, logical radius: ${logicalRadius.toFixed(2)} AU`);
+    return logicalRadius;
   }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2]]);
   
+  // Use exact same orbital speed formula as planets in SystemGenerator
   const orbitalSpeed = useMemo(() => {
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
@@ -193,8 +196,10 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         const timeSinceMovement = (currentTime - movementStartTime) * 0.0001;
         const angle = timeSinceMovement * orbitalSpeed + initialAngle;
 
-        const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
-        const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
+        // Use visual radius (logical radius * 2) to match planet positioning
+        const visualRadius = orbitRadius * 2;
+        const x = orbitCenter[0] + visualRadius * Math.cos(angle);
+        const z = orbitCenter[2] + visualRadius * Math.sin(angle);
 
         fleetRef.current.position.set(x, fleet.position[1], z);
         setRealTimePosition([x, fleet.position[1], z]);
