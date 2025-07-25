@@ -36,6 +36,8 @@ interface UniverseState {
   loadUniverse: (file: File) => Promise<void>;
   updateStar: (starId: string, updates: Partial<Star>) => void;
   updatePlanet: (planetId: string, updates: Partial<Planet>) => void;
+  updateFleetPosition: (systemId: string, fleetId: string, position: [number, number, number]) => void;
+  updateArmyPosition: (planetId: string, armyId: string, position: [number, number]) => void;
 }
 
 export const useUniverse = create<UniverseState>()(
@@ -238,6 +240,46 @@ export const useUniverse = create<UniverseState>()(
             universeData: { ...universeData },
             selectedSystem: { ...selectedSystem }
           });
+        }
+      }
+    },
+
+    updateFleetPosition: (systemId, fleetId, position) => {
+      const { universeData } = get();
+      if (universeData) {
+        const system = universeData.systems.find(s => s.id === systemId);
+        if (system) {
+          if (!system.fleets) system.fleets = [];
+          const fleetIndex = system.fleets.findIndex(f => f.id === fleetId);
+          if (fleetIndex >= 0) {
+            system.fleets[fleetIndex].position = position;
+            console.log(`💾 Updated fleet ${fleetId} position in system data:`, position);
+          } else {
+            // Fleet not in system storage yet - this will be handled during fleet movement
+            console.log(`💾 Fleet ${fleetId} position will be stored during movement:`, position);
+          }
+          universeData.metadata.modified = new Date().toISOString();
+          set({ universeData: { ...universeData } });
+        }
+      }
+    },
+
+    updateArmyPosition: (planetId, armyId, position) => {
+      const { universeData } = get();
+      if (universeData) {
+        // Find planet and update army position
+        for (const system of universeData.systems) {
+          const planet = system.planets.find(p => p.id === planetId);
+          if (planet && planet.armies) {
+            const armyIndex = planet.armies.findIndex(a => a.id === armyId);
+            if (armyIndex >= 0) {
+              planet.armies[armyIndex].position = position;
+              universeData.metadata.modified = new Date().toISOString();
+              set({ universeData: { ...universeData } });
+              console.log(`💾 Updated army ${armyId} position on planet ${planetId}:`, position);
+              break;
+            }
+          }
         }
       }
     }

@@ -897,6 +897,11 @@ export function SystemView({
                 // Update the fleet's position in the system data - use click Y coordinate
                 targetFleet.position = [clickX, clickY, clickZ];
                 
+                // Persist fleet position in universe store
+                if (universeStore?.updateFleetPosition) {
+                  universeStore.updateFleetPosition(system.id, targetFleet.id, [clickX, clickY, clickZ]);
+                }
+                
                 // Update selected fleet state to trigger re-render
                 setSelectedFleet({ ...targetFleet });
                 

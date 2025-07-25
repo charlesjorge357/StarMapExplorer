@@ -7,6 +7,7 @@ import { ArmyMarker } from './ArmyMarker';
 import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
+import { useUniverse } from '../../lib/stores/useUniverse';
 import { UnsignedInt248Type } from 'three';
 
 interface PlanetaryViewProps {
@@ -86,6 +87,9 @@ export function PlanetaryView({
   const setSelectedArmy = propOnArmyClick ? 
     ((army: any) => propOnArmyClick(army)) : 
     setLocalSelectedArmy;
+    
+  // Universe store for position persistence
+  const universeStore = useUniverse();
   console.log('PlanetaryView: Rendering Google Earth-like view for', planet?.name);
   console.log('Planet computed properties:', {
     computedColor: planet?.computedColor,
@@ -449,6 +453,12 @@ export function PlanetaryView({
               const army = planet.faction.armies.find((a: any) => a.id === armyId);
               if (army) {
                 army.position = movement.targetPosition;
+                
+                // Persist army position in universe store
+                if (universeStore?.updateArmyPosition) {
+                  universeStore.updateArmyPosition(planet.id, armyId, movement.targetPosition);
+                }
+                
                 console.log(`Army ${armyId} reached destination:`, movement.targetPosition);
               }
             }
