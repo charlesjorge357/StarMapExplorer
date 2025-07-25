@@ -148,7 +148,10 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
     const dx = fleet.position[0] - orbitCenter[0];
     const dz = fleet.position[2] - orbitCenter[2];
     const angle = Math.atan2(dz, dx);
-    console.log(`🎯 Fleet ${fleet.id} initial angle: ${angle.toFixed(2)} rad from position [${fleet.position.join(', ')}]`);
+    console.log(`🎯 Fleet ${fleet.id} position: [${fleet.position.join(', ')}]`);
+    console.log(`🎯 Orbit center: [${orbitCenter.join(', ')}]`);
+    console.log(`🎯 Delta: dx=${dx.toFixed(2)}, dz=${dz.toFixed(2)}`);
+    console.log(`🎯 Initial angle: ${angle.toFixed(2)} rad (${(angle * 180 / Math.PI).toFixed(1)}°)`);
     return angle;
   }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2], fleet.id]);
 
@@ -169,7 +172,9 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
       
       // Debug: log current position every few seconds for selected fleet
       if (isSelected && Math.floor(time * 10) % 30 === 0) {
-        console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] (angle: ${angle.toFixed(2)})`);
+        console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] (angle: ${angle.toFixed(2)}°)`);
+        console.log(`🌀 Expected position: [${fleet.position[0].toFixed(1)}, 0, ${fleet.position[2].toFixed(1)}]`);
+        console.log(`🌀 Distance from expected: ${Math.sqrt((x - fleet.position[0])**2 + (z - fleet.position[2])**2).toFixed(2)}`);
       }
     }
   });
