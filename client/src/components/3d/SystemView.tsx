@@ -818,29 +818,34 @@ export function SystemView({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Orbital selection disk - positioned at camera level to intercept all clicks */}
+      {/* Orbital selection disk - positioned at system center to intercept all clicks */}
       {selectedFleet && (
         <mesh 
-          position={[0, 0, 100]}
+          position={[0, 0, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
-            console.log('Event details:', {
-              point: event.point,
-              distance: event.distance,
-              intersections: event.intersections?.length
-            });
+            console.log('Raw click point:', event.point);
+            console.log('Camera position:', event.camera?.position);
             event.stopPropagation();
             
             if (event.point) {
+              // The click point is in world coordinates
+              // Since the disk is rotated, we need to use the x and z correctly
+              const clickX = event.point.x;
+              const clickZ = event.point.z;
+              
+              console.log(`Interpreted click coordinates: x=${clickX.toFixed(2)}, z=${clickZ.toFixed(2)}`);
+              
               // Update fleet position directly
               const targetFleet = system.factions?.flatMap((f: any) => f.fleets || [])
                 .find((f: any) => f.id === selectedFleet.id);
               
               if (targetFleet) {
-                targetFleet.position = [event.point.x, 0, event.point.z];
+                console.log(`Old fleet position: [${targetFleet.position.join(', ')}]`);
+                targetFleet.position = [clickX, 0, clickZ];
                 setSelectedFleet({ ...targetFleet });
-                console.log(`🚀 FLEET MOVED TO: [${event.point.x.toFixed(2)}, 0, ${event.point.z.toFixed(2)}]`);
+                console.log(`🚀 FLEET MOVED TO: [${clickX.toFixed(2)}, 0, ${clickZ.toFixed(2)}]`);
               }
             }
           }}
