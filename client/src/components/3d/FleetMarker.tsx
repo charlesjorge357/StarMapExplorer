@@ -126,28 +126,38 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Precompute orbit center and radius using initial fleet position
+  // Orbit center and base parameters - these should NOT change during orbital motion
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
+  // Calculate orbit radius from fleet.position - this will update when fleet is moved to new location
   const orbitRadius = useMemo(() => {
     const dx = fleet.position[0] - orbitCenter[0];
     const dz = fleet.position[2] - orbitCenter[2];
-    return Math.sqrt(dx * dx + dz * dz);
-  }, [fleet.position, orbitCenter[0], orbitCenter[2]]);
+    const radius = Math.sqrt(dx * dx + dz * dz);
+    console.log(`📐 Fleet ${fleet.id} orbit radius calculated: ${radius.toFixed(2)} AU from position [${fleet.position.join(', ')}]`);
+    return radius;
+  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2], fleet.id]);
   
   const orbitalSpeed = useMemo(() => {
     // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
 
-  // Random phase offset so fleets don't all orbit in sync
-  const initialAngle = useMemo(() => Math.random() * Math.PI * 2, []);
+  // Calculate initial angle based on fleet.position to start at the clicked location
+  const initialAngle = useMemo(() => {
+    const dx = fleet.position[0] - orbitCenter[0];
+    const dz = fleet.position[2] - orbitCenter[2];
+    const angle = Math.atan2(dz, dx);
+    console.log(`🎯 Fleet ${fleet.id} initial angle: ${angle.toFixed(2)} rad from position [${fleet.position.join(', ')}]`);
+    return angle;
+  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2], fleet.id]);
 
   useFrame(() => {
     if (fleetRef.current) {
       const time = Date.now() * 0.0001;
       const angle = time * orbitalSpeed + initialAngle;
 
+      // Calculate orbital position using fixed radius and orbit center
       const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
       const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
 
