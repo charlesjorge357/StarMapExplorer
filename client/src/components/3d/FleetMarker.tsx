@@ -126,39 +126,35 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Calculate orbital parameters based on orbit center
+  // Precompute orbit center and radius using initial fleet position
+  const orbitCenter = fleet.orbitCenter || [0, 0, 0];
+  
   const orbitRadius = useMemo(() => {
-    const orbitCenter = fleet.orbitCenter || [0, 0, 0];
-    return Math.sqrt(
-      Math.pow(fleet.position[0] - orbitCenter[0], 2) +
-      Math.pow(fleet.position[2] - orbitCenter[2], 2)
-    );
-  }, [fleet.position[0], fleet.position[2], fleet.orbitCenter]);
+    const dx = fleet.position[0] - orbitCenter[0];
+    const dz = fleet.position[2] - orbitCenter[2];
+    return Math.sqrt(dx * dx + dz * dz);
+  }, [fleet.position, orbitCenter[0], orbitCenter[2]]);
   
   const orbitalSpeed = useMemo(() => {
     // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
 
+  // Random phase offset so fleets don't all orbit in sync
+  const initialAngle = useMemo(() => Math.random() * Math.PI * 2, []);
+
   useFrame(() => {
     if (fleetRef.current) {
       const time = Date.now() * 0.0001;
+      const angle = time * orbitalSpeed + initialAngle;
 
-      // Get original orbit center (e.g., around star)
-      const [orbitCenterX, orbitCenterY, orbitCenterZ] = fleet.orbitCenter || [0, 0, 0];
-      const radius = Math.sqrt(
-        Math.pow(fleet.position[0] - orbitCenterX, 2) +
-        Math.pow(fleet.position[2] - orbitCenterZ, 2)
-      );
-
-      const angle = time * orbitalSpeed;
-
-      const x = orbitCenterX + radius * Math.cos(angle);
-      const z = orbitCenterZ + radius * Math.sin(angle);
+      const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
+      const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
 
       fleetRef.current.position.set(x, 0, z);
 
-      setRealTimePosition([x, 0, z]); // Provide this to ShipMarkers
+      // Pass real-time fleet center to ShipMarkers
+      setRealTimePosition([x, 0, z]);
     }
   });
 
