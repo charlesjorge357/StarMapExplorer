@@ -157,16 +157,12 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
-  // Calculate logical orbit radius from fleet.position (accounting for 2x display scaling)
+  // Calculate orbit radius as direct distance from origin on XZ plane
   const orbitRadius = useMemo(() => {
-    const dx = fleet.position[0] - orbitCenter[0];
-    const dz = fleet.position[2] - orbitCenter[2];
-    const visualRadius = Math.sqrt(dx * dx + dz * dz);
-    // Convert from visual radius to logical radius (planets display at orbitRadius * 2)
-    const logicalRadius = visualRadius / 2;
-    console.log(`📐 Fleet ${fleet.id} visual radius: ${visualRadius.toFixed(2)}, logical radius: ${logicalRadius.toFixed(2)} AU`);
-    return logicalRadius;
-  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2]]);
+    const radius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+    console.log(`📐 Fleet ${fleet.id} orbit radius: ${radius.toFixed(2)} AU`);
+    return radius;
+  }, [fleet.position[0], fleet.position[2]]);
   
   // Use exact same orbital speed formula as planets in SystemGenerator
   const orbitalSpeed = useMemo(() => {
@@ -175,10 +171,8 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
 
   // Calculate initial angle from current position
   const initialAngle = useMemo(() => {
-    const dx = fleet.position[0] - orbitCenter[0];
-    const dz = fleet.position[2] - orbitCenter[2];
-    return Math.atan2(dz, dx);
-  }, [fleet.position[0], fleet.position[2], orbitCenter[0], orbitCenter[2]]);
+    return Math.atan2(fleet.position[2], fleet.position[0]);
+  }, [fleet.position[0], fleet.position[2]]);
 
   useFrame(() => {
     if (fleetRef.current) {
@@ -196,10 +190,9 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         const timeSinceMovement = (currentTime - movementStartTime) * 0.0001;
         const angle = timeSinceMovement * orbitalSpeed + initialAngle;
 
-        // Use visual radius (logical radius * 2) to match planet positioning
-        const visualRadius = orbitRadius * 2;
-        const x = orbitCenter[0] + visualRadius * Math.cos(angle);
-        const z = orbitCenter[2] + visualRadius * Math.sin(angle);
+        // Use orbit radius directly for positioning
+        const x = orbitRadius * Math.cos(angle);
+        const z = orbitRadius * Math.sin(angle);
 
         fleetRef.current.position.set(x, fleet.position[1], z);
         setRealTimePosition([x, fleet.position[1], z]);
