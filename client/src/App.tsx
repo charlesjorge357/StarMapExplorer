@@ -751,9 +751,18 @@ function App() {
               
               // Get current fleet positions from universe store
               const universeStore = useUniverse.getState();
+              console.log(`🔍 Debug: Universe store available:`, !!universeStore);
+              console.log(`🔍 Debug: Universe data available:`, !!universeStore?.universeData);
+              console.log(`🔍 Debug: Systems count:`, universeStore?.universeData?.systems?.length || 0);
+              
               if (universeStore?.universeData?.systems) {
                 const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id);
+                console.log(`🔍 Debug: Looking for system ID:`, currentSystem.id);
+                console.log(`🔍 Debug: Available system IDs:`, universeStore.universeData.systems.map(s => s.id));
+                console.log(`🔍 Debug: Saved system found:`, !!savedSystem);
+                
                 if (savedSystem?.fleets) {
+                  console.log(`🔍 Debug: Saved fleets count:`, savedSystem.fleets.length);
                   // Update fleet positions in all factions
                   updatedSystem.factions?.forEach((faction: any) => {
                     if (faction.fleets) {
@@ -762,11 +771,17 @@ function App() {
                         if (savedFleet && savedFleet.position) {
                           fleet.position = savedFleet.position;
                           console.log(`📍 Updated fleet ${fleet.id} position in currentSystem:`, savedFleet.position);
+                        } else {
+                          console.log(`⚠️ No saved position found for fleet ${fleet.id}`);
                         }
                       });
                     }
                   });
+                } else {
+                  console.log(`⚠️ No saved fleets found in system ${currentSystem.id}`);
                 }
+              } else {
+                console.log(`⚠️ No universe data systems available`);
               }
               
               setCurrentSystem(updatedSystem);
