@@ -248,27 +248,18 @@ export const useUniverse = create<UniverseState>()(
       const { universeData } = get();
       if (universeData) {
         const system = universeData.systems.find(s => s.id === systemId);
-        if (system && system.factions) {
-          // Find fleet in faction data structure
-          let fleetFound = false;
-          for (const faction of system.factions) {
-            if (faction.fleets) {
-              const fleetIndex = faction.fleets.findIndex(f => f.id === fleetId);
-              if (fleetIndex >= 0) {
-                faction.fleets[fleetIndex].position = position;
-                console.log(`💾 Updated fleet ${fleetId} position in faction ${faction.name}:`, position);
-                fleetFound = true;
-                break;
-              }
-            }
-          }
-          
-          if (fleetFound) {
-            universeData.metadata.modified = new Date().toISOString();
-            set({ universeData: { ...universeData } });
+        if (system) {
+          if (!system.fleets) system.fleets = [];
+          const fleetIndex = system.fleets.findIndex(f => f.id === fleetId);
+          if (fleetIndex >= 0) {
+            system.fleets[fleetIndex].position = position;
+            console.log(`💾 Updated fleet ${fleetId} position in system data:`, position);
           } else {
-            console.log(`💾 Fleet ${fleetId} not found in system ${systemId} factions`);
+            // Fleet not in system storage yet - this will be handled during fleet movement
+            console.log(`💾 Fleet ${fleetId} position will be stored during movement:`, position);
           }
+          universeData.metadata.modified = new Date().toISOString();
+          set({ universeData: { ...universeData } });
         }
       }
     },
