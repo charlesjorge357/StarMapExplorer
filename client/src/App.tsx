@@ -606,7 +606,32 @@ function App() {
           setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
           console.log(`Generated new system for ${selectedStar.name}`);
         } else {
-          console.log(`Using cached system for ${selectedStar.name}`);
+          console.log(`Using cached system for ${selectedStar.name}, checking for fleet position updates...`);
+          
+          // Update cached system with saved fleet positions from universe store
+          const universeStore = useUniverse.getState();
+          if (universeStore?.universeData?.systems) {
+            const savedSystem = universeStore.universeData.systems.find(s => s.id === `system-${selectedStar.id}`);
+            if (savedSystem?.fleets && savedSystem.fleets.length > 0) {
+              console.log(`🔄 Updating cached system with ${savedSystem.fleets.length} saved fleet positions`);
+              
+              // Update fleet positions in cached system
+              system.factions?.forEach((faction: any) => {
+                if (faction.fleets) {
+                  faction.fleets.forEach((fleet: any) => {
+                    const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                    if (savedFleet && savedFleet.position) {
+                      fleet.position = savedFleet.position;
+                      console.log(`🎯 Updated cached fleet ${fleet.id} position:`, savedFleet.position);
+                    }
+                  });
+                }
+              });
+              
+              // Update the cache with the updated system
+              setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
+            }
+          }
         }
 
         setCurrentView('system');
