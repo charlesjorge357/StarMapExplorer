@@ -249,17 +249,41 @@ export const useUniverse = create<UniverseState>()(
       if (universeData) {
         const system = universeData.systems.find(s => s.id === systemId);
         if (system) {
-          if (!system.fleets) system.fleets = [];
-          const fleetIndex = system.fleets.findIndex(f => f.id === fleetId);
-          if (fleetIndex >= 0) {
-            system.fleets[fleetIndex].position = position;
-            console.log(`💾 Updated fleet ${fleetId} position in system data:`, position);
-          } else {
-            // Fleet not in system storage yet - this will be handled during fleet movement
-            console.log(`💾 Fleet ${fleetId} position will be stored during movement:`, position);
+          // Look for fleet in faction structure
+          let fleetFound = false;
+          if (system.factions) {
+            for (const faction of system.factions) {
+              if (faction.fleets) {
+                const fleetIndex = faction.fleets.findIndex(f => f.id === fleetId);
+                if (fleetIndex >= 0) {
+                  faction.fleets[fleetIndex].position = position;
+                  console.log(`💾 Updated fleet ${fleetId} position in faction ${faction.id}:`, position);
+                  fleetFound = true;
+                  break;
+                }
+              }
+            }
           }
-          universeData.metadata.modified = new Date().toISOString();
-          set({ universeData: { ...universeData } });
+          
+          // Also update system.fleets if it exists for backup storage
+          if (!system.fleets) system.fleets = [];
+          const systemFleetIndex = system.fleets.findIndex(f => f.id === fleetId);
+          if (systemFleetIndex >= 0) {
+            system.fleets[systemFleetIndex].position = position;
+            console.log(`💾 Updated fleet ${fleetId} position in system.fleets:`, position);
+            fleetFound = true;
+          } else if (fleetFound) {
+            // Add to system.fleets for backup reference
+            system.fleets.push({ id: fleetId, position });
+            console.log(`💾 Added fleet ${fleetId} to system.fleets backup:`, position);
+          }
+          
+          if (fleetFound) {
+            universeData.metadata.modified = new Date().toISOString();
+            set({ universeData: { ...universeData } });
+          } else {
+            console.warn(`⚠️ Fleet ${fleetId} not found in system ${systemId}`);
+          }
         }
       }
     },

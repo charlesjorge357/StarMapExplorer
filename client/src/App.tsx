@@ -466,21 +466,72 @@ function App() {
     const currentUniverseStore = useUniverse.getState();
     if (currentUniverseStore?.universeData?.systems) {
       const savedSystem = currentUniverseStore.universeData.systems.find(s => s.id === `system-${star.id}`);
-      if (savedSystem?.fleets) {
-        console.log(`🔄 Restoring ${savedSystem.fleets.length} saved fleet positions for system ${star.name}`);
+      if (savedSystem) {
+        console.log(`🔄 Checking for saved fleet positions in system ${star.name}`);
         
-        // Update fleet positions in the generated system
+        // Update fleet positions in the generated system from both sources
         system.factions?.forEach((faction: any) => {
           if (faction.fleets) {
             faction.fleets.forEach((fleet: any) => {
-              const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
-              if (savedFleet) {
+              let savedFleet = null;
+              
+              // First check savedSystem.fleets backup array
+              if (savedSystem.fleets) {
+                savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+              }
+              
+              // Then check faction structure in saved system
+              if (!savedFleet && savedSystem.factions) {
+                for (const savedFaction of savedSystem.factions) {
+                  if (savedFaction.fleets) {
+                    savedFleet = savedFaction.fleets.find((sf: any) => sf.id === fleet.id);
+                    if (savedFleet) break;
+                  }
+                }
+              }
+              
+              if (savedFleet && savedFleet.position) {
                 fleet.position = savedFleet.position;
                 console.log(`🎯 Restored fleet ${fleet.id} position:`, savedFleet.position);
               }
             });
           }
         });
+      } else {
+        // First time generating this system - add it to universe store
+        console.log(`➕ Adding new system ${star.name} to universe store`);
+        const systemData = {
+          id: `system-${star.id}`,
+          starId: star.id,
+          factions: system.factions || [],
+          planets: system.planets || [],
+          fleets: [], // Initialize empty fleets array for backup storage
+          spaceFeatures: system.spaceFeatures || [],
+          asteroidBelts: system.asteroidBelts || []
+        };
+        
+        if (!currentUniverseStore.universeData) {
+          currentUniverseStore.universeData = {
+            id: 'sandbox-universe',
+            name: 'Sandbox Universe',
+            mode: 'sandbox',
+            metadata: {
+              created: new Date().toISOString(),
+              modified: new Date().toISOString(),
+              version: '1.0'
+            },
+            stars: [],
+            systems: [],
+            nebulas: []
+          };
+        }
+        
+        if (!currentUniverseStore.universeData.systems) {
+          currentUniverseStore.universeData.systems = [];
+        }
+        
+        currentUniverseStore.universeData.systems.push(systemData);
+        useUniverse.setState({ universeData: currentUniverseStore.universeData });
       }
     }
     
