@@ -822,7 +822,7 @@ export function SystemView({
       {selectedFleet && (
         <mesh 
           position={[0, selectedFleet.position[1], 0]}
-          rotation={[0, 0, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
           onClick={(event) => {
             console.log('🎯 ORBITAL DISK CLICKED - fleet movement initiated');
             console.log('Raw click point:', event.point);
