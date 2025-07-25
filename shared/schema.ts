@@ -136,6 +136,7 @@ export interface Fleets {
   id: string;
   size: number; //ships[].length()
   position: [number, number, number]; // 3D position in system
+  orbitCenter: [number, number, number]; // Center point of orbital motion (usually [0, 0, 0] for star)
   composition: Ships[]; //ships inside fleet
   faction?: Faction;
 }

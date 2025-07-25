@@ -126,31 +126,39 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
   
-  // Recalculate orbital motion every time fleet.position changes
+  // Calculate orbital parameters based on orbit center
   const orbitRadius = useMemo(() => {
-    return Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-  }, [fleet.position[0], fleet.position[2]]);
+    const orbitCenter = fleet.orbitCenter || [0, 0, 0];
+    return Math.sqrt(
+      Math.pow(fleet.position[0] - orbitCenter[0], 2) +
+      Math.pow(fleet.position[2] - orbitCenter[2], 2)
+    );
+  }, [fleet.position[0], fleet.position[2], fleet.orbitCenter]);
   
   const orbitalSpeed = useMemo(() => {
     // Use exact same formula as planets: Math.sqrt(1 / orbitRadius) * 0.15
     return Math.sqrt(1 / Math.max(orbitRadius, 0.1)) * 0.15;
   }, [orbitRadius]);
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (fleetRef.current) {
-      // Always use orbital motion around the fleet's current position
       const time = Date.now() * 0.0001;
-      const [baseX, baseY, baseZ] = fleet.position;
-      const currentRadius = Math.sqrt(baseX * baseX + baseZ * baseZ);
-      const currentAngle = Math.atan2(baseZ, baseX);
-      const orbitalMotion = time * Math.sqrt(1 / Math.max(currentRadius, 0.1)) * 0.15;
-      
-      fleetRef.current.position.x = currentRadius * Math.cos(currentAngle + orbitalMotion);
-      fleetRef.current.position.z = currentRadius * Math.sin(currentAngle + orbitalMotion);
-      fleetRef.current.position.y = 0;
-      
-      // Always update real-time position for ships
-      setRealTimePosition([fleetRef.current.position.x, 0, fleetRef.current.position.z]);
+
+      // Get original orbit center (e.g., around star)
+      const [orbitCenterX, orbitCenterY, orbitCenterZ] = fleet.orbitCenter || [0, 0, 0];
+      const radius = Math.sqrt(
+        Math.pow(fleet.position[0] - orbitCenterX, 2) +
+        Math.pow(fleet.position[2] - orbitCenterZ, 2)
+      );
+
+      const angle = time * orbitalSpeed;
+
+      const x = orbitCenterX + radius * Math.cos(angle);
+      const z = orbitCenterZ + radius * Math.sin(angle);
+
+      fleetRef.current.position.set(x, 0, z);
+
+      setRealTimePosition([x, 0, z]); // Provide this to ShipMarkers
     }
   });
 

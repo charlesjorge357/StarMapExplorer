@@ -53,6 +53,7 @@ export class FleetGenerator {
       id: this.generateId(),
       size: ships.length,
       position: fleetPosition,
+      orbitCenter: [0, 0, 0], // Default orbit around star at system center
       composition: ships,
       faction: faction
     };
