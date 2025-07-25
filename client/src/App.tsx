@@ -744,6 +744,34 @@ function App() {
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
             console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
             
+            // Update currentSystem with current fleet positions before transitioning
+            if (currentSystem) {
+              console.log('💾 Updating currentSystem with current fleet positions before planetary transition');
+              const updatedSystem = { ...currentSystem };
+              
+              // Get current fleet positions from universe store
+              const universeStore = useUniverse.getState();
+              if (universeStore?.universeData?.systems) {
+                const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id);
+                if (savedSystem?.fleets) {
+                  // Update fleet positions in all factions
+                  updatedSystem.factions?.forEach((faction: any) => {
+                    if (faction.fleets) {
+                      faction.fleets.forEach((fleet: any) => {
+                        const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                        if (savedFleet && savedFleet.position) {
+                          fleet.position = savedFleet.position;
+                          console.log(`📍 Updated fleet ${fleet.id} position in currentSystem:`, savedFleet.position);
+                        }
+                      });
+                    }
+                  });
+                }
+              }
+              
+              setCurrentSystem(updatedSystem);
+            }
+            
             // Disable controls FIRST to prevent camera conflicts during transition
             (window as any).disableGalacticSystemControls = true;
             
