@@ -463,8 +463,9 @@ function App() {
     console.log('SystemGenerator returned:', system);
     
     // Restore saved fleet positions from universe store
-    if (universeStore?.universeData?.systems) {
-      const savedSystem = universeStore.universeData.systems.find(s => s.id === `system-${star.id}`);
+    const currentUniverseStore = useUniverse.getState();
+    if (currentUniverseStore?.universeData?.systems) {
+      const savedSystem = currentUniverseStore.universeData.systems.find(s => s.id === `system-${star.id}`);
       if (savedSystem?.fleets) {
         console.log(`🔄 Restoring ${savedSystem.fleets.length} saved fleet positions for system ${star.name}`);
         
