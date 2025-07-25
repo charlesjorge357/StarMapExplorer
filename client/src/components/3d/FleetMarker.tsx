@@ -181,8 +181,8 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
     if (fleetRef.current) {
       if (isMoving) {
         // During movement, position fleet exactly at the target coordinates
-        fleetRef.current.position.set(fleet.position[0], 0, fleet.position[2]);
-        setRealTimePosition([fleet.position[0], 0, fleet.position[2]]);
+        fleetRef.current.position.set(fleet.position[0], fleet.position[1], fleet.position[2]);
+        setRealTimePosition([fleet.position[0], fleet.position[1], fleet.position[2]]);
         
         if (isSelected) {
           console.log(`🎯 Fleet ${fleet.id} holding position at [${fleet.position.join(', ')}]`);
@@ -196,8 +196,8 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         const x = orbitCenter[0] + orbitRadius * Math.cos(angle);
         const z = orbitCenter[2] + orbitRadius * Math.sin(angle);
 
-        fleetRef.current.position.set(x, 0, z);
-        setRealTimePosition([x, 0, z]);
+        fleetRef.current.position.set(x, fleet.position[1], z);
+        setRealTimePosition([x, fleet.position[1], z]);
         
         if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
           console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}]`);

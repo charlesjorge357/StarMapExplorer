@@ -844,8 +844,8 @@ export function SystemView({
               if (targetFleet) {
                 console.log(`📍 OLD FLEET POSITION: [${targetFleet.position.join(', ')}]`);
                 
-                // Update the fleet's position in the system data
-                targetFleet.position = [clickX, 0, clickZ];
+                // Update the fleet's position in the system data - preserve Y coordinate
+                targetFleet.position = [clickX, targetFleet.position[1], clickZ];
                 
                 // Update selected fleet state to trigger re-render
                 setSelectedFleet({ ...targetFleet });
