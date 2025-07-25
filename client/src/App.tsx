@@ -18,6 +18,7 @@ import { Vector3 } from "three";
 import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 import { useAudio } from './lib/stores/useAudio';
+import { useUniverse } from './lib/stores/useUniverse';
 import { MusicController } from './components/3d/musicController';
 import { FleetInfoPanel } from './components/ui/FleetInfoPanel';
 import { ArmyInfoPanel } from './components/ui/ArmyInfoPanel';
@@ -331,6 +332,9 @@ function App() {
   const [warpLanes, setWarpLanes] = useState<any[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
+  
+  // Universe store for fleet/army position persistence
+  const universeStore = useUniverse();
 
   // Generate nebulas once
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
@@ -522,23 +526,20 @@ function App() {
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
 
-        // Check if system already exists in cache
-        let system = systemCache.get(selectedStar.id);
-        if (!system) {
-          // Generate new system and cache it
-          system = generateSystemForStar(selectedStar);
-          console.log('Generated system:', system);
-          setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
-          console.log(`Generated new system for ${selectedStar.name}`);
+        // Use universe store for system generation and caching
+        universeStore.selectStar(selectedStar);
+        const system = universeStore.selectedSystem;
+        
+        if (system) {
+          console.log('Using system from universe store:', system);
+          setCurrentView('system');
+          setCurrentSystem(system);
+          setLastVisitedStar(selectedStar); // Remember the star we're visiting
+          setSelectedStar(null);
+          setSelectedSpaceFeature(null); // Clear space feature when entering system view
         } else {
-          console.log(`Using cached system for ${selectedStar.name}`);
+          console.error('Failed to get system from universe store');
         }
-
-        setCurrentView('system');
-        setCurrentSystem(system);
-        setLastVisitedStar(selectedStar); // Remember the star we're visiting
-        setSelectedStar(null);
-        setSelectedSpaceFeature(null); // Clear space feature when entering system view
 
         // Ensure star info is available immediately in system view and set default camera
         setTimeout(() => {
