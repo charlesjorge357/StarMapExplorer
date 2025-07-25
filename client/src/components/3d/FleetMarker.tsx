@@ -53,26 +53,28 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
       const time = Date.now() * 0.0001 + shipIndex * (Math.PI * 2 / 8); // Stagger ships
       const theta = shipOrbitalSpeed * time;
       
-      // Calculate ship position relative to fleet center
-      const shipX = shipOrbitRadius * Math.cos(theta);
-      const shipZ = shipOrbitRadius * Math.sin(theta);
+      // Calculate current and next ship positions for velocity direction
+      const currentX = shipOrbitRadius * Math.cos(theta);
+      const currentZ = shipOrbitRadius * Math.sin(theta);
       
-      // Calculate ship rotation (direction of movement)
-      const dx = -shipOrbitRadius * Math.sin(theta);
-      const dz = shipOrbitRadius * Math.cos(theta);
-      const shipRotation = Math.atan2(dz, dx);
+      const nextTheta = theta + 0.01; // Small time step for velocity calculation
+      const nextX = shipOrbitRadius * Math.cos(nextTheta);
+      const nextZ = shipOrbitRadius * Math.sin(nextTheta);
+      
+      // Calculate velocity direction (acceleration direction)
+      const velocityX = nextX - currentX;
+      const velocityZ = nextZ - currentZ;
+      
+      // Ship faces its acceleration direction
+      const accelerationAngle = Math.atan2(velocityZ, velocityX);
       
       // Apply fleet position offset to get world position  
-      shipRef.current.position.x = fleetPosition[0] + shipX;
-      shipRef.current.position.z = fleetPosition[2] + shipZ;
+      shipRef.current.position.x = fleetPosition[0] + currentX;
+      shipRef.current.position.z = fleetPosition[2] + currentZ;
       shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
       
-      // Calculate fleet's orbital direction for formation alignment
-      const fleetOrbitRadius = Math.sqrt(fleetPosition[0] * fleetPosition[0] + fleetPosition[2] * fleetPosition[2]);
-      const fleetAngle = Math.atan2(fleetPosition[2], fleetPosition[0]);
-      
-      // Combine ship's local rotation with fleet's orbital direction
-      shipRef.current.rotation.y = shipRotation + fleetAngle + Math.PI / 2;
+      // Simple rotation: face the direction of acceleration/movement
+      shipRef.current.rotation.y = accelerationAngle;
     }
   });
 
