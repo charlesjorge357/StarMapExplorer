@@ -1124,7 +1124,9 @@ function App() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {currentSystem?.factions?.flatMap((faction: any) => faction.fleets || [])?.map((fleet: any) => {
-                  const auDistance = fleet.orbitRadius ? (fleet.orbitRadius / 6).toFixed(2) : 'N/A';
+                  // Calculate orbital radius from fleet position (distance from origin)
+                  const orbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+                  const auDistance = orbitRadius ? (orbitRadius / 6).toFixed(2) : 'N/A';
                   return (
                     <div
                       key={fleet.id}
