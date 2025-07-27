@@ -405,11 +405,22 @@ export function CameraController() {
       let positionCalculated = false;
 
       // Calculate space feature's real-time position based on orbital parameters
+      console.log(`Calculating position for space feature ${spaceFeature.name}:`, {
+        orbitTarget: spaceFeature.orbitTarget,
+        orbitTargetId: spaceFeature.orbitTargetId,
+        orbitRadius: spaceFeature.orbitRadius,
+        orbitSpeed: spaceFeature.orbitSpeed
+      });
+
       if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
         // Space feature orbiting a planet - need to get current system data
         const currentSystem = (window as any).currentSystemRef?.current;
+        console.log(`Planet orbit branch: currentSystem=${!!currentSystem}, planets=${currentSystem?.planets?.length || 0}`);
+        
         if (currentSystem && currentSystem.planets) {
           const targetPlanet = currentSystem.planets.find((p: any) => p.id === spaceFeature.orbitTargetId);
+          console.log(`Target planet search: targetId=${spaceFeature.orbitTargetId}, found=${!!targetPlanet}, planetName=${targetPlanet?.name}`);
+          
           if (targetPlanet && targetPlanet.orbitRadius && targetPlanet.orbitSpeed) {
             const planetTime = Date.now() * 0.0001;
             const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
@@ -438,8 +449,12 @@ export function CameraController() {
         }
       } else if (spaceFeature.orbitTarget === 'independent' || spaceFeature.orbitTarget === 'star') {
         // Independent orbit around system center (star)
+        console.log(`Independent orbit branch: orbitTarget=${spaceFeature.orbitTarget}`);
+        
         const angle = time * (spaceFeature.orbitSpeed || 0.01) + (spaceFeature.orbitOffset || 0);
         const radius = spaceFeature.orbitRadius || 50;
+        
+        console.log(`Independent orbit calculation: angle=${angle.toFixed(3)}, radius=${radius}, time=${time.toFixed(3)}`);
         
         featurePosition.set(
           Math.cos(angle) * radius * 2,
@@ -447,11 +462,27 @@ export function CameraController() {
           Math.sin(angle) * radius * 2
         );
         positionCalculated = true;
+        
+        console.log(`Independent orbit result: position=[${featurePosition.x.toFixed(2)}, ${featurePosition.y.toFixed(2)}, ${featurePosition.z.toFixed(2)}], distance=${featurePosition.length().toFixed(2)}`);
+      } else {
+        console.log(`Unknown orbit target: ${spaceFeature.orbitTarget}`);
       }
 
       // If position calculation failed, use fallback position or disable tracking
       if (!positionCalculated || featurePosition.length() < 5) {
-        console.warn(`Space feature ${spaceFeature.name} position calculation failed or too close to star (${featurePosition.length().toFixed(2)}). Disabling tracking.`);
+        console.warn(`Space feature orbital tracking failed:`, {
+          featureName: spaceFeature.name,
+          positionCalculated,
+          featurePosition: featurePosition.toArray(),
+          distance: featurePosition.length(),
+          orbitTarget: spaceFeature.orbitTarget,
+          orbitTargetId: spaceFeature.orbitTargetId,
+          orbitRadius: spaceFeature.orbitRadius,
+          orbitSpeed: spaceFeature.orbitSpeed,
+          orbitOffset: spaceFeature.orbitOffset,
+          currentSystem: !!(window as any).currentSystemRef?.current,
+          systemPlanets: (window as any).currentSystemRef?.current?.planets?.length || 0
+        });
         isSpaceFeatureTrackingRef.current = false;
         spaceFeatureTargetRef.current = null;
         return;
