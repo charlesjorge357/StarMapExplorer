@@ -177,75 +177,13 @@ export function CameraController() {
     console.log(`Camera positioned at ${cameraPosition.toArray().map(n => n.toFixed(1))} looking at ${star.name}`);
   };
 
-  // Space feature orbital tracking function
-  const homeToSpaceFeature = (spaceFeature: any, distance?: number, enableTracking = false) => {
-    if (!camera || !spaceFeature) return;
-
-    console.log(`Tracking space feature: ${spaceFeature.name} (${spaceFeature.type})`);
-
-    if (enableTracking) {
-      // Enable orbital tracking for space feature
-      isOrbitalTrackingRef.current = true;
-      orbitalTargetRef.current = spaceFeature;
-      console.log('Enabled orbital tracking for space feature');
-    } else {
-      // Disable orbital tracking
-      isOrbitalTrackingRef.current = false;
-      orbitalTargetRef.current = null;
-    }
-
-    // Calculate current space feature position using same logic as SpaceFeatureMarker
-    const time = Date.now() * 0.0001;
-    let featurePosition = new Vector3(0, 0, 0);
-
-    if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
-      // For planet-orbiting features, we'd need planet data - for now use simplified approach
-      const angle = time * (spaceFeature.orbitSpeed || 0.1) + (spaceFeature.orbitOffset || 0);
-      const radius = spaceFeature.orbitRadius || 10;
-      featurePosition.set(
-        Math.cos(angle) * radius * 2,
-        0,
-        Math.sin(angle) * radius * 2
-      );
-    } else if (spaceFeature.orbitTarget === 'independent' || spaceFeature.orbitTarget === 'star') {
-      // Independent orbit around system center (star)
-      const angle = time * (spaceFeature.orbitSpeed || 0.01) + (spaceFeature.orbitOffset || 0);
-      const radius = spaceFeature.orbitRadius || 50;
-      featurePosition.set(
-        Math.cos(angle) * radius * 2,
-        0,
-        Math.sin(angle) * radius * 2
-      );
-    } else {
-      // Fallback for unknown orbit types
-      featurePosition.set(0, 0, 0);
-    }
-
-    // Position camera with appropriate distance
-    const trackingDistance = distance || Math.max((spaceFeature.orbitRadius || 10) * 0.3, 3);
-    const direction = new Vector3(1, 0.4, 1).normalize();
-    const targetPosition = new Vector3().addVectors(featurePosition, direction.multiplyScalar(trackingDistance));
-
-    camera.position.copy(targetPosition);
-    camera.rotation.set(0, 0, 0);
-    camera.rotation.order = 'YXZ';
-    camera.up.set(0, 1, 0);
-    camera.lookAt(featurePosition);
-    camera.updateMatrix();
-    camera.updateMatrixWorld(true);
-
-    console.log(`Camera positioned for space feature ${spaceFeature.name} at:`, featurePosition.toArray().map(n => n.toFixed(1)));
-  };
-
   // Expose camera functions to window for external access
   useEffect(() => {
     (window as any).homeToPlanet = homeToPlanet;
-    (window as any).homeToSpaceFeature = homeToSpaceFeature;
     (window as any).resetToStar = resetToStar;
     (window as any).setCameraLookingAtStar = setCameraLookingAtStar;
     return () => {
       delete (window as any).homeToPlanet;
-      delete (window as any).homeToSpaceFeature;
       delete (window as any).resetToStar;
       delete (window as any).setCameraLookingAtStar;
     };
@@ -353,78 +291,46 @@ export function CameraController() {
       return; // Ensure no further updates if transitioning
     }
 
-    // Handle orbital tracking - support both planets and space features
+    // Handle orbital tracking - copy planet's movement data directly to camera
     // Disable orbital tracking in planetary view to prevent camera conflicts
     if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope !== 'planetary') {
-      const targetData = orbitalTargetRef.current;
+      const planetData = orbitalTargetRef.current;
       const time = Date.now() * 0.0001;
+      const planetIndex = planetData.index || 0;
+      const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
 
-      let targetPos = new Vector3();
-      let cameraDistance = 10;
+      // Calculate exact planet position (identical to SystemView calculation)
+      const planetPos = new Vector3(
+        Math.cos(angle) * planetData.orbitRadius * 2,
+        0,
+        Math.sin(angle) * planetData.orbitRadius * 2
+      );
 
-      // Check if tracking a planet or space feature
-      if (targetData.type) {
-        // Space feature tracking
-        if (targetData.orbitTarget === 'planet' && targetData.orbitTargetId) {
-          // For planet-orbiting features
-          const angle = time * (targetData.orbitSpeed || 0.1) + (targetData.orbitOffset || 0);
-          const radius = targetData.orbitRadius || 10;
-          targetPos.set(
-            Math.cos(angle) * radius * 2,
-            0,
-            Math.sin(angle) * radius * 2
-          );
-        } else if (targetData.orbitTarget === 'independent' || targetData.orbitTarget === 'star') {
-          // Independent orbit around system center (star)
-          const angle = time * (targetData.orbitSpeed || 0.01) + (targetData.orbitOffset || 0);
-          const radius = targetData.orbitRadius || 50;
-          targetPos.set(
-            Math.cos(angle) * radius * 2,
-            0,
-            Math.sin(angle) * radius * 2
-          );
-        }
-        cameraDistance = Math.max((targetData.orbitRadius || 10) * 0.3, 3);
-      } else {
-        // Planet tracking (existing logic)
-        const planetIndex = targetData.index || 0;
-        const angle = time * targetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+      // Position camera at fixed distance from planet, not star
+      const cameraDistance = Math.max(planetData.radius * 8, 5);
+      const cameraOffsetAngle = angle + Math.PI * 0.3;
 
-        // Calculate exact planet position (identical to SystemView calculation)
-        targetPos.set(
-          Math.cos(angle) * targetData.orbitRadius * 2,
-          0,
-          Math.sin(angle) * targetData.orbitRadius * 2
-        );
-        cameraDistance = Math.max(targetData.radius * 8, 5);
-      }
-
-      // Position camera at fixed distance from target
-      const cameraOffsetAngle = time * 0.01 + Math.PI * 0.3;
-
-      // Calculate direction from target to camera
+      // Calculate direction from planet to camera
       const cameraDirection = new Vector3(
         Math.cos(cameraOffsetAngle),
         0.4, // Elevated angle
         Math.sin(cameraOffsetAngle)
       ).normalize();
 
-      // Position camera relative to target position
-      const cameraPos = targetPos.clone().add(cameraDirection.multiplyScalar(cameraDistance));
+      // Position camera relative to planet position
+      const cameraPos = planetPos.clone().add(cameraDirection.multiplyScalar(cameraDistance));
 
       // Direct position copy - no interpolation for instant sync
       camera.position.copy(cameraPos);
-      camera.lookAt(targetPos);
+      camera.lookAt(planetPos);
       camera.updateMatrix();
       camera.updateMatrixWorld(true);
       
       // Debug rapid camera updates
       if (Math.random() < 0.01) { // 1% chance to log
-        const targetType = targetData.type ? 'space feature' : 'planet';
-        console.log(`Orbital tracking ${targetType} update:`, {
+        console.log('Orbital tracking camera update:', {
           position: cameraPos.toArray().map(n => n.toFixed(2)),
-          targetPos: targetPos.toArray().map(n => n.toFixed(2)),
-          targetName: targetData.name
+          planetPos: planetPos.toArray().map(n => n.toFixed(2))
         });
       }
 
