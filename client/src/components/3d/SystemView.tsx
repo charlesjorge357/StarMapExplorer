@@ -726,6 +726,10 @@ export function SystemView({
     }
     if (selectedSpaceFeature) {
       console.log('Deselecting space feature');
+      // Stop space feature orbital tracking
+      if ((window as any).homeToSpaceFeature) {
+        (window as any).homeToSpaceFeature(null, 0, false);
+      }
       setSelectedSpaceFeature(null);
     }
     if (selectedFleet) {

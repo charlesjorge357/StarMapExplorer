@@ -682,6 +682,10 @@ function App() {
           }
           if (selectedSpaceFeature) {
             console.log(`Unselected space feature: ${selectedSpaceFeature.name}`);
+            // Stop space feature orbital tracking
+            if ((window as any).homeToSpaceFeature) {
+              (window as any).homeToSpaceFeature(null, 0, false);
+            }
             setSelectedSpaceFeature(null);
           }
           if (selectedFleet) {
@@ -711,6 +715,10 @@ function App() {
           setCurrentView('system');
           setSelectedFeature(null);
           setSelectedArmy(null); // Clear army when returning to system view
+          // Stop space feature orbital tracking when leaving planetary view
+          if ((window as any).homeToSpaceFeature) {
+            (window as any).homeToSpaceFeature(null, 0, false);
+          }
           setSelectedSpaceFeature(null); // Clear space feature when returning to system view
 
           // Re-enable galactic and system view keyboard controls
@@ -734,6 +742,10 @@ function App() {
           // Stop orbital tracking when leaving system view
           if ((window as any).homeToPlanet) {
             (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
+          }
+          // Stop space feature orbital tracking when leaving system view
+          if ((window as any).homeToSpaceFeature) {
+            (window as any).homeToSpaceFeature(null, 0, false);
           }
 
           setCurrentView('galactic');
