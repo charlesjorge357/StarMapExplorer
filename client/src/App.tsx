@@ -1121,8 +1121,13 @@ function App() {
               <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
                 Fleet Positions
               </div>
+              {console.log('Fleet debug:', { 
+                currentSystem: !!currentSystem, 
+                factions: currentSystem?.factions?.length,
+                allFleets: currentSystem?.factions?.flatMap((f: any) => f.fleets || [])
+              })}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {currentSystem?.fleets?.map((fleet: any) => {
+                {currentSystem?.factions?.flatMap((faction: any) => faction.fleets || [])?.map((fleet: any) => {
                   const auDistance = fleet.orbitRadius ? (fleet.orbitRadius / 6).toFixed(2) : 'N/A';
                   return (
                     <div
@@ -1326,7 +1331,7 @@ function App() {
             style={{
               position: 'fixed',
               top: '20px',
-              right: '240px',
+              right: '320px',
               zIndex: 1000,
               background: isViewingArmies ? '#4CAF50' : 'rgba(0, 0, 0, 0.7)',
               color: 'white',
@@ -1344,7 +1349,7 @@ function App() {
             <div style={{
               position: 'fixed',
               top: '70px',
-              right: '240px',
+              right: '320px',
               zIndex: 1000,
               background: 'rgba(0, 0, 0, 0.9)',
               padding: '15px',
@@ -1357,8 +1362,15 @@ function App() {
               <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
                 Army Positions
               </div>
+              {console.log('Army debug:', { 
+                selectedPlanet: !!selectedPlanet, 
+                planetFaction: selectedPlanet?.faction,
+                armies: selectedPlanet?.faction?.armies, 
+                armiesLength: selectedPlanet?.faction?.armies?.length,
+                planetName: selectedPlanet?.name 
+              })}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {selectedPlanet?.armies?.map((army: any) => {
+                {selectedPlanet?.faction?.armies?.map((army: any) => {
                   const longitude = army.position ? army.position[0].toFixed(1) : 'N/A';
                   const latitude = army.position ? army.position[1].toFixed(1) : 'N/A';
                   return (
