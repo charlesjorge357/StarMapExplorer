@@ -683,16 +683,29 @@ export function SystemView({
 
   // No longer needed - using currentSystem.star directly in UI
 
-  // Handle space feature selection
-  const handleSpaceFeatureClick = (feature: SpaceFeature | null) => {
+  // Handle space feature selection with toggle behavior like planets
+  const handleSpaceFeatureClick = (feature: SpaceFeature) => {
     console.log('handleSpaceFeatureClick called with:', feature);
     try {
-      if (propOnSpaceFeatureClick) {
-        console.log('Using prop onSpaceFeatureClick');
-        propOnSpaceFeatureClick(feature);
+      // Toggle selection: if already selected, deselect it
+      if (selectedSpaceFeature && selectedSpaceFeature.id === feature.id) {
+        console.log('Deselecting space feature (toggle)');
+        // Stop space feature orbital tracking
+        if ((window as any).homeToSpaceFeature) {
+          (window as any).homeToSpaceFeature(null, 0, false);
+        }
+        if (propOnSpaceFeatureClick) {
+          propOnSpaceFeatureClick(null);
+        } else {
+          setSelectedSpaceFeature(null);
+        }
       } else {
-        console.log('Using local setSelectedSpaceFeature');
-        setSelectedSpaceFeature(feature);
+        console.log('Selecting space feature');
+        if (propOnSpaceFeatureClick) {
+          propOnSpaceFeatureClick(feature);
+        } else {
+          setSelectedSpaceFeature(feature);
+        }
       }
     } catch (error) {
       console.error('Error in handleSpaceFeatureClick:', error);
@@ -724,14 +737,7 @@ export function SystemView({
       }
       onPlanetClick(null);
     }
-    if (selectedSpaceFeature) {
-      console.log('Deselecting space feature');
-      // Stop space feature orbital tracking
-      if ((window as any).homeToSpaceFeature) {
-        (window as any).homeToSpaceFeature(null, 0, false);
-      }
-      setSelectedSpaceFeature(null);
-    }
+
     if (selectedFleet) {
       console.log('Deselecting fleet');
       setSelectedFleet(null);

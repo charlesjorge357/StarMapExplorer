@@ -1425,7 +1425,7 @@ function App() {
                 <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Location:</span> Orbital distance: {selectedSpaceFeature.orbitRadius?.toFixed(1) || 'N/A'} AU</p>
               </div>
               <div className="mt-3 text-xs text-gray-400">
-                <p>Click background to deselect</p>
+                <p>Click feature again to deselect</p>
               </div>
             </div>
           )}
