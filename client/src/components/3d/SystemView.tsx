@@ -801,23 +801,32 @@ export function SystemView({
     );
   }
 
-  // Expose search functions and planet data to parent component
+  // Expose search functions and orbital data to parent component
   React.useEffect(() => {
     // Add search functionality to window for external access
     (window as any).searchPlanet = searchPlanet;
     (window as any).systemPlanets = planets; // Use processed planets with all data
+    (window as any).systemSpaceFeatures = spaceFeatures; // Expose space features for fleet orbital sync
     
     console.log(`📡 Exposed ${planets.length} planets to fleet orbital system:`, planets.map(p => ({
       name: p.name,
       orbitSpeed: p.orbitSpeed,
       orbitRadius: p.orbitRadius
     })));
+    
+    console.log(`📡 Exposed ${spaceFeatures.length} space features to fleet orbital system:`, spaceFeatures.map(f => ({
+      name: f.name,
+      type: f.type,
+      orbitSpeed: f.orbitSpeed,
+      orbitRadius: f.orbitRadius
+    })));
 
     return () => {
       delete (window as any).searchPlanet;
       delete (window as any).systemPlanets;
+      delete (window as any).systemSpaceFeatures;
     };
-  }, [planets, searchPlanet]);
+  }, [planets, spaceFeatures, searchPlanet]);
 
   return (
     <group>

@@ -161,23 +161,29 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
   
-  // Find the closest planet and adopt its orbital speed
-  const { orbitalSpeed, closestPlanet } = useMemo(() => {
-    // Get planets from system data
+  // Find the closest orbital object (planet or space feature) and adopt its orbital speed
+  const { orbitalSpeed, closestObject } = useMemo(() => {
+    // Get planets and space features from system data
     const systemPlanets = (window as any).systemPlanets || [];
+    const systemSpaceFeatures = (window as any).systemSpaceFeatures || [];
     
-    if (systemPlanets.length === 0) {
-      // Fallback to calculated speed if no planets available
+    if (systemPlanets.length === 0 && systemSpaceFeatures.length === 0) {
+      // Fallback to calculated speed if no orbital objects available
       const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
       const logicalRadius = visualRadius / 2;
       return {
         orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
-        closestPlanet: null
+        closestObject: null
       };
     }
     
-    // Find closest planet by orbital radius (more reliable than position)
-    let closestPlanet = null;
+    // Combine planets and space features into orbital objects list
+    const orbitalObjects = [
+      ...systemPlanets.map((p: any) => ({ ...p, objectType: 'planet' })),
+      ...systemSpaceFeatures.filter((f: any) => f.orbitRadius && f.orbitSpeed).map((f: any) => ({ ...f, objectType: 'space_feature' }))
+    ];
+    
+    let closestObject = null;
     let minRadiusDiff = Infinity;
     const fleetOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]) / 2;
     
@@ -185,47 +191,48 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
     const fleetPos = fleet.position;
     let proximityBonus = 0;
     
-    for (const planet of systemPlanets) {
-      if (!planet.orbitRadius || !planet.orbitSpeed) continue;
+    for (const orbitalObj of orbitalObjects) {
+      if (!orbitalObj.orbitRadius || !orbitalObj.orbitSpeed) continue;
       
-      const radiusDiff = Math.abs(planet.orbitRadius - fleetOrbitRadius);
+      const radiusDiff = Math.abs(orbitalObj.orbitRadius - fleetOrbitRadius);
       
-      // Calculate actual 3D distance to planet's current position
-      const planetPos = planet.position || [planet.orbitRadius * 2, 0, 0]; // Fallback position
+      // Calculate actual 3D distance to object's current position
+      const objPos = orbitalObj.position || [orbitalObj.orbitRadius * 2, 0, 0]; // Fallback position
       const actualDistance = Math.sqrt(
-        Math.pow(fleetPos[0] - planetPos[0], 2) + 
-        Math.pow(fleetPos[2] - planetPos[2], 2)
+        Math.pow(fleetPos[0] - objPos[0], 2) + 
+        Math.pow(fleetPos[2] - objPos[2], 2)
       );
       
-      // If fleet is within 8 units of a planet, strongly prefer that planet for speed sync
+      // If fleet is within 8 units of an orbital object, strongly prefer that object for speed sync
       const isInProximity = actualDistance < 8.0;
       const adjustedRadiusDiff = isInProximity ? radiusDiff * 0.1 : radiusDiff; // 90% bonus for proximity
       
       if (adjustedRadiusDiff < minRadiusDiff) {
         minRadiusDiff = adjustedRadiusDiff;
-        closestPlanet = planet;
+        closestObject = orbitalObj;
         proximityBonus = isInProximity ? actualDistance : 0;
       }
     }
     
-    if (closestPlanet) {
+    if (closestObject) {
+      const objectTypeEmoji = closestObject.objectType === 'planet' ? '🌍' : '🏗️';
       const logMessage = proximityBonus > 0 
-        ? `🌍 Fleet ${fleet.id} syncing with nearby planet ${closestPlanet.name} (distance: ${proximityBonus.toFixed(1)} units)`
-        : `🌍 Fleet ${fleet.id} adopting orbital speed from closest planet: ${closestPlanet.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`;
+        ? `${objectTypeEmoji} Fleet ${fleet.id} syncing with nearby ${closestObject.objectType} ${closestObject.name} (distance: ${proximityBonus.toFixed(1)} units)`
+        : `${objectTypeEmoji} Fleet ${fleet.id} adopting orbital speed from closest ${closestObject.objectType}: ${closestObject.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`;
       console.log(logMessage);
       
       return {
-        orbitalSpeed: closestPlanet.orbitSpeed,
-        closestPlanet: closestPlanet
+        orbitalSpeed: closestObject.orbitSpeed,
+        closestObject: closestObject
       };
     }
     
-    // Fallback if no closest planet found
+    // Fallback if no closest orbital object found
     const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
     const logicalRadius = visualRadius / 2;
     return {
       orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
-      closestPlanet: null
+      closestObject: null
     };
   }, [fleet.position[0], fleet.position[2]]);
 
@@ -259,7 +266,7 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         setRealTimePosition([x, fleet.position[1], z]);
         
         if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
-          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestPlanet?.name || 'calculated'}`);
+          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestObject?.name || 'calculated'}`);
         }
       }
     }
