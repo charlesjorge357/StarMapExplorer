@@ -1069,12 +1069,13 @@ function App() {
                         setSelectedSpaceFeature(feature);
                         setIsSearchingSpaceFeatures(false);
 
-                        // Auto-start orbital tracking for selected space feature
+                        // Auto-start orbital tracking for selected space feature (matching planet behavior)
                         setTimeout(() => {
                           if ((window as any).homeToPlanet && feature.position) {
                             // Use space feature position for orbital tracking
                             const trackingDistance = Math.max(feature.orbitRadius * 0.5, 2); // Closer tracking for space features
                             (window as any).homeToPlanet(new Vector3(...feature.position), trackingDistance, feature, true);
+                            console.log(`Starting orbital tracking for space feature: ${feature.name}`);
                           }
                         }, 100);
                       }}
