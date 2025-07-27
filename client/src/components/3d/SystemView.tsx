@@ -254,13 +254,17 @@ function PlanetMesh({
   index, 
   isSelected, 
   onPlanetClick, 
-  planetTextures
+  planetTextures,
+  selectedSpaceFeature,
+  onSpaceFeatureClick
 }: { 
   planet: any; 
   index: number; 
   isSelected: boolean;
   onPlanetClick: (planet: any) => void;
   planetTextures: any;
+  selectedSpaceFeature?: any;
+  onSpaceFeatureClick?: (feature: any) => void;
 }) {
   const planetRef = useRef<any>();
 
@@ -314,10 +318,8 @@ function PlanetMesh({
         if ((window as any).homeToSpaceFeature) {
           (window as any).homeToSpaceFeature(null, 0, false);
         }
-        if (propOnSpaceFeatureClick) {
-          propOnSpaceFeatureClick(null);
-        } else {
-          setSelectedSpaceFeature(null);
+        if (onSpaceFeatureClick) {
+          onSpaceFeatureClick(null);
         }
       }
       
@@ -1033,6 +1035,8 @@ export function SystemView({
           isSelected={selectedPlanet?.id === planet.id}
           onPlanetClick={onPlanetClick}
           planetTextures={planetTextures}
+          selectedSpaceFeature={selectedSpaceFeature}
+          onSpaceFeatureClick={onSpaceFeatureClick}
         />
       ))}
 
