@@ -330,6 +330,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchingSpaceFeatures, setIsSearchingSpaceFeatures] = useState(false);
+  const [isSearchingSurfaceFeatures, setIsSearchingSurfaceFeatures] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
@@ -931,6 +932,22 @@ function App() {
     return null;
   };
 
+  // Surface feature search function for planetary view
+  const searchSurfaceFeature = (featureName: string) => {
+    if (currentView === 'planetary' && selectedPlanet?.surfaceFeatures) {
+      const feature = selectedPlanet.surfaceFeatures.find((f: any) => 
+        f.name.toLowerCase().includes(featureName.toLowerCase())
+      );
+
+      if (feature) {
+        setSelectedFeature(feature);
+        console.log(`Found and selected surface feature: ${feature.name}`);
+        return feature;
+      }
+    }
+    return null;
+  };
+
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -1207,6 +1224,135 @@ function App() {
           )}
         </>
       )}
+
+      {/* Surface Feature Search UI for Planetary View */}
+      {currentView === 'planetary' && (
+        <>
+          <button
+            onClick={() => setIsSearchingSurfaceFeatures(!isSearchingSurfaceFeatures)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 1000,
+              background: isSearchingSurfaceFeatures ? '#9C27B0' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '6px',
+              padding: '10px 15px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {isSearchingSurfaceFeatures ? 'Close Selector' : 'Select Surface Feature'}
+          </button>
+
+          {isSearchingSurfaceFeatures && (
+            <div style={{
+              position: 'fixed',
+              top: '70px',
+              right: '20px',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.9)',
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #333',
+              minWidth: '300px',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}>
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
+                Select Surface Feature
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {selectedPlanet?.surfaceFeatures?.map((feature: any) => {
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() => {
+                        console.log('Selecting surface feature from menu:', feature.name);
+                        setSelectedFeature(feature);
+                        
+                        // Auto-start feature tracking (similar to Enter key behavior)
+                        setTimeout(() => {
+                          if ((window as any).homeToFeature) {
+                            const planetRadius = selectedPlanet?.radius ? selectedPlanet.radius * 15 : 10;
+                            const trackingDistance = planetRadius * 0.9;
+                            (window as any).homeToFeature(feature, trackingDistance);
+                            console.log(`Starting surface feature tracking for: ${feature.name}`);
+                          }
+                        }, 100);
+                        
+                        setIsSearchingSurfaceFeatures(false);
+                      }}
+                      style={{
+                        background: selectedFeature?.id === feature.id ? '#9C27B0' : '#333',
+                        color: 'white',
+                        border: selectedFeature?.id === feature.id ? '2px solid #BA68C8' : '1px solid #555',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        fontSize: '13px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedFeature?.id !== feature.id) {
+                          e.currentTarget.style.background = '#444';
+                          e.currentTarget.style.borderColor = '#777';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedFeature?.id !== feature.id) {
+                          e.currentTarget.style.background = '#333';
+                          e.currentTarget.style.borderColor = '#555';
+                        }
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{feature.name}</div>
+                      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
+                        {feature.type.replace('_', ' ').charAt(0).toUpperCase() + feature.type.replace('_', ' ').slice(1)} • 
+                        {feature.size && `${feature.size.charAt(0).toUpperCase() + feature.size.slice(1)} • `}
+                        {feature.population && `Pop: ${feature.population.toLocaleString()}`}
+                        {feature.technology && ` • Tech: ${feature.technology}`}
+                      </div>
+                    </button>
+                  );
+                }) || (
+                  <div style={{ color: '#aaa', textAlign: 'center', padding: '20px' }}>
+                    No surface features available
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsSearchingSurfaceFeatures(false)}
+                style={{
+                  marginTop: '15px',
+                  width: '100%',
+                  padding: '8px',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
       {hasStarted === true && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <MusicController />
