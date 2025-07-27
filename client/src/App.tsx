@@ -730,6 +730,39 @@ function App() {
           // Re-enable galactic and system view keyboard controls
           (window as any).disableGalacticSystemControls = false;
 
+          // CRITICAL: Restore fleet positions when returning from planetary view
+          if (currentSystem) {
+            console.log('🔄 Restoring fleet positions when returning from planetary view');
+            const updatedSystem = { ...currentSystem };
+            
+            // Get current fleet positions from universe store
+            const universeStore = useUniverse.getState();
+            if (universeStore?.universeData?.systems) {
+              const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id || s.id === `system-${selectedStar?.id}`);
+              console.log(`🔍 Looking for saved system: ${currentSystem.id} or system-${selectedStar?.id}`);
+              console.log(`🔍 Saved system found:`, !!savedSystem);
+              
+              if (savedSystem?.fleets) {
+                console.log(`🔍 Restoring ${savedSystem.fleets.length} fleet positions`);
+                // Update fleet positions in all factions
+                updatedSystem.factions?.forEach((faction: any) => {
+                  if (faction.fleets) {
+                    faction.fleets.forEach((fleet: any) => {
+                      const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                      if (savedFleet && savedFleet.position) {
+                        console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
+                        fleet.position = savedFleet.position;
+                      }
+                    });
+                  }
+                });
+                
+                // Update the current system state
+                setCurrentSystem(updatedSystem);
+              }
+            }
+          }
+
           // Re-establish orbital tracking for the selected planet since it continued rotating
           if (selectedPlanet && (window as any).homeToPlanet) {
             setTimeout(() => {
