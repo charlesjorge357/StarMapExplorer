@@ -897,7 +897,8 @@ function App() {
             }
 
             const trackingDistance = Math.max((selectedSpaceFeature.orbitRadius || 10) * 0.3, 3);
-            (window as any).homeToPlanet(featurePosition, trackingDistance, selectedSpaceFeature, true);
+            // Pass null as planetData since space features don't follow planet orbital mechanics
+            (window as any).homeToPlanet(featurePosition, trackingDistance, null, true);
             console.log(`Starting orbital tracking for ${selectedSpaceFeature.name} via Enter key at position:`, featurePosition);
           }
         }
@@ -1157,7 +1158,8 @@ function App() {
                             }
 
                             const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3); // Closer tracking for space features
-                            (window as any).homeToPlanet(featurePosition, trackingDistance, feature, true);
+                            // Pass null as planetData since space features don't follow planet orbital mechanics
+                            (window as any).homeToPlanet(featurePosition, trackingDistance, null, true);
                             console.log(`Starting orbital tracking for space feature: ${feature.name} at position:`, featurePosition);
                           }
                         }, 100);
