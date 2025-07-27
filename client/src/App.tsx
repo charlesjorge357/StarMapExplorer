@@ -331,6 +331,8 @@ function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchingSpaceFeatures, setIsSearchingSpaceFeatures] = useState(false);
   const [isSearchingSurfaceFeatures, setIsSearchingSurfaceFeatures] = useState(false);
+  const [isViewingFleets, setIsViewingFleets] = useState(false);
+  const [isViewingArmies, setIsViewingArmies] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
@@ -1082,6 +1084,97 @@ function App() {
             </div>
           )}
 
+          {/* Fleet View Menu for System View */}
+          <button
+            onClick={() => setIsViewingFleets(!isViewingFleets)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '620px',
+              zIndex: 1000,
+              background: isViewingFleets ? '#FF9800' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '6px',
+              padding: '10px 15px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {isViewingFleets ? 'Close Fleets' : 'View Fleets'}
+          </button>
+
+          {isViewingFleets && (
+            <div style={{
+              position: 'fixed',
+              top: '70px',
+              right: '620px',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.9)',
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #333',
+              minWidth: '280px',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}>
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
+                Fleet Positions
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {currentSystem?.fleets?.map((fleet: any) => {
+                  const auDistance = fleet.orbitRadius ? (fleet.orbitRadius / 6).toFixed(2) : 'N/A';
+                  return (
+                    <div
+                      key={fleet.id}
+                      style={{
+                        background: '#333',
+                        color: 'white',
+                        border: '1px solid #555',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        fontSize: '13px'
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{fleet.name}</div>
+                      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
+                        {fleet.faction} • {fleet.ships?.length || 0} ships • {auDistance} AU
+                      </div>
+                    </div>
+                  );
+                }) || (
+                  <div style={{ color: '#aaa', textAlign: 'center', padding: '20px' }}>
+                    No fleets in system
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsViewingFleets(false)}
+                style={{
+                  marginTop: '15px',
+                  width: '100%',
+                  padding: '8px',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+              >
+                Close
+              </button>
+            </div>
+          )}
+
           {/* Space Feature Search UI for System View */}
           <button
             onClick={() => setIsSearchingSpaceFeatures(!isSearchingSpaceFeatures)}
@@ -1219,6 +1312,102 @@ function App() {
                 }}
               >
                 Cancel
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Army View Menu for Planetary View */}
+      {currentView === 'planetary' && (
+        <>
+          <button
+            onClick={() => setIsViewingArmies(!isViewingArmies)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '240px',
+              zIndex: 1000,
+              background: isViewingArmies ? '#4CAF50' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '6px',
+              padding: '10px 15px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {isViewingArmies ? 'Close Armies' : 'View Armies'}
+          </button>
+
+          {isViewingArmies && (
+            <div style={{
+              position: 'fixed',
+              top: '70px',
+              right: '240px',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.9)',
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #333',
+              minWidth: '280px',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}>
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
+                Army Positions
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {selectedPlanet?.armies?.map((army: any) => {
+                  const longitude = army.position ? army.position[0].toFixed(1) : 'N/A';
+                  const latitude = army.position ? army.position[1].toFixed(1) : 'N/A';
+                  return (
+                    <div
+                      key={army.id}
+                      style={{
+                        background: '#333',
+                        color: 'white',
+                        border: '1px solid #555',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        fontSize: '13px'
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{army.name}</div>
+                      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
+                        {army.faction} • {army.divisions?.length || 0} divisions • {longitude}°, {latitude}°
+                      </div>
+                    </div>
+                  );
+                }) || (
+                  <div style={{ color: '#aaa', textAlign: 'center', padding: '20px' }}>
+                    No armies on planet
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsViewingArmies(false)}
+                style={{
+                  marginTop: '15px',
+                  width: '100%',
+                  padding: '8px',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+              >
+                Close
               </button>
             </div>
           )}
@@ -1449,9 +1638,9 @@ function App() {
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedPlanet 
-                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Escape: deselect • Backspace: galactic view`
+                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Click: Deselect • Backspace: galactic view`
                 : selectedSpaceFeature
-                ? `Selected: ${selectedSpaceFeature.name} • Enter: orbital track • Escape: deselect • Backspace: galactic view`
+                ? `Selected: ${selectedSpaceFeature.name} • Enter: orbital track • Reclick object: deselect • Backspace: galactic view`
                 : 'Click planets or space features to inspect • Select Planet / Select Space Feature buttons • Backspace: galactic view'
               }
             </div>
@@ -1461,7 +1650,7 @@ function App() {
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedFeature 
                 ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Enter: deselect • Backspace: system view`
-                : 'Click surface features to inspect, and hit Enter to lock • Backspace: return to system view'
+                : 'Click surface features to inspect, and hit Enter to lock. Enter again to unlock • Backspace: return to system view'
               }
             </div>
           )}
