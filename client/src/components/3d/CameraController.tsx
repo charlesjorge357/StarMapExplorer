@@ -117,11 +117,22 @@ export function CameraController() {
     if (!camera) return;
 
     if (enableOrbitalTracking && spaceFeature) {
+      // Validate space feature has required orbital parameters
+      if (!spaceFeature.orbitRadius || spaceFeature.orbitRadius < 5) {
+        console.warn(`Space feature ${spaceFeature.name} has invalid orbitRadius (${spaceFeature.orbitRadius}). Minimum is 5.`);
+        return;
+      }
+      
+      if (!spaceFeature.orbitSpeed) {
+        console.warn(`Space feature ${spaceFeature.name} has no orbitSpeed. Using default 0.01.`);
+        spaceFeature.orbitSpeed = 0.01;
+      }
+
       // Enable continuous orbital tracking for space feature
       isSpaceFeatureTrackingRef.current = true;
       spaceFeatureTargetRef.current = spaceFeature;
-      spaceFeatureDistanceRef.current = trackingDistance;
-      console.log(`Starting space feature orbital tracking for ${spaceFeature.name}`);
+      spaceFeatureDistanceRef.current = Math.max(trackingDistance, 3); // Minimum tracking distance
+      console.log(`Starting space feature orbital tracking for ${spaceFeature.name} at radius ${spaceFeature.orbitRadius} with distance ${spaceFeatureDistanceRef.current}`);
       return;
     }
 
@@ -391,14 +402,15 @@ export function CameraController() {
       const spaceFeature = spaceFeatureTargetRef.current;
       const time = Date.now() * 0.0001;
       let featurePosition = new Vector3(0, 0, 0);
+      let positionCalculated = false;
 
       // Calculate space feature's real-time position based on orbital parameters
       if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
         // Space feature orbiting a planet - need to get current system data
         const currentSystem = (window as any).currentSystemRef?.current;
-        if (currentSystem) {
-          const targetPlanet = currentSystem.planets?.find((p: any) => p.id === spaceFeature.orbitTargetId);
-          if (targetPlanet) {
+        if (currentSystem && currentSystem.planets) {
+          const targetPlanet = currentSystem.planets.find((p: any) => p.id === spaceFeature.orbitTargetId);
+          if (targetPlanet && targetPlanet.orbitRadius && targetPlanet.orbitSpeed) {
             const planetTime = Date.now() * 0.0001;
             const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
             const planetAngle = planetTime * targetPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
@@ -412,14 +424,16 @@ export function CameraController() {
 
             // Calculate feature's orbit around the planet
             const featureAngle = time * (spaceFeature.orbitSpeed || 0.1) + (spaceFeature.orbitOffset || 0);
-            const orbitX = Math.cos(featureAngle) * (spaceFeature.orbitRadius || 10);
-            const orbitZ = Math.sin(featureAngle) * (spaceFeature.orbitRadius || 10);
+            const orbitRadius = spaceFeature.orbitRadius || 10;
+            const orbitX = Math.cos(featureAngle) * orbitRadius;
+            const orbitZ = Math.sin(featureAngle) * orbitRadius;
 
             featurePosition.set(
               planetPos.x + orbitX,
               planetPos.y,
               planetPos.z + orbitZ
             );
+            positionCalculated = true;
           }
         }
       } else if (spaceFeature.orbitTarget === 'independent' || spaceFeature.orbitTarget === 'star') {
@@ -432,6 +446,15 @@ export function CameraController() {
           0,
           Math.sin(angle) * radius * 2
         );
+        positionCalculated = true;
+      }
+
+      // If position calculation failed, use fallback position or disable tracking
+      if (!positionCalculated || featurePosition.length() < 5) {
+        console.warn(`Space feature ${spaceFeature.name} position calculation failed or too close to star (${featurePosition.length().toFixed(2)}). Disabling tracking.`);
+        isSpaceFeatureTrackingRef.current = false;
+        spaceFeatureTargetRef.current = null;
+        return;
       }
 
       // Position camera at tracking distance from space feature
