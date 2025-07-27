@@ -326,6 +326,7 @@ function App() {
   const [lastVisitedStar, setLastVisitedStar] = useState<SimpleStar | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchingSpaceFeatures, setIsSearchingSpaceFeatures] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [stars, setStars] = useState<SimpleStar[]>([]);
@@ -687,6 +688,10 @@ function App() {
             console.log(`Unselected fleet: ${selectedFleet.name}`);
             setSelectedFleet(null);
           }
+          
+          // Close any open search menus when escaping selections
+          setIsSearching(false);
+          setIsSearchingSpaceFeatures(false);
         } else if (currentView === 'planetary' && (selectedFeature || selectedArmy)) {
           // Unselect surface features and armies in planetary view
           if (selectedFeature) {
@@ -832,7 +837,7 @@ function App() {
 
       // Handle Enter key for orbital tracking
       if (event.key === 'Enter') {
-        if (currentView === 'system' && selectedPlanet && !isSearching) {
+        if (currentView === 'system' && selectedPlanet && !isSearching && !isSearchingSpaceFeatures) {
           event.preventDefault();
 
           // Enable orbital tracking for selected planet
@@ -843,12 +848,23 @@ function App() {
             console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
           }
         }
+
+        if (currentView === 'system' && selectedSpaceFeature && !isSearching && !isSearchingSpaceFeatures) {
+          event.preventDefault();
+
+          // Enable orbital tracking for selected space feature
+          if ((window as any).homeToPlanet && selectedSpaceFeature.position) {
+            const trackingDistance = Math.max(selectedSpaceFeature.orbitRadius * 0.5, 2);
+            (window as any).homeToPlanet(new Vector3(...selectedSpaceFeature.position), trackingDistance, selectedSpaceFeature, true);
+            console.log(`Starting orbital tracking for ${selectedSpaceFeature.name}`);
+          }
+        }
       }
     };
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar, currentView, systemCache, selectedPlanet, isSearching, currentSystem]);
+  }, [selectedStar, currentView, systemCache, selectedPlanet, isSearching, isSearchingSpaceFeatures, currentSystem]);
 
   // Planet search function for system view
   const searchPlanet = (planetName: string) => {
@@ -861,6 +877,22 @@ function App() {
         setSelectedPlanet(planet);
         console.log(`Found and selected planet: ${planet.name}`);
         return planet;
+      }
+    }
+    return null;
+  };
+
+  // Space feature search function for system view
+  const searchSpaceFeature = (featureName: string) => {
+    if (currentView === 'system' && currentSystem?.spaceFeatures) {
+      const feature = currentSystem.spaceFeatures.find((f: any) => 
+        f.name.toLowerCase().includes(featureName.toLowerCase())
+      );
+
+      if (feature) {
+        setSelectedSpaceFeature(feature);
+        console.log(`Found and selected space feature: ${feature.name}`);
+        return feature;
       }
     }
     return null;
@@ -990,6 +1022,126 @@ function App() {
               </button>
             </div>
           )}
+
+          {/* Space Feature Search UI for System View */}
+          <button
+            onClick={() => setIsSearchingSpaceFeatures(!isSearchingSpaceFeatures)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '200px',
+              zIndex: 1000,
+              background: isSearchingSpaceFeatures ? '#FF5722' : 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid #666',
+              borderRadius: '6px',
+              padding: '10px 15px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {isSearchingSpaceFeatures ? 'Close Selector' : 'Select Space Feature'}
+          </button>
+
+          {isSearchingSpaceFeatures && (
+            <div style={{
+              position: 'fixed',
+              top: '70px',
+              right: '200px',
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.9)',
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #333',
+              minWidth: '300px',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}>
+              <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
+                Select Space Feature
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {currentSystem?.spaceFeatures?.map((feature: any) => {
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() => {
+                        setSelectedSpaceFeature(feature);
+                        setIsSearchingSpaceFeatures(false);
+
+                        // Auto-start orbital tracking for selected space feature
+                        setTimeout(() => {
+                          if ((window as any).homeToPlanet && feature.position) {
+                            // Use space feature position for orbital tracking
+                            const trackingDistance = Math.max(feature.orbitRadius * 0.5, 2); // Closer tracking for space features
+                            (window as any).homeToPlanet(new Vector3(...feature.position), trackingDistance, feature, true);
+                          }
+                        }, 100);
+                      }}
+                      style={{
+                        background: selectedSpaceFeature?.id === feature.id ? '#FF5722' : '#333',
+                        color: 'white',
+                        border: selectedSpaceFeature?.id === feature.id ? '2px solid #FF7043' : '1px solid #555',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        fontSize: '13px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedSpaceFeature?.id !== feature.id) {
+                          e.currentTarget.style.background = '#444';
+                          e.currentTarget.style.borderColor = '#777';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedSpaceFeature?.id !== feature.id) {
+                          e.currentTarget.style.background = '#333';
+                          e.currentTarget.style.borderColor = '#555';
+                        }
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{feature.name}</div>
+                      <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
+                        {feature.type.replace('_', ' ').charAt(0).toUpperCase() + feature.type.replace('_', ' ').slice(1)} • 
+                        {feature.size?.charAt(0).toUpperCase() + feature.size?.slice(1)} • 
+                        Orbit: {feature.orbitRadius?.toFixed(1) || 'N/A'}
+                      </div>
+                    </button>
+                  );
+                }) || (
+                  <div style={{ color: '#aaa', textAlign: 'center', padding: '20px' }}>
+                    No space features available
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsSearchingSpaceFeatures(false)}
+                style={{
+                  marginTop: '15px',
+                  width: '100%',
+                  padding: '8px',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = '#777';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#aaa';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </>
       )}
       {hasStarted === true && (
@@ -1088,8 +1240,10 @@ function App() {
           {currentView === 'system' && (
             <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
               {selectedPlanet 
-                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Escape: look at star • Backspace: galactic view`
-                : 'Press Backspace to return to galactic view'
+                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Escape: deselect • Backspace: galactic view`
+                : selectedSpaceFeature
+                ? `Selected: ${selectedSpaceFeature.name} • Enter: orbital track • Escape: deselect • Backspace: galactic view`
+                : 'Click planets or space features to inspect • Select Planet / Select Space Feature buttons • Backspace: galactic view'
               }
             </div>
           )}
