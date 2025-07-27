@@ -307,6 +307,20 @@ function PlanetMesh({
       onPlanetClick(null);
     } else {
       console.log(`Selected planet: ${planet.name}`);
+      
+      // Deselect space feature if one is selected and stop its tracking
+      if (selectedSpaceFeature) {
+        console.log('Deselecting space feature due to planet selection (3D click)');
+        if ((window as any).homeToSpaceFeature) {
+          (window as any).homeToSpaceFeature(null, 0, false);
+        }
+        if (propOnSpaceFeatureClick) {
+          propOnSpaceFeatureClick(null);
+        } else {
+          setSelectedSpaceFeature(null);
+        }
+      }
+      
       onPlanetClick(planet);
     }
   };
@@ -701,6 +715,16 @@ export function SystemView({
         }
       } else {
         console.log('Selecting space feature');
+        
+        // Deselect planet if one is selected and stop its tracking
+        if (selectedPlanet) {
+          console.log('Deselecting planet due to space feature selection (3D click)');
+          if ((window as any).homeToPlanet) {
+            (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
+          }
+          onPlanetClick(null);
+        }
+        
         if (propOnSpaceFeatureClick) {
           propOnSpaceFeatureClick(feature);
         } else {

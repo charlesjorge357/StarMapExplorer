@@ -855,6 +855,15 @@ function App() {
         if (currentView === 'system' && selectedPlanet && !isSearching && !isSearchingSpaceFeatures) {
           event.preventDefault();
 
+          // Deselect space feature if one is selected and stop its tracking
+          if (selectedSpaceFeature) {
+            console.log('Deselecting space feature due to planet tracking');
+            if ((window as any).homeToSpaceFeature) {
+              (window as any).homeToSpaceFeature(null, 0, false);
+            }
+            setSelectedSpaceFeature(null);
+          }
+
           // Enable orbital tracking for selected planet
           if ((window as any).homeToPlanet) {
             const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
@@ -866,6 +875,15 @@ function App() {
 
         if (currentView === 'system' && selectedSpaceFeature && !isSearching && !isSearchingSpaceFeatures) {
           event.preventDefault();
+
+          // Deselect planet if one is selected and stop its tracking
+          if (selectedPlanet) {
+            console.log('Deselecting planet due to space feature tracking');
+            if ((window as any).homeToPlanet) {
+              (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
+            }
+            setSelectedPlanet(null);
+          }
 
           // Enable orbital tracking for selected space feature
           if ((window as any).homeToSpaceFeature) {
@@ -962,6 +980,15 @@ function App() {
                     <button
                       key={planet.id}
                       onClick={() => {
+                        // Deselect space feature if one is selected and stop its tracking
+                        if (selectedSpaceFeature) {
+                          console.log('Deselecting space feature due to planet menu selection');
+                          if ((window as any).homeToSpaceFeature) {
+                            (window as any).homeToSpaceFeature(null, 0, false);
+                          }
+                          setSelectedSpaceFeature(null);
+                        }
+                        
                         setSelectedPlanet(planet);
                         setIsSearching(false);
 
@@ -1091,6 +1118,16 @@ function App() {
                           setSelectedSpaceFeature(null);
                         } else {
                           console.log('Selecting space feature (menu)');
+                          
+                          // Deselect planet if one is selected and stop its tracking
+                          if (selectedPlanet) {
+                            console.log('Deselecting planet due to space feature selection');
+                            if ((window as any).homeToPlanet) {
+                              (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
+                            }
+                            setSelectedPlanet(null);
+                          }
+                          
                           setSelectedSpaceFeature(feature);
 
                           // Auto-start orbital tracking for selected space feature (using dedicated function)
