@@ -421,7 +421,15 @@ export function SystemView({
   }
   const selectStar = universeStore?.selectStar || (() => {});
 
-
+  // Expose current system data to window for space feature orbital tracking
+  useEffect(() => {
+    if (system) {
+      (window as any).currentSystemRef = { current: system };
+    }
+    return () => {
+      delete (window as any).currentSystemRef;
+    };
+  }, [system]);
 
   const outermostOrbit = useMemo(() => {
     if (!system || !system.planets || system.planets.length === 0) return 0;

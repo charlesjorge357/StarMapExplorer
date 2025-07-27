@@ -26,6 +26,9 @@ export function CameraController() {
   const lastPositionRef = useRef(new Vector3());
   const isOrbitalTrackingRef = useRef(false);
   const orbitalTargetRef = useRef<any>(null);
+  const isSpaceFeatureTrackingRef = useRef(false);
+  const spaceFeatureTargetRef = useRef<any>(null);
+  const spaceFeatureDistanceRef = useRef<number>(5);
 
   // Camera homing functionality with orbital tracking option
   const homeToPlanet = (planetPosition: Vector3, planetRadius: number, planetData?: any, enableOrbitalTracking = false) => {
@@ -109,6 +112,43 @@ export function CameraController() {
     console.log(`Camera positioned at planet ${planetData?.name || 'Unknown'} with index offset ${planetData?.index || 0}`);
   };
 
+  // Space feature orbital tracking function
+  const homeToSpaceFeature = (spaceFeature: any, trackingDistance = 5, enableOrbitalTracking = false) => {
+    if (!camera) return;
+
+    if (enableOrbitalTracking && spaceFeature) {
+      // Enable continuous orbital tracking for space feature
+      isSpaceFeatureTrackingRef.current = true;
+      spaceFeatureTargetRef.current = spaceFeature;
+      spaceFeatureDistanceRef.current = trackingDistance;
+      console.log(`Starting space feature orbital tracking for ${spaceFeature.name}`);
+      return;
+    }
+
+    // Disable orbital tracking only - reset rotation but keep position
+    if (enableOrbitalTracking === false && !spaceFeature) {
+      isSpaceFeatureTrackingRef.current = false;
+      spaceFeatureTargetRef.current = null;
+
+      // Reset camera rotation to look at star (0,0,0) but keep current position
+      camera.rotation.set(0, 0, 0);
+      camera.rotation.order = 'YXZ';
+      camera.up.set(0, 1, 0);
+      camera.lookAt(0, 0, 0); // Look at the central star
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+
+      console.log('Stopped space feature orbital tracking - reset rotation to look at star');
+      return;
+    }
+
+    // Disable orbital tracking
+    isSpaceFeatureTrackingRef.current = false;
+    spaceFeatureTargetRef.current = null;
+
+    console.log(`Space feature tracking disabled for ${spaceFeature?.name || 'Unknown'}`);
+  };
+
   // Reset camera to center star
   const resetToStar = () => {
     if (!camera) return;
@@ -124,6 +164,8 @@ export function CameraController() {
     targetVelocityRef.current.set(0, 0, 0);
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
+    isSpaceFeatureTrackingRef.current = false;
+    spaceFeatureTargetRef.current = null;
 
     // Position camera at a good viewing distance from star
     camera.position.set(0, 20, 200);
@@ -137,10 +179,12 @@ export function CameraController() {
   // Handle escape key to break orbital tracking and clear on scope changes
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOrbitalTrackingRef.current) {
+      if (event.key === 'Escape' && (isOrbitalTrackingRef.current || isSpaceFeatureTrackingRef.current)) {
         console.log('Escape pressed - stopping orbital tracking');
         isOrbitalTrackingRef.current = false;
         orbitalTargetRef.current = null;
+        isSpaceFeatureTrackingRef.current = false;
+        spaceFeatureTargetRef.current = null;
       }
     };
 
@@ -150,10 +194,12 @@ export function CameraController() {
 
   // Clear orbital tracking when leaving system view
   useEffect(() => {
-    if (currentScope !== 'system' && isOrbitalTrackingRef.current) {
+    if (currentScope !== 'system' && (isOrbitalTrackingRef.current || isSpaceFeatureTrackingRef.current)) {
       console.log('Clearing orbital tracking - left system view');
       isOrbitalTrackingRef.current = false;
       orbitalTargetRef.current = null;
+      isSpaceFeatureTrackingRef.current = false;
+      spaceFeatureTargetRef.current = null;
     }
   }, [currentScope]);
 
@@ -180,10 +226,12 @@ export function CameraController() {
   // Expose camera functions to window for external access
   useEffect(() => {
     (window as any).homeToPlanet = homeToPlanet;
+    (window as any).homeToSpaceFeature = homeToSpaceFeature;
     (window as any).resetToStar = resetToStar;
     (window as any).setCameraLookingAtStar = setCameraLookingAtStar;
     return () => {
       delete (window as any).homeToPlanet;
+      delete (window as any).homeToSpaceFeature;
       delete (window as any).resetToStar;
       delete (window as any).setCameraLookingAtStar;
     };
@@ -335,6 +383,85 @@ export function CameraController() {
       }
 
       // Skip movement controls when in orbital tracking
+      return;
+    }
+
+    // Handle space feature orbital tracking
+    if (isSpaceFeatureTrackingRef.current && spaceFeatureTargetRef.current && currentScope !== 'planetary') {
+      const spaceFeature = spaceFeatureTargetRef.current;
+      const time = Date.now() * 0.0001;
+      let featurePosition = new Vector3(0, 0, 0);
+
+      // Calculate space feature's real-time position based on orbital parameters
+      if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
+        // Space feature orbiting a planet - need to get current system data
+        const currentSystem = (window as any).currentSystemRef?.current;
+        if (currentSystem) {
+          const targetPlanet = currentSystem.planets?.find((p: any) => p.id === spaceFeature.orbitTargetId);
+          if (targetPlanet) {
+            const planetTime = Date.now() * 0.0001;
+            const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
+            const planetAngle = planetTime * targetPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+            
+            // Calculate planet's current position
+            const planetPos = new Vector3(
+              Math.cos(planetAngle) * targetPlanet.orbitRadius * 2,
+              0,
+              Math.sin(planetAngle) * targetPlanet.orbitRadius * 2
+            );
+
+            // Calculate feature's orbit around the planet
+            const featureAngle = time * (spaceFeature.orbitSpeed || 0.1) + (spaceFeature.orbitOffset || 0);
+            const orbitX = Math.cos(featureAngle) * (spaceFeature.orbitRadius || 10);
+            const orbitZ = Math.sin(featureAngle) * (spaceFeature.orbitRadius || 10);
+
+            featurePosition.set(
+              planetPos.x + orbitX,
+              planetPos.y,
+              planetPos.z + orbitZ
+            );
+          }
+        }
+      } else if (spaceFeature.orbitTarget === 'independent' || spaceFeature.orbitTarget === 'star') {
+        // Independent orbit around system center (star)
+        const angle = time * (spaceFeature.orbitSpeed || 0.01) + (spaceFeature.orbitOffset || 0);
+        const radius = spaceFeature.orbitRadius || 50;
+        
+        featurePosition.set(
+          Math.cos(angle) * radius * 2,
+          0,
+          Math.sin(angle) * radius * 2
+        );
+      }
+
+      // Position camera at tracking distance from space feature
+      const trackingDistance = spaceFeatureDistanceRef.current;
+      const cameraOffsetAngle = time * 0.5; // Slow camera orbit around feature
+      
+      const cameraDirection = new Vector3(
+        Math.cos(cameraOffsetAngle),
+        0.3, // Elevated angle
+        Math.sin(cameraOffsetAngle)
+      ).normalize();
+
+      const cameraPos = featurePosition.clone().add(cameraDirection.multiplyScalar(trackingDistance));
+
+      // Direct position copy for smooth tracking
+      camera.position.copy(cameraPos);
+      camera.lookAt(featurePosition);
+      camera.updateMatrix();
+      camera.updateMatrixWorld(true);
+      
+      // Debug logging
+      if (Math.random() < 0.01) { // 1% chance to log
+        console.log('Space feature orbital tracking update:', {
+          featureName: spaceFeature.name,
+          featurePos: featurePosition.toArray().map((n: number) => n.toFixed(2)),
+          cameraPos: cameraPos.toArray().map((n: number) => n.toFixed(2))
+        });
+      }
+
+      // Skip movement controls when in space feature tracking
       return;
     }
 

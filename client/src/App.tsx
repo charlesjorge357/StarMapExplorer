@@ -853,52 +853,10 @@ function App() {
           event.preventDefault();
 
           // Enable orbital tracking for selected space feature
-          if ((window as any).homeToPlanet) {
-            // Calculate space feature's current position based on its orbital parameters
-            const time = Date.now() * 0.0001;
-            let featurePosition = new Vector3(0, 0, 0);
-
-            if (selectedSpaceFeature.orbitTarget === 'planet' && selectedSpaceFeature.orbitTargetId) {
-              // Find the target planet
-              const targetPlanet = currentSystem?.planets?.find((p: any) => p.id === selectedSpaceFeature.orbitTargetId);
-              if (targetPlanet) {
-                const planetTime = Date.now() * 0.0001;
-                const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
-                const planetAngle = planetTime * targetPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
-                
-                // Calculate planet's current position
-                const planetPos = new Vector3(
-                  Math.cos(planetAngle) * targetPlanet.orbitRadius * 2,
-                  0,
-                  Math.sin(planetAngle) * targetPlanet.orbitRadius * 2
-                );
-
-                // Calculate feature's orbit around the planet
-                const featureAngle = time * (selectedSpaceFeature.orbitSpeed || 0.1) + (selectedSpaceFeature.orbitOffset || 0);
-                const orbitX = Math.cos(featureAngle) * (selectedSpaceFeature.orbitRadius || 10);
-                const orbitZ = Math.sin(featureAngle) * (selectedSpaceFeature.orbitRadius || 10);
-
-                featurePosition.set(
-                  planetPos.x + orbitX,
-                  planetPos.y,
-                  planetPos.z + orbitZ
-                );
-              }
-            } else if (selectedSpaceFeature.orbitTarget === 'independent' || selectedSpaceFeature.orbitTarget === 'star') {
-              // Independent orbit around system center (star)
-              const angle = time * (selectedSpaceFeature.orbitSpeed || 0.01) + (selectedSpaceFeature.orbitOffset || 0);
-              const radius = selectedSpaceFeature.orbitRadius || 50;
-              
-              featurePosition.set(
-                Math.cos(angle) * radius * 2,
-                0,
-                Math.sin(angle) * radius * 2
-              );
-            }
-
+          if ((window as any).homeToSpaceFeature) {
             const trackingDistance = Math.max((selectedSpaceFeature.orbitRadius || 10) * 0.3, 3);
-            (window as any).homeToPlanet(featurePosition, trackingDistance, selectedSpaceFeature, true);
-            console.log(`Starting orbital tracking for ${selectedSpaceFeature.name} via Enter key at position:`, featurePosition);
+            (window as any).homeToSpaceFeature(selectedSpaceFeature, trackingDistance, true);
+            console.log(`Starting orbital tracking for ${selectedSpaceFeature.name} via Enter key`);
           }
         }
       }
@@ -1111,54 +1069,12 @@ function App() {
                         setSelectedSpaceFeature(feature);
                         setIsSearchingSpaceFeatures(false);
 
-                        // Auto-start orbital tracking for selected space feature (matching planet behavior)
+                        // Auto-start orbital tracking for selected space feature (using dedicated function)
                         setTimeout(() => {
-                          if ((window as any).homeToPlanet) {
-                            // Calculate space feature's current position based on its orbital parameters
-                            const time = Date.now() * 0.0001;
-                            let featurePosition = new Vector3(0, 0, 0);
-
-                            if (feature.orbitTarget === 'planet' && feature.orbitTargetId) {
-                              // Find the target planet
-                              const targetPlanet = currentSystem?.planets?.find((p: any) => p.id === feature.orbitTargetId);
-                              if (targetPlanet) {
-                                const planetTime = Date.now() * 0.0001;
-                                const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
-                                const planetAngle = planetTime * targetPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
-                                
-                                // Calculate planet's current position
-                                const planetPos = new Vector3(
-                                  Math.cos(planetAngle) * targetPlanet.orbitRadius * 2,
-                                  0,
-                                  Math.sin(planetAngle) * targetPlanet.orbitRadius * 2
-                                );
-
-                                // Calculate feature's orbit around the planet
-                                const featureAngle = time * (feature.orbitSpeed || 0.1) + (feature.orbitOffset || 0);
-                                const orbitX = Math.cos(featureAngle) * (feature.orbitRadius || 10);
-                                const orbitZ = Math.sin(featureAngle) * (feature.orbitRadius || 10);
-
-                                featurePosition.set(
-                                  planetPos.x + orbitX,
-                                  planetPos.y,
-                                  planetPos.z + orbitZ
-                                );
-                              }
-                            } else if (feature.orbitTarget === 'independent' || feature.orbitTarget === 'star') {
-                              // Independent orbit around system center (star)
-                              const angle = time * (feature.orbitSpeed || 0.01) + (feature.orbitOffset || 0);
-                              const radius = feature.orbitRadius || 50;
-                              
-                              featurePosition.set(
-                                Math.cos(angle) * radius * 2,
-                                0,
-                                Math.sin(angle) * radius * 2
-                              );
-                            }
-
-                            const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3); // Closer tracking for space features
-                            (window as any).homeToPlanet(featurePosition, trackingDistance, feature, true);
-                            console.log(`Starting orbital tracking for space feature: ${feature.name} at position:`, featurePosition);
+                          if ((window as any).homeToSpaceFeature) {
+                            const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3);
+                            (window as any).homeToSpaceFeature(feature, trackingDistance, true);
+                            console.log(`Starting orbital tracking for space feature: ${feature.name}`);
                           }
                         }, 100);
                       }}
