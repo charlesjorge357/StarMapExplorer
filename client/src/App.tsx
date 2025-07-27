@@ -23,6 +23,9 @@ import { MusicController } from './components/3d/musicController';
 import { FleetInfoPanel } from './components/ui/FleetInfoPanel';
 import { ArmyInfoPanel } from './components/ui/ArmyInfoPanel';
 
+// Configuration constants
+const SPACE_FEATURE_TRACKING_DISTANCE = 8; // Fixed safe distance for space feature orbital tracking
+
 // Simple star type to avoid import issues
 interface SimpleStar {
   id: string;
@@ -866,7 +869,7 @@ function App() {
 
           // Enable orbital tracking for selected space feature
           if ((window as any).homeToSpaceFeature) {
-            const trackingDistance = Math.max((selectedSpaceFeature.orbitRadius || 10) * 0.3, 3);
+            const trackingDistance = SPACE_FEATURE_TRACKING_DISTANCE;
             (window as any).homeToSpaceFeature(selectedSpaceFeature, trackingDistance, true);
             console.log(`Starting orbital tracking for ${selectedSpaceFeature.name} via Enter key`);
           }
@@ -1093,7 +1096,7 @@ function App() {
                           // Auto-start orbital tracking for selected space feature (using dedicated function)
                           setTimeout(() => {
                             if ((window as any).homeToSpaceFeature) {
-                              const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3);
+                              const trackingDistance = SPACE_FEATURE_TRACKING_DISTANCE;
                               (window as any).homeToSpaceFeature(feature, trackingDistance, true);
                               console.log(`Starting orbital tracking for space feature: ${feature.name}`);
                             }
