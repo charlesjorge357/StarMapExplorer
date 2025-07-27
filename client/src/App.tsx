@@ -1078,17 +1078,28 @@ function App() {
                     <button
                       key={feature.id}
                       onClick={() => {
-                        setSelectedSpaceFeature(feature);
-                        setIsSearchingSpaceFeatures(false);
-
-                        // Auto-start orbital tracking for selected space feature (using dedicated function)
-                        setTimeout(() => {
+                        // Toggle selection: if already selected, deselect it
+                        if (selectedSpaceFeature && selectedSpaceFeature.id === feature.id) {
+                          console.log('Deselecting space feature (menu toggle)');
+                          // Stop space feature orbital tracking
                           if ((window as any).homeToSpaceFeature) {
-                            const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3);
-                            (window as any).homeToSpaceFeature(feature, trackingDistance, true);
-                            console.log(`Starting orbital tracking for space feature: ${feature.name}`);
+                            (window as any).homeToSpaceFeature(null, 0, false);
                           }
-                        }, 100);
+                          setSelectedSpaceFeature(null);
+                        } else {
+                          console.log('Selecting space feature (menu)');
+                          setSelectedSpaceFeature(feature);
+
+                          // Auto-start orbital tracking for selected space feature (using dedicated function)
+                          setTimeout(() => {
+                            if ((window as any).homeToSpaceFeature) {
+                              const trackingDistance = Math.max((feature.orbitRadius || 10) * 0.3, 3);
+                              (window as any).homeToSpaceFeature(feature, trackingDistance, true);
+                              console.log(`Starting orbital tracking for space feature: ${feature.name}`);
+                            }
+                          }, 100);
+                        }
+                        setIsSearchingSpaceFeatures(false);
                       }}
                       style={{
                         background: selectedSpaceFeature?.id === feature.id ? '#FF5722' : '#333',
