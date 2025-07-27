@@ -683,6 +683,11 @@ function App() {
           if (selectedSpaceFeature) {
             console.log(`Unselected space feature: ${selectedSpaceFeature.name}`);
             setSelectedSpaceFeature(null);
+            
+            // Stop space feature orbital tracking when deselected
+            if ((window as any).homeToSpaceFeature) {
+              (window as any).homeToSpaceFeature(null, 0, false);
+            }
           }
           if (selectedFleet) {
             console.log(`Unselected fleet: ${selectedFleet.name}`);
@@ -991,7 +996,13 @@ function App() {
                       key={planet.id}
                       onClick={() => {
                         setSelectedPlanet(planet);
+                        setSelectedSpaceFeature(null); // Deselect space feature when planet is selected
                         setIsSearching(false);
+
+                        // Stop any space feature orbital tracking
+                        if ((window as any).homeToSpaceFeature) {
+                          (window as any).homeToSpaceFeature(null, 0, false);
+                        }
 
                         // Auto-start orbital tracking for selected planet
                         setTimeout(() => {
