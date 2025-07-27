@@ -1036,7 +1036,7 @@ export function SystemView({
           onPlanetClick={onPlanetClick}
           planetTextures={planetTextures}
           selectedSpaceFeature={selectedSpaceFeature}
-          onSpaceFeatureClick={onSpaceFeatureClick}
+          onSpaceFeatureClick={setSelectedSpaceFeature}
         />
       ))}
 
