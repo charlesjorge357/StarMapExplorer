@@ -1121,11 +1121,7 @@ function App() {
               <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
                 Fleet Positions
               </div>
-              {console.log('Fleet debug:', { 
-                currentSystem: !!currentSystem, 
-                factions: currentSystem?.factions?.length,
-                allFleets: currentSystem?.factions?.flatMap((f: any) => f.fleets || [])
-              })}
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {currentSystem?.factions?.flatMap((faction: any) => faction.fleets || [])?.map((fleet: any) => {
                   const auDistance = fleet.orbitRadius ? (fleet.orbitRadius / 6).toFixed(2) : 'N/A';
@@ -1143,7 +1139,7 @@ function App() {
                     >
                       <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{fleet.name}</div>
                       <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
-                        {fleet.faction} • {fleet.ships?.length || 0} ships • {auDistance} AU
+                        {fleet.faction?.name || 'Unknown'} • {fleet.composition?.length || 0} ships • {auDistance} AU
                       </div>
                     </div>
                   );
@@ -1362,13 +1358,7 @@ function App() {
               <div style={{ marginBottom: '15px', color: 'white', fontSize: '14px', fontWeight: 'bold' }}>
                 Army Positions
               </div>
-              {console.log('Army debug:', { 
-                selectedPlanet: !!selectedPlanet, 
-                planetFaction: selectedPlanet?.faction,
-                armies: selectedPlanet?.faction?.armies, 
-                armiesLength: selectedPlanet?.faction?.armies?.length,
-                planetName: selectedPlanet?.name 
-              })}
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {selectedPlanet?.faction?.armies?.map((army: any) => {
                   const longitude = army.position ? army.position[0].toFixed(1) : 'N/A';
@@ -1387,7 +1377,7 @@ function App() {
                     >
                       <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{army.name}</div>
                       <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
-                        {army.faction} • {army.divisions?.length || 0} divisions • {longitude}°, {latitude}°
+                        {army.faction?.name || 'Unknown'} • {army.composition?.length || 0} divisions • {longitude}°, {latitude}°
                       </div>
                     </div>
                   );
