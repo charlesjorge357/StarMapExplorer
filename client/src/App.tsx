@@ -739,6 +739,11 @@ function App() {
             
             // Get current fleet positions from universe store
             const universeStore = useUniverse.getState();
+            console.log(`🔍 Universe store exists:`, !!universeStore);
+            console.log(`🔍 Universe data exists:`, !!universeStore?.universeData);
+            console.log(`🔍 Systems array exists:`, !!universeStore?.universeData?.systems);
+            console.log(`🔍 Systems count:`, universeStore?.universeData?.systems?.length || 0);
+            
             if (universeStore?.universeData?.systems) {
               console.log(`🔍 Available systems:`, universeStore.universeData.systems.map(s => s.id));
               const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id || s.id === `system-${selectedStar?.id}`);

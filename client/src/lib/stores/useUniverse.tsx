@@ -245,9 +245,13 @@ export const useUniverse = create<UniverseState>()(
     },
 
     updateFleetPosition: (systemId, fleetId, position) => {
+      console.log(`💾 updateFleetPosition called with systemId: ${systemId}, fleetId: ${fleetId}`);
       const { universeData } = get();
+      console.log(`💾 Universe data exists:`, !!universeData);
+      console.log(`💾 Systems count:`, universeData?.systems?.length || 0);
       if (universeData) {
         const system = universeData.systems.find(s => s.id === systemId);
+        console.log(`💾 System found for ID ${systemId}:`, !!system);
         if (system) {
           // Look for fleet in faction structure
           let fleetFound = false;
