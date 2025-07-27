@@ -38,6 +38,9 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
   const orbitRadius = fleet?.position ? Math.sqrt(
     fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]
   ) : 0;
+  
+  // Convert to AU (divide by 6 to match game scaling)
+  const orbitRadiusAU = orbitRadius / 6;
 
   return (
     <div className="w-full bg-transparent border-2 rounded-lg p-4 text-white font-mono text-sm"
@@ -83,7 +86,7 @@ export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
         
         <div>
           <span className="text-gray-400">Orbit Radius:</span>
-          <span className="ml-2">{orbitRadius.toFixed(1)} AU</span>
+          <span className="ml-2">{orbitRadiusAU.toFixed(2)} AU</span>
         </div>
         
         <div>
