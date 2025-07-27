@@ -950,6 +950,7 @@ export function SystemView({
                 
                 // Persist fleet position in universe store
                 if (universeStore?.updateFleetPosition) {
+                  console.log(`💾 Saving fleet position with system ID: ${system.id}`);
                   universeStore.updateFleetPosition(system.id, targetFleet.id, [clickX, clickY, clickZ]);
                 }
                 

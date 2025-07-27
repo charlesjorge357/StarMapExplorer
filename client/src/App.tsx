@@ -733,11 +733,14 @@ function App() {
           // CRITICAL: Restore fleet positions when returning from planetary view
           if (currentSystem) {
             console.log('🔄 Restoring fleet positions when returning from planetary view');
+            console.log(`🔍 Current system ID: ${currentSystem.id}`);
+            console.log(`🔍 Selected star ID: ${selectedStar?.id}`);
             const updatedSystem = { ...currentSystem };
             
             // Get current fleet positions from universe store
             const universeStore = useUniverse.getState();
             if (universeStore?.universeData?.systems) {
+              console.log(`🔍 Available systems:`, universeStore.universeData.systems.map(s => s.id));
               const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id || s.id === `system-${selectedStar?.id}`);
               console.log(`🔍 Looking for saved system: ${currentSystem.id} or system-${selectedStar?.id}`);
               console.log(`🔍 Saved system found:`, !!savedSystem);
