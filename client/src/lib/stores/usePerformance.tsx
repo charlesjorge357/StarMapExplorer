@@ -9,7 +9,6 @@ interface PerformanceSettings {
   starGeometrySegments: number;
   planetGeometrySegments: number;
   nebulaParticles: number;
-  asteroidMultiplier: number;
   showFPS: boolean;
   setQuality: (quality: QualityPreset) => void;
   toggleBloom: () => void;
@@ -23,7 +22,6 @@ const qualityPresets = {
     starGeometrySegments: 4,
     planetGeometrySegments: 16,
     nebulaParticles: 60,
-    asteroidMultiplier: 0.3,
   },
   medium: {
     bloomEnabled: true,
@@ -31,7 +29,6 @@ const qualityPresets = {
     starGeometrySegments: 6,
     planetGeometrySegments: 24,
     nebulaParticles: 100,
-    asteroidMultiplier: 0.6,
   },
   high: {
     bloomEnabled: true,
@@ -39,7 +36,6 @@ const qualityPresets = {
     starGeometrySegments: 8,
     planetGeometrySegments: 32,
     nebulaParticles: 130,
-    asteroidMultiplier: 1.0,
   },
 };
 
