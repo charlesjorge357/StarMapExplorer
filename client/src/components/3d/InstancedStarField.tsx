@@ -1,9 +1,44 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
+import { useTexture, shaderMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+import { extend } from '@react-three/fiber';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
 import { usePerformance } from '../../lib/stores/usePerformance';
+
+// Custom shader material for instanced stars with per-instance colors and glow
+const InstancedStarMaterial = shaderMaterial(
+  {
+    map: null,
+  },
+  // Vertex shader
+  `
+    attribute vec3 instanceColor;
+    varying vec3 vColor;
+    varying vec2 vUv;
+    
+    void main() {
+      vColor = instanceColor;
+      vUv = uv;
+      vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  // Fragment shader
+  `
+    uniform sampler2D map;
+    varying vec3 vColor;
+    varying vec2 vUv;
+    
+    void main() {
+      vec4 texColor = texture2D(map, vUv);
+      // Combine texture with instance color and make it emissive
+      gl_FragColor = vec4(vColor * texColor.rgb, 1.0);
+    }
+  `
+);
+
+extend({ InstancedStarMaterial });
 
 interface Star {
   id: string;
@@ -22,10 +57,19 @@ interface InstancedStarFieldProps {
 export function InstancedStarField({ stars, selectedStar, onStarClick }: InstancedStarFieldProps) {
   const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
   const interactionMeshRef = useRef<THREE.InstancedMesh>(null);
+  const materialRef = useRef<any>(null);
   const { starGeometrySegments } = usePerformance();
   
   // Load star surface texture
   const starBumpMap = useTexture('/textures/star_surface.jpg');
+  
+  // Update material texture when it loads
+  useEffect(() => {
+    if (materialRef.current && starBumpMap) {
+      materialRef.current.map = starBumpMap;
+      materialRef.current.needsUpdate = true;
+    }
+  }, [starBumpMap]);
   
   // Pre-calculate star data
   const starData = useMemo(() => {
@@ -72,23 +116,24 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   // Set instance matrices and colors after mount and when data changes
   useEffect(() => {
     if (instancedMeshRef.current) {
-      console.log('Setting up star instances, count:', starData.matrices.length);
+      // Set matrices
       starData.matrices.forEach((matrix, i) => {
         instancedMeshRef.current!.setMatrixAt(i, matrix);
-        instancedMeshRef.current!.setColorAt(i, starData.colors[i]);
       });
       instancedMeshRef.current.instanceMatrix.needsUpdate = true;
-      if (instancedMeshRef.current.instanceColor) {
-        instancedMeshRef.current.instanceColor.needsUpdate = true;
-        console.log('Instance colors updated');
-      } else {
-        console.warn('No instanceColor attribute found on mesh');
-      }
       
-      // Debug: check first color
-      const firstColor = new THREE.Color();
-      instancedMeshRef.current.getColorAt(0, firstColor);
-      console.log('First star color:', firstColor);
+      // Set up instance color attribute
+      const count = starData.colors.length;
+      const colors = new Float32Array(count * 3);
+      
+      starData.colors.forEach((color, i) => {
+        colors[i * 3 + 0] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+      });
+      
+      const geometry = instancedMeshRef.current.geometry;
+      geometry.setAttribute('instanceColor', new THREE.InstancedBufferAttribute(colors, 3));
     }
     
     if (interactionMeshRef.current) {
@@ -102,18 +147,13 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   // Handle click on interaction mesh
   const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log('Star clicked, event:', event);
-    console.log('Instance ID:', event.instanceId);
     const instanceId = event.instanceId;
     if (instanceId !== undefined) {
       const star = starData.starMap.get(instanceId);
-      console.log('Found star:', star);
       if (star) {
         console.log(`Selected star: ${star.name || star.id}`);
         onStarClick(star);
       }
-    } else {
-      console.log('No instanceId in event');
     }
   };
   
@@ -134,12 +174,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         }}
       >
         <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
-        <meshBasicMaterial 
-          vertexColors={true}
-          map={starBumpMap}
-          transparent={false}
-          depthTest={false}
-        />
+        <primitive object={new InstancedStarMaterial({ depthTest: false })} attach="material" ref={materialRef} />
       </instancedMesh>
       
       {/* Larger invisible hitboxes for easier clicking */}
