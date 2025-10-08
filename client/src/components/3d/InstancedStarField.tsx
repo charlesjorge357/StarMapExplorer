@@ -57,19 +57,23 @@ interface InstancedStarFieldProps {
 export function InstancedStarField({ stars, selectedStar, onStarClick }: InstancedStarFieldProps) {
   const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
   const interactionMeshRef = useRef<THREE.InstancedMesh>(null);
-  const materialRef = useRef<any>(null);
   const { starGeometrySegments } = usePerformance();
   
   // Load star surface texture
   const starBumpMap = useTexture('/textures/star_surface.jpg');
   
+  // Create material once
+  const starMaterial = useMemo(() => {
+    return new InstancedStarMaterial({ depthTest: false });
+  }, []);
+  
   // Update material texture when it loads
   useEffect(() => {
-    if (materialRef.current && starBumpMap) {
-      materialRef.current.map = starBumpMap;
-      materialRef.current.needsUpdate = true;
+    if (starMaterial && starBumpMap) {
+      (starMaterial as any).map = starBumpMap;
+      starMaterial.needsUpdate = true;
     }
-  }, [starBumpMap]);
+  }, [starMaterial, starBumpMap]);
   
   // Pre-calculate star data
   const starData = useMemo(() => {
@@ -174,7 +178,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         }}
       >
         <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
-        <primitive object={new InstancedStarMaterial({ depthTest: false })} attach="material" ref={materialRef} />
+        <primitive object={starMaterial} attach="material" />
       </instancedMesh>
       
       {/* Larger invisible hitboxes for easier clicking */}
