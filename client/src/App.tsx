@@ -519,8 +519,6 @@ function App() {
         
         if (!currentUniverseStore.universeData) {
           currentUniverseStore.universeData = {
-            id: 'sandbox-universe',
-            name: 'Sandbox Universe',
             mode: 'sandbox',
             metadata: {
               created: new Date().toISOString(),
@@ -533,11 +531,13 @@ function App() {
           };
         }
         
-        if (!currentUniverseStore.universeData.systems) {
+        if (currentUniverseStore.universeData && !currentUniverseStore.universeData.systems) {
           currentUniverseStore.universeData.systems = [];
         }
         
-        currentUniverseStore.universeData.systems.push(systemData);
+        if (currentUniverseStore.universeData) {
+          currentUniverseStore.universeData.systems.push(systemData);
+        }
         useUniverse.setState({ universeData: currentUniverseStore.universeData });
       }
     }
@@ -626,7 +626,7 @@ function App() {
               system.factions?.forEach((faction: any) => {
                 if (faction.fleets) {
                   faction.fleets.forEach((fleet: any) => {
-                    const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                    const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
                     if (savedFleet && savedFleet.position) {
                       fleet.position = savedFleet.position;
                       console.log(`🎯 Updated cached fleet ${fleet.id} position:`, savedFleet.position);
@@ -756,7 +756,7 @@ function App() {
                 updatedSystem.factions?.forEach((faction: any) => {
                   if (faction.fleets) {
                     faction.fleets.forEach((fleet: any) => {
-                      const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                      const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
                       if (savedFleet && savedFleet.position) {
                         console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
                         fleet.position = savedFleet.position;
@@ -856,7 +856,7 @@ function App() {
                   updatedSystem.factions?.forEach((faction: any) => {
                     if (faction.fleets) {
                       faction.fleets.forEach((fleet: any) => {
-                        const savedFleet = savedSystem.fleets.find((sf: any) => sf.id === fleet.id);
+                        const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
                         if (savedFleet && savedFleet.position) {
                           fleet.position = savedFleet.position;
                           console.log(`📍 Updated fleet ${fleet.id} position in currentSystem:`, savedFleet.position);

@@ -181,6 +181,7 @@ export interface StarSystem {
   planets: Planet[];
   asteroidBelts: AsteroidBelt[];
   spaceFeatures: SpaceFeature[];
+  factions?: Faction[];  // Factions present in the system
   fleets?: Fleets[];  // Persistent fleet positions
   star?: any;
 }
