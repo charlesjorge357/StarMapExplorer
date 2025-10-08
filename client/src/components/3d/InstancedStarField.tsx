@@ -32,8 +32,17 @@ const InstancedStarMaterial = shaderMaterial(
     
     void main() {
       vec4 texColor = texture2D(map, vUv);
-      // Combine texture with instance color and make it emissive
-      gl_FragColor = vec4(vColor * texColor.rgb, 1.0);
+      
+      // Calculate color brightness (luminance)
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114));
+      
+      // Bright stars wash out the texture more, dim stars show more texture
+      // Mix between texture and pure color based on brightness
+      float colorDominance = 0.7 + brightness * 0.3; // 0.7 to 1.0 range
+      
+      vec3 finalColor = mix(vColor * texColor.rgb, vColor, colorDominance);
+      
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `
 );
@@ -66,6 +75,11 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   const starMaterial = useMemo(() => {
     return new InstancedStarMaterial({ depthTest: false });
   }, []);
+  
+  // Create geometry with current quality setting
+  const starGeometry = useMemo(() => {
+    return new THREE.SphereGeometry(1, starGeometrySegments, starGeometrySegments);
+  }, [starGeometrySegments]);
   
   // Update material texture when it loads
   useEffect(() => {
@@ -146,7 +160,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       });
       interactionMeshRef.current.instanceMatrix.needsUpdate = true;
     }
-  }, [starData, interactionMatrices]);
+  }, [starData, interactionMatrices, starGeometry]);
   
   // Handle click on interaction mesh
   const handleClick = (event: any) => {
@@ -166,7 +180,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       {/* Visual stars - instanced with interaction */}
       <instancedMesh 
         ref={instancedMeshRef}
-        args={[undefined, undefined, stars.length]}
+        args={[starGeometry, starMaterial, stars.length]}
         frustumCulled={false}
         onClick={handleClick}
         onPointerOver={(e) => {
@@ -176,10 +190,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
         }}
-      >
-        <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
-        <primitive object={starMaterial} attach="material" />
-      </instancedMesh>
+      />
       
       {/* Larger invisible hitboxes for easier clicking */}
       <instancedMesh 
