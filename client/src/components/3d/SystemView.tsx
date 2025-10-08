@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
+import { usePerformance } from '../../lib/stores/usePerformance';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
@@ -267,6 +268,7 @@ function PlanetMesh({
   onSpaceFeatureClick?: (feature: any) => void;
 }) {
   const planetRef = useRef<any>();
+  const { planetGeometrySegments } = usePerformance();
 
   useFrame((state) => {
     if (planetRef.current) {
@@ -341,7 +343,7 @@ function PlanetMesh({
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[planet.radius * 0.6, 32, 32]} />
+        <sphereGeometry args={[planet.radius * 0.6, planetGeometrySegments, planetGeometrySegments]} />
         <meshStandardMaterial 
           color={planetColor}
           emissive={planet.type === 'nuclear_world' ? '#330000' : '#000000'}
