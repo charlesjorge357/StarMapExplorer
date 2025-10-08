@@ -72,6 +72,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   // Set instance matrices and colors after mount and when data changes
   useEffect(() => {
     if (instancedMeshRef.current) {
+      console.log('Setting up star instances, count:', starData.matrices.length);
       starData.matrices.forEach((matrix, i) => {
         instancedMeshRef.current!.setMatrixAt(i, matrix);
         instancedMeshRef.current!.setColorAt(i, starData.colors[i]);
@@ -79,7 +80,15 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       instancedMeshRef.current.instanceMatrix.needsUpdate = true;
       if (instancedMeshRef.current.instanceColor) {
         instancedMeshRef.current.instanceColor.needsUpdate = true;
+        console.log('Instance colors updated');
+      } else {
+        console.warn('No instanceColor attribute found on mesh');
       }
+      
+      // Debug: check first color
+      const firstColor = new THREE.Color();
+      instancedMeshRef.current.getColorAt(0, firstColor);
+      console.log('First star color:', firstColor);
     }
     
     if (interactionMeshRef.current) {
@@ -93,36 +102,47 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   // Handle click on interaction mesh
   const handleClick = (event: any) => {
     event.stopPropagation();
+    console.log('Star clicked, event:', event);
+    console.log('Instance ID:', event.instanceId);
     const instanceId = event.instanceId;
     if (instanceId !== undefined) {
       const star = starData.starMap.get(instanceId);
+      console.log('Found star:', star);
       if (star) {
         console.log(`Selected star: ${star.name || star.id}`);
         onStarClick(star);
       }
+    } else {
+      console.log('No instanceId in event');
     }
   };
   
   return (
     <group>
-      {/* Visual stars - instanced */}
+      {/* Visual stars - instanced with interaction */}
       <instancedMesh 
         ref={instancedMeshRef}
         args={[undefined, undefined, stars.length]}
         frustumCulled={false}
+        onClick={handleClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
       >
         <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
-        <meshStandardMaterial 
+        <meshBasicMaterial 
           vertexColors={true}
-          emissive="#ffffff"
-          emissiveIntensity={0.8}
           map={starBumpMap}
           transparent={false}
           depthTest={false}
         />
       </instancedMesh>
       
-      {/* Interaction hitboxes - instanced, invisible */}
+      {/* Larger invisible hitboxes for easier clicking */}
       <instancedMesh 
         ref={interactionMeshRef}
         args={[undefined, undefined, stars.length]}
