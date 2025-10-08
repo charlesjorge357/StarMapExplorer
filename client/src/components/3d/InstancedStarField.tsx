@@ -113,7 +113,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       >
         <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
         <meshStandardMaterial 
-          color="#ffffff"
+          vertexColors={true}
           emissive="#ffffff"
           emissiveIntensity={0.8}
           map={starBumpMap}
