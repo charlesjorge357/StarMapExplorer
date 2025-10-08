@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -65,6 +65,22 @@ export function StarSkybox({ count = 5000, radius = 800, starPosition = [0, 0, 0
     return { positions, colors, matrices };
   }, [count, radius]);
 
+  // Set instance matrices and colors once after mount
+  useEffect(() => {
+    if (meshRef.current) {
+      // Set instance matrices
+      starData.matrices.forEach((matrix, i) => {
+        meshRef.current!.setMatrixAt(i, matrix);
+      });
+      meshRef.current.instanceMatrix.needsUpdate = true;
+      
+      // Set instance colors
+      const colorArray = new Float32Array(starData.colors);
+      meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colorArray, 3);
+      meshRef.current.instanceColor.needsUpdate = true;
+    }
+  }, [starData]);
+
   return (
     <instancedMesh
       ref={meshRef}
@@ -79,27 +95,6 @@ export function StarSkybox({ count = 5000, radius = 800, starPosition = [0, 0, 0
         transparent
         opacity={0.8}
         depthWrite={false}
-      />
-      <primitive 
-        object={{
-          onBeforeRender: () => {
-            if (meshRef.current) {
-              // Set instance matrices
-              starData.matrices.forEach((matrix, i) => {
-                meshRef.current!.setMatrixAt(i, matrix);
-              });
-              
-              // Set instance colors
-              const colorArray = new Float32Array(starData.colors);
-              meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colorArray, 3);
-              
-              meshRef.current.instanceMatrix.needsUpdate = true;
-              if (meshRef.current.instanceColor) {
-                meshRef.current.instanceColor.needsUpdate = true;
-              }
-            }
-          }
-        }}
       />
     </instancedMesh>
   );
