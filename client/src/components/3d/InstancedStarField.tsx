@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -69,8 +69,8 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
     });
   }, [stars]);
   
-  // Set instance matrices and colors once
-  useMemo(() => {
+  // Set instance matrices and colors after mount and when data changes
+  useEffect(() => {
     if (instancedMeshRef.current) {
       starData.matrices.forEach((matrix, i) => {
         instancedMeshRef.current!.setMatrixAt(i, matrix);
