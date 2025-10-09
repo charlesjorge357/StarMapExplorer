@@ -273,8 +273,16 @@ function PlanetMesh({
       // Use Date.now() for consistent timing across components
       const time = Date.now() * 0.0001;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
-      planetRef.current.position.x = Math.cos(angle) * planet.orbitRadius * 2;
-      planetRef.current.position.z = Math.sin(angle) * planet.orbitRadius * 2;
+      const x = Math.cos(angle) * planet.orbitRadius * 2;
+      const z = Math.sin(angle) * planet.orbitRadius * 2;
+      planetRef.current.position.x = x;
+      planetRef.current.position.z = z;
+
+      // Expose current planet position to window for persistence
+      if (!(window as any).currentPlanetPositions) {
+        (window as any).currentPlanetPositions = {};
+      }
+      (window as any).currentPlanetPositions[planet.id] = [x, 0, z];
 
       // Axis rotation using frame time
       planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;

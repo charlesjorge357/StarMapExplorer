@@ -248,6 +248,12 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         fleetRef.current.position.set(fleet.position[0], fleet.position[1], fleet.position[2]);
         setRealTimePosition([fleet.position[0], fleet.position[1], fleet.position[2]]);
         
+        // Expose current position to window for persistence
+        if (!(window as any).currentFleetPositions) {
+          (window as any).currentFleetPositions = {};
+        }
+        (window as any).currentFleetPositions[fleet.id] = [fleet.position[0], fleet.position[1], fleet.position[2]];
+        
         if (isSelected) {
           console.log(`🎯 Fleet ${fleet.id} holding position at [${fleet.position.join(', ')}]`);
         }
@@ -264,6 +270,12 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
 
         fleetRef.current.position.set(x, fleet.position[1], z);
         setRealTimePosition([x, fleet.position[1], z]);
+        
+        // Expose current orbital position to window for persistence
+        if (!(window as any).currentFleetPositions) {
+          (window as any).currentFleetPositions = {};
+        }
+        (window as any).currentFleetPositions[fleet.id] = [x, fleet.position[1], z];
         
         if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
           console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestObject?.name || 'calculated'}`);
