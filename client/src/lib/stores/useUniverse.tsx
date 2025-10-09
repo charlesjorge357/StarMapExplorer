@@ -95,9 +95,17 @@ export const useUniverse = create<UniverseState>()(
         let system = universeData.systems.find((s: any) => s.starId === star.id);
         if (!system) {
           system = SystemGenerator.generateSystem(star, Math.floor(Math.random() * 1000000));
-          universeData.systems.push(system);
+          // Create deep copy when adding system
+          set({ 
+            selectedSystem: system, 
+            universeData: { 
+              ...universeData,
+              systems: [...universeData.systems, system]
+            } 
+          });
+        } else {
+          set({ selectedSystem: system });
         }
-        set({ selectedSystem: system, universeData: { ...universeData } });
       }
     },
 

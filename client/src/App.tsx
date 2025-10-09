@@ -536,9 +536,14 @@ function App() {
         }
         
         if (currentUniverseStore.universeData) {
-          currentUniverseStore.universeData.systems.push(systemData);
+          // Create a deep copy to ensure Zustand detects the change
+          useUniverse.setState({ 
+            universeData: { 
+              ...currentUniverseStore.universeData,
+              systems: [...currentUniverseStore.universeData.systems, systemData]
+            }
+          });
         }
-        useUniverse.setState({ universeData: currentUniverseStore.universeData });
       }
     }
     
