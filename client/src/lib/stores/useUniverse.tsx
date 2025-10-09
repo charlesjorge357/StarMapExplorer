@@ -257,6 +257,7 @@ export const useUniverse = create<UniverseState>()(
       const { universeData } = get();
       console.log(`💾 Universe data exists:`, !!universeData);
       console.log(`💾 Systems count:`, universeData?.systems?.length || 0);
+      console.log(`💾 Available system IDs:`, universeData?.systems?.map(s => s.id).join(', ') || 'none');
       if (universeData) {
         const system = universeData.systems.find(s => s.id === systemId);
         console.log(`💾 System found for ID ${systemId}:`, !!system);
