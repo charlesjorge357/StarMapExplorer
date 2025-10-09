@@ -1,0 +1,178 @@
+Generated fleet for The Sylanthian Syndicate: 7 ships at orbit 84.7 AU near homeworld Sylanth
+SystemGenerator.ts:682 Generated 1 fleets for faction: The Sylanthian Syndicate
+SystemView.tsx:818 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:823 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:818 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:823 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:818 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:823 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:459 🚀 FLEET CLICKED - selecting: {fleetId: '35efznye', fleetPosition: Array(3), fleetSize: 7}
+SystemView.tsx:465 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:299 Fleet 35efznye: 7 ships
+SystemView.tsx:818 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:823 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:937 🎯 ORBITAL DISK CLICKED - fleet movement initiated
+SystemView.tsx:956 📍 OLD FLEET POSITION: [40.63733129636592, 0, -164.3690596367121]
+SystemView.tsx:963 💾 Saving fleet position with system ID: system-star-3524
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+SystemView.tsx:970 🚀 FLEET MOVED TO: [78.39, -0.00, 71.88]
+SystemView.tsx:971 📊 Updated targetFleet.position: (3) [78.38799934872154, -1.2408701011499908e-14, 71.88382125154288]
+SystemView.tsx:972 📊 Updated selectedFleet will be: {id: '35efznye', size: 7, position: Array(3), orbitCenter: Array(3), composition: Array(7), …}
+FleetMarker.tsx:222 🌍 Fleet 35efznye adopting orbital speed from closest planet: Epsilon Orionis β (orbit radius diff: 0.2 AU)
+FleetMarker.tsx:145 🚀 Fleet 35efznye position changed - stopping orbital motion
+FleetMarker.tsx:146 Old: [40.63733129636592, 0, -164.3690596367121]
+FleetMarker.tsx:147 New: [78.38799934872154, -1.2408701011499908e-14, 71.88382125154288]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+74FleetMarker.tsx:258 🎯 Fleet 35efznye holding position at [78.38799934872154, -1.2408701011499908e-14, 71.88382125154288]
+FleetMarker.tsx:155 🌀 Fleet 35efznye resuming orbital motion from new position
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+App.tsx:843 💾 Capturing current fleet positions before planetary transition
+App.tsx:845 📍 Current fleet positions from window: {35efznye: Array(3)}
+App.tsx:854 💾 Saving current position for fleet 35efznye: (3) [73.60933332129324, -1.2408701011499908e-14, 76.76996969918436]
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+App.tsx:740 🔄 Restoring fleet positions when returning from planetary view
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+App.tsx:843 💾 Capturing current fleet positions before planetary transition
+App.tsx:845 📍 Current fleet positions from window: {35efznye: Array(3)}
+App.tsx:854 💾 Saving current position for fleet 35efznye: (3) [-97.65773515496413, -1.2408701011499908e-14, 42.12990581548716]
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+App.tsx:740 🔄 Restoring fleet positions when returning from planetary view
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:430 🚀 FLEET CLICKED - selecting: {fleetId: '35efznye', fleetPosition: Array(3), fleetSize: 7}
+SystemView.tsx:436 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:299 Fleet 35efznye: 7 ships
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:937 🎯 ORBITAL DISK CLICKED - fleet movement initiated
+SystemView.tsx:956 📍 OLD FLEET POSITION: [78.38799934872154, -1.2408701011499908e-14, 71.88382125154288]
+SystemView.tsx:963 💾 Saving fleet position with system ID: system-star-3524
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+SystemView.tsx:970 🚀 FLEET MOVED TO: [55.15, -0.00, 80.94]
+SystemView.tsx:971 📊 Updated targetFleet.position: (3) [55.15210432958307, -3.038079825503621e-14, 80.93913044905642]
+SystemView.tsx:972 📊 Updated selectedFleet will be: {id: '35efznye', size: 7, position: Array(3), orbitCenter: Array(3), composition: Array(7), …}
+FleetMarker.tsx:222 🌍 Fleet 35efznye adopting orbital speed from closest planet: Epsilon Orionis β (orbit radius diff: 4.4 AU)
+FleetMarker.tsx:145 🚀 Fleet 35efznye position changed - stopping orbital motion
+FleetMarker.tsx:146 Old: [78.38799934872154, -1.2408701011499908e-14, 71.88382125154288]
+FleetMarker.tsx:147 New: [55.15210432958307, -3.038079825503621e-14, 80.93913044905642]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+74FleetMarker.tsx:258 🎯 Fleet 35efznye holding position at [55.15210432958307, -3.038079825503621e-14, 80.93913044905642]
+FleetMarker.tsx:155 🌀 Fleet 35efznye resuming orbital motion from new position
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+App.tsx:843 💾 Capturing current fleet positions before planetary transition
+App.tsx:845 📍 Current fleet positions from window: {35efznye: Array(3)}
+App.tsx:854 💾 Saving current position for fleet 35efznye: (3) [48.0219514203429, -3.038079825503621e-14, 85.36269461312017]
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+App.tsx:740 🔄 Restoring fleet positions when returning from planetary view
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:430 🚀 FLEET CLICKED - selecting: {fleetId: '35efznye', fleetPosition: Array(3), fleetSize: 7}
+SystemView.tsx:436 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:299 Fleet 35efznye: 7 ships
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:937 🎯 ORBITAL DISK CLICKED - fleet movement initiated
+SystemView.tsx:956 📍 OLD FLEET POSITION: [55.15210432958307, -3.038079825503621e-14, 80.93913044905642]
+SystemView.tsx:963 💾 Saving fleet position with system ID: system-star-3524
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+SystemView.tsx:970 🚀 FLEET MOVED TO: [-67.75, -0.00, 65.31]
+SystemView.tsx:971 📊 Updated targetFleet.position: (3) [-67.75095917052019, -4.4881859771758754e-14, 65.30697524318828]
+SystemView.tsx:972 📊 Updated selectedFleet will be: {id: '35efznye', size: 7, position: Array(3), orbitCenter: Array(3), composition: Array(7), …}
+FleetMarker.tsx:222 🌍 Fleet 35efznye adopting orbital speed from closest planet: Epsilon Orionis β (orbit radius diff: 6.3 AU)
+FleetMarker.tsx:145 🚀 Fleet 35efznye position changed - stopping orbital motion
+FleetMarker.tsx:146 Old: [55.15210432958307, -3.038079825503621e-14, 80.93913044905642]
+FleetMarker.tsx:147 New: [-67.75095917052019, -4.4881859771758754e-14, 65.30697524318828]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+75FleetMarker.tsx:258 🎯 Fleet 35efznye holding position at [-67.75095917052019, -4.4881859771758754e-14, 65.30697524318828]
+FleetMarker.tsx:155 🌀 Fleet 35efznye resuming orbital motion from new position
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:430 🚀 FLEET CLICKED - selecting: {fleetId: '35efznye', fleetPosition: Array(3), fleetSize: 7}
+SystemView.tsx:436 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:299 Fleet 35efznye: 7 ships
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+8FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.3, 0, 18.2] - speed from Epsilon Orionis β
+7FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.3, 0, 18.1] - speed from Epsilon Orionis β
+2FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 18.1] - speed from Epsilon Orionis β
+8FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 18.0] - speed from Epsilon Orionis β
+9FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 17.9] - speed from Epsilon Orionis β
+8FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 17.8] - speed from Epsilon Orionis β
+9FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 17.7] - speed from Epsilon Orionis β
+4FleetMarker.tsx:281 🌀 Fleet 35efznye orbiting at [-92.4, 0, 17.6] - speed from Epsilon Orionis β
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:430 🚀 FLEET CLICKED - selecting: {fleetId: '35efznye', fleetPosition: Array(3), fleetSize: 7}
+SystemView.tsx:436 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:299 Fleet 35efznye: 7 ships
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:937 🎯 ORBITAL DISK CLICKED - fleet movement initiated
+SystemView.tsx:956 📍 OLD FLEET POSITION: [-67.75095917052019, -4.4881859771758754e-14, 65.30697524318828]
+SystemView.tsx:963 💾 Saving fleet position with system ID: system-star-3524
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+SystemView.tsx:970 🚀 FLEET MOVED TO: [-101.98, -0.00, -35.24]
+SystemView.tsx:971 📊 Updated targetFleet.position: (3) [-101.97897512321036, -3.705705464041394e-14, -35.239789473771246]
+SystemView.tsx:972 📊 Updated selectedFleet will be: {id: '35efznye', size: 7, position: Array(3), orbitCenter: Array(3), composition: Array(7), …}
+FleetMarker.tsx:222 🌍 Fleet 35efznye adopting orbital speed from closest planet: Epsilon Orionis β (orbit radius diff: 0.5 AU)
+FleetMarker.tsx:145 🚀 Fleet 35efznye position changed - stopping orbital motion
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+76FleetMarker.tsx:258 🎯 Fleet 35efznye holding position at [-101.97897512321036, -3.705705464041394e-14, -35.239789473771246]
+FleetMarker.tsx:155 🌀 Fleet 35efznye resuming orbital motion from new position
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:756 Background click detected: {hasSelectedFleet: false, hasIntersections: true, intersectionCount: 1}
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+App.tsx:843 💾 Capturing current fleet positions before planetary transition
+App.tsx:845 📍 Current fleet positions from window: {35efznye: Array(3)}
+App.tsx:854 💾 Saving current position for fleet 35efznye: (3) [-94.04294770979453, -3.705705464041394e-14, -52.891191283510786]
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-3524, fleetId: 35efznye
+App.tsx:740 🔄 Restoring fleet positions when returning from planetary view
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:863 📡 Exposed 9 planets to fleet orbital system: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+SystemView.tsx:869 📡 Exposed 5 space features to fleet orbital system: (5) [{…}, {…}, {…}, {…}, {…}]
