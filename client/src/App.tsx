@@ -648,15 +648,17 @@ function App() {
           }
         }
 
-        // Clear any existing frozen time when entering system (fresh visit should not be frozen)
-        if (system.frozenTime) {
-          console.log(`🔓 Clearing stale frozen time for system ${system.id}`);
+        // Only clear frozen time if this is a fresh visit from galactic view
+        // Don't clear if we're returning from planetary view (currentView would be 'planetary')
+        if (system.frozenTime && currentView === 'galactic') {
+          console.log(`🔓 Clearing stale frozen time for system ${system.id} (fresh visit from galactic view)`);
           delete system.frozenTime;
         }
         
         setCurrentView('system');
         setCurrentSystem(system);
         (window as any).currentSystem = system; // Expose for PlanetMesh to access frozen time
+        (window as any).systemEntryTime = Date.now(); // Add this line
         setLastVisitedStar(selectedStar); // Remember the star we're visiting
         setSelectedStar(null);
         setSelectedSpaceFeature(null); // Clear space feature when entering system view
@@ -733,6 +735,11 @@ function App() {
         if (currentView === 'planetary') {
           console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
           setCurrentView('system');
+          // UNFREEZE TIME when returning to system view
+          if (currentSystem?.frozenTime) {
+            console.log(`🔓 Unfreezing time - clearing frozenTime from system ${currentSystem.id}`);
+            delete currentSystem.frozenTime;
+          }
           setSelectedFeature(null);
           setSelectedArmy(null); // Clear army when returning to system view
           // Stop space feature orbital tracking when leaving planetary view
@@ -766,6 +773,10 @@ function App() {
               
               if (savedSystem?.fleets) {
                 console.log(`🔍 Restoring ${savedSystem.fleets.length} fleet positions with frozen time`);
+                console.log(`🔄 Restoring fleet positions when returning from planetary view`);
+                console.log(`📦 updatedSystem.factions:`, updatedSystem.factions?.length || 0);
+                console.log(`📦 savedSystem exists:`, !!savedSystem);
+                console.log(`📦 savedSystem.fleets:`, savedSystem?.fleets?.length || 0);
                 
                 // Update fleet positions in all factions
                 updatedSystem.factions?.forEach((faction: any) => {
@@ -774,17 +785,25 @@ function App() {
                       const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
                       if (savedFleet && savedFleet.position) {
                         console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
-                        fleet.position = [...savedFleet.position];
+                        // Create new array reference to trigger position change detection
+                        fleet.position = [savedFleet.position[0], savedFleet.position[1], savedFleet.position[2]];
                         fleet._justRestored = true;
+                        // Add timestamp to force recalc trigger
+                        fleet._forceRecalc = Date.now();
+                        console.log(`🏷️ SET FLAGS on fleet ${fleet.id}:`, {
+                          justRestored: fleet._justRestored,
+                          forceRecalc: fleet._forceRecalc,
+                          position: fleet.position
+                        });
                       }
                     });
                   }
                 });
-                
-                // Update the current system state
-                setCurrentSystem(updatedSystem);
+
+                // Update the current system state - this triggers re-render and position change detection
+                setCurrentSystem({ ...updatedSystem });
                 // Expose to window for PlanetMesh to access frozen time
-                (window as any).currentSystem = updatedSystem;
+                (window as any).currentSystem = { ...updatedSystem };
               }
             }
           }
@@ -803,6 +822,8 @@ function App() {
           }
         } else if (currentView === 'system') {
           console.log('Returning to galactic view...');
+          // Clear system entry time
+          delete (window as any).systemEntryTime; // Add this line
 
           // Clear frozen time when leaving system
           if (currentSystem && currentSystem.frozenTime) {
@@ -861,15 +882,11 @@ function App() {
             // Save simulation time to freeze orbital state
             if (currentSystem) {
               console.log('💾 Freezing simulation time before planetary transition');
-              
-              // Save the current simulation time
+
+              // Always update frozen time to capture current positions
               const currentTime = Date.now();
-              if (!currentSystem.frozenTime) {
-                currentSystem.frozenTime = currentTime;
-                console.log(`💾 Froze simulation at time: ${currentTime}`);
-              } else {
-                console.log(`💾 System already frozen at time: ${currentSystem.frozenTime}`);
-              }
+              currentSystem.frozenTime = currentTime;
+              console.log(`💾 Froze simulation at time: ${currentTime}`);
               
               // Save fleet positions to universe store
               const universeStore = useUniverse.getState();

@@ -354,9 +354,27 @@ export function CameraController() {
     // Disable orbital tracking in planetary view to prevent camera conflicts
     if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope !== 'planetary') {
       const planetData = orbitalTargetRef.current;
-      const time = Date.now() * 0.0001;
-      const planetIndex = planetData.index || 0;
-      const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
+
+      // Get current system to check for frozen time
+      const currentSystem = (window as any).currentSystemRef?.current;
+
+      // Get planet index from current system data to ensure correct position
+      let planetIndex = planetData.index || 0;
+      let totalPlanets = 8; // Default fallback
+      if (currentSystem && currentSystem.planets && planetData.id) {
+        const foundIndex = currentSystem.planets.findIndex((p: any) => p.id === planetData.id);
+        if (foundIndex !== -1) {
+          planetIndex = foundIndex;
+        }
+        totalPlanets = currentSystem.planets.length; // Use actual planet count
+      }
+
+      // Use frozen time if available, otherwise use current time
+      const time = currentSystem?.frozenTime ? currentSystem.frozenTime * 0.0001 : Date.now() * 0.0001;
+
+      // CRITICAL: Match the exact angle calculation from SystemView
+      // Must use totalPlanets, not hardcoded 8, to match the visual positioning
+      const angle = time * planetData.orbitSpeed + (planetIndex * (Math.PI * 2) / totalPlanets);
 
       // Calculate exact planet position (identical to SystemView calculation)
       const planetPos = new Vector3(

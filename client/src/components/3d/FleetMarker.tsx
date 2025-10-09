@@ -129,11 +129,15 @@ export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) 
 export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: FleetMarkerProps) {
   const fleetRef = useRef<Mesh>(null);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
-  
+
+  // Use system entry time as base reference, not individual movement time
+  const systemEntryTime = useRef<number>((window as any).systemEntryTime || Date.now());
+
   // Movement state tracking
   const [isMoving, setIsMoving] = useState(false);
-  const [movementStartTime, setMovementStartTime] = useState(0);
+  const [movementStartTime, setMovementStartTime] = useState(systemEntryTime.current);
   const lastPositionRef = useRef<[number, number, number]>(fleet.position);
+  const [recalcTrigger, setRecalcTrigger] = useState(0);
   
   // Detect when fleet position changes (user clicked to move it or restored from save)
   useEffect(() => {
@@ -149,6 +153,9 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         console.log(`📍 Fleet ${fleet.id} restored to exact position - holding steady`);
         // Clear the restoration flag
         delete (fleet as any)._justRestored;
+        delete (fleet as any)._resetMovementTime;
+        // Force speed recalculation
+        setRecalcTrigger(prev => prev + 1);
       } else {
         console.log(`🚀 Fleet ${fleet.id} position changed - stopping orbital motion`);
         console.log(`Old: [${lastPositionRef.current.join(', ')}]`);
@@ -165,7 +172,27 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         setIsMoving(false);
       }, isRestoration ? 100 : 1000); // Shorter delay for restorations
     }
-  }, [fleet.position[0], fleet.position[2], fleet.id]);
+  }, [fleet.position[0], fleet.position[2], fleet.id, (fleet as any)._forceRecalc]);
+
+  // Separate effect specifically for restoration flag
+  useEffect(() => {
+    console.log(`🔍 RESTORATION CHECK for Fleet ${fleet.id}:`, {
+      justRestored: (fleet as any)._justRestored,
+      forceRecalc: (fleet as any)._forceRecalc,
+      currentRecalcTrigger: recalcTrigger
+    });
+
+    if ((fleet as any)._justRestored) {
+      console.log(`✅ Fleet ${fleet.id} HAS _justRestored flag - triggering recalc NOW`);
+      const newTrigger = recalcTrigger + 1;
+      console.log(`⚡ Calling setRecalcTrigger: ${recalcTrigger} → ${newTrigger}`);
+      setRecalcTrigger(newTrigger);
+      delete (fleet as any)._justRestored;
+      console.log(`🧹 Cleaned up _justRestored flag`);
+    } else {
+      console.log(`❌ Fleet ${fleet.id} does NOT have _justRestored flag`);
+    }
+  }, [(fleet as any)._justRestored, fleet.id]);
   
   // Orbit center and base parameters
   const orbitCenter = fleet.orbitCenter || [0, 0, 0];
@@ -243,7 +270,7 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
       orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
       closestObject: null
     };
-  }, [fleet.position[0], fleet.position[2]]);
+  }, [fleet.position[0], fleet.position[2], recalcTrigger]);
 
   // Calculate initial angle from current position
   const initialAngle = useMemo(() => {
@@ -256,26 +283,51 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         // During movement, position fleet exactly at the target coordinates
         fleetRef.current.position.set(fleet.position[0], fleet.position[1], fleet.position[2]);
         setRealTimePosition([fleet.position[0], fleet.position[1], fleet.position[2]]);
-        
+
         if (isSelected) {
           console.log(`🎯 Fleet ${fleet.id} holding position at [${fleet.position.join(', ')}]`);
         }
       } else {
-        // Normal orbital motion - calculate time since movement ended
-        const currentTime = Date.now();
-        const timeSinceMovement = (currentTime - movementStartTime) * 0.0001;
-        const angle = timeSinceMovement * orbitalSpeed + initialAngle;
+        // Check for frozen time
+        const currentSystem = (window as any).currentSystem;
+        const isFrozen = currentSystem?.frozenTime;
 
-        // Calculate current orbit radius from position for positioning
-        const currentOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-        const x = currentOrbitRadius * Math.cos(angle);
-        const z = currentOrbitRadius * Math.sin(angle);
+        if (isFrozen) {
+          // FROZEN: Don't move, stay at current position
+          // This prevents the fleet from jumping when frozen time exists
+          if (!fleetRef.current.userData.frozenPosition) {
+            // Store the frozen position once
+            fleetRef.current.userData.frozenPosition = [
+              fleetRef.current.position.x,
+              fleetRef.current.position.y, 
+              fleetRef.current.position.z
+            ];
+            console.log(`❄️ Fleet ${fleet.id} frozen at position:`, fleetRef.current.userData.frozenPosition);
+          }
+        } else {
+          // Normal orbital motion - time is unfrozen
+          // If we just unfroze, reset movement start time
+          if (fleetRef.current.userData.frozenPosition) {
+            console.log(`🔥 Fleet ${fleet.id} unfrozen, resetting movement timer`);
+            setMovementStartTime(Date.now());
+            delete fleetRef.current.userData.frozenPosition;
+          }
 
-        fleetRef.current.position.set(x, fleet.position[1], z);
-        setRealTimePosition([x, fleet.position[1], z]);
-        
-        if (isSelected && Math.floor(timeSinceMovement * 10) % 30 === 0) {
-          console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestObject?.name || 'calculated'}`);
+          const simulationTime = Date.now();
+          const elapsedTime = (simulationTime - movementStartTime) * 0.0001;
+          const angle = elapsedTime * orbitalSpeed + initialAngle;
+
+          // Calculate current orbit radius from position for positioning
+          const currentOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
+          const x = currentOrbitRadius * Math.cos(angle);
+          const z = currentOrbitRadius * Math.sin(angle);
+
+          fleetRef.current.position.set(x, fleet.position[1], z);
+          setRealTimePosition([x, fleet.position[1], z]);
+
+          if (isSelected && Math.floor(elapsedTime * 10) % 30 === 0) {
+            console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestObject?.name || 'calculated'}`);
+          }
         }
       }
     }
