@@ -404,7 +404,9 @@ export function CameraController() {
     // Handle space feature orbital tracking
     if (isSpaceFeatureTrackingRef.current && spaceFeatureTargetRef.current && currentScope !== 'planetary') {
       const spaceFeature = spaceFeatureTargetRef.current;
-      const time = Date.now() * 0.0001;
+      const currentSystem = (window as any).currentSystem;
+      const simulationTime = currentSystem?.frozenTime || Date.now();
+      const time = simulationTime * 0.0001;
       let featurePosition = new Vector3(0, 0, 0);
       let positionCalculated = false;
 
@@ -421,13 +423,14 @@ export function CameraController() {
 
       if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
         // Space feature orbiting a planet - need to get current system data
-        const currentSystem = (window as any).currentSystemRef?.current;
-        if (currentSystem && currentSystem.planets) {
-          const targetPlanet = currentSystem.planets.find((p: any) => p.id === spaceFeature.orbitTargetId);
+        const systemRef = (window as any).currentSystemRef?.current || (window as any).currentSystem;
+        if (systemRef && systemRef.planets) {
+          const targetPlanet = systemRef.planets.find((p: any) => p.id === spaceFeature.orbitTargetId);
           
           if (targetPlanet && targetPlanet.orbitRadius && targetPlanet.orbitSpeed) {
-            const planetTime = Date.now() * 0.0001;
-            const planetIndex = currentSystem.planets.findIndex((p: any) => p.id === targetPlanet.id);
+            const planetSimTime = systemRef?.frozenTime || Date.now();
+            const planetTime = planetSimTime * 0.0001;
+            const planetIndex = systemRef.planets.findIndex((p: any) => p.id === targetPlanet.id);
             const planetAngle = planetTime * targetPlanet.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
             
             // Calculate planet's current position
