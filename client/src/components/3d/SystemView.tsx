@@ -252,6 +252,7 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
 function PlanetMesh({ 
   planet, 
   index, 
+  totalPlanets,
   isSelected, 
   onPlanetClick, 
   planetTextures,
@@ -260,6 +261,7 @@ function PlanetMesh({
 }: { 
   planet: any; 
   index: number; 
+  totalPlanets: number;
   isSelected: boolean;
   onPlanetClick: (planet: any) => void;
   planetTextures: any;
@@ -272,7 +274,7 @@ function PlanetMesh({
     if (planetRef.current) {
       // Use Date.now() for consistent timing across components
       const time = Date.now() * 0.0001;
-      const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / 8);
+      const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / totalPlanets);
       const x = Math.cos(angle) * planet.orbitRadius * 2;
       const z = Math.sin(angle) * planet.orbitRadius * 2;
       planetRef.current.position.x = x;
@@ -1040,6 +1042,7 @@ export function SystemView({
           key={planet.id} 
           planet={planet} 
           index={index}
+          totalPlanets={planets.length}
           isSelected={selectedPlanet?.id === planet.id}
           onPlanetClick={onPlanetClick}
           planetTextures={planetTextures}

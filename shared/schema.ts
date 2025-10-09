@@ -139,6 +139,8 @@ export interface Fleets {
   orbitCenter: [number, number, number]; // Center point of orbital motion (usually [0, 0, 0] for star)
   composition: Ships[]; //ships inside fleet
   faction?: Faction;
+  anchoredToPlanetId?: string; // ID of planet this fleet is anchored to (for relative positioning)
+  anchorOffset?: [number, number, number]; // Offset from anchored planet
 }
 
 

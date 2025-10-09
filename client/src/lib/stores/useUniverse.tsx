@@ -36,7 +36,7 @@ interface UniverseState {
   loadUniverse: (file: File) => Promise<void>;
   updateStar: (starId: string, updates: Partial<Star>) => void;
   updatePlanet: (planetId: string, updates: Partial<Planet>) => void;
-  updateFleetPosition: (systemId: string, fleetId: string, position: [number, number, number]) => void;
+  updateFleetPosition: (systemId: string, fleetId: string, position: [number, number, number], anchorData?: { planetId: string; offset: [number, number, number] }) => void;
   updateArmyPosition: (planetId: string, armyId: string, position: [number, number]) => void;
 }
 
@@ -252,7 +252,7 @@ export const useUniverse = create<UniverseState>()(
       }
     },
 
-    updateFleetPosition: (systemId, fleetId, position) => {
+    updateFleetPosition: (systemId, fleetId, position, anchorData?: { planetId: string; offset: [number, number, number] }) => {
       console.log(`💾 updateFleetPosition called with systemId: ${systemId}, fleetId: ${fleetId}`);
       const { universeData } = get();
       console.log(`💾 Universe data exists:`, !!universeData);
@@ -270,6 +270,10 @@ export const useUniverse = create<UniverseState>()(
                 const fleetIndex = faction.fleets.findIndex(f => f.id === fleetId);
                 if (fleetIndex >= 0) {
                   faction.fleets[fleetIndex].position = position;
+                  if (anchorData) {
+                    faction.fleets[fleetIndex].anchoredToPlanetId = anchorData.planetId;
+                    faction.fleets[fleetIndex].anchorOffset = anchorData.offset;
+                  }
                   console.log(`💾 Updated fleet ${fleetId} position in faction ${faction.id}:`, position);
                   fleetFound = true;
                   break;
@@ -283,11 +287,20 @@ export const useUniverse = create<UniverseState>()(
           const systemFleetIndex = system.fleets.findIndex(f => f.id === fleetId);
           if (systemFleetIndex >= 0) {
             system.fleets[systemFleetIndex].position = position;
+            if (anchorData) {
+              system.fleets[systemFleetIndex].anchoredToPlanetId = anchorData.planetId;
+              system.fleets[systemFleetIndex].anchorOffset = anchorData.offset;
+            }
             console.log(`💾 Updated fleet ${fleetId} position in system.fleets:`, position);
             fleetFound = true;
           } else if (fleetFound) {
             // Add to system.fleets for backup reference (partial object for position tracking)
-            system.fleets.push({ id: fleetId, position } as any);
+            const fleetData: any = { id: fleetId, position };
+            if (anchorData) {
+              fleetData.anchoredToPlanetId = anchorData.planetId;
+              fleetData.anchorOffset = anchorData.offset;
+            }
+            system.fleets.push(fleetData);
             console.log(`💾 Added fleet ${fleetId} to system.fleets backup:`, position);
           }
           
