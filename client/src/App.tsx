@@ -843,22 +843,19 @@ function App() {
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
             console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
             
-            // Capture CURRENT fleet positions before transitioning (from their actual orbital positions)
+            // Save fleet BASE positions (not orbital positions) before transitioning
             if (currentSystem) {
-              console.log('💾 Capturing current fleet positions before planetary transition');
-              const currentFleetPositions = (window as any).currentFleetPositions || {};
-              console.log('📍 Current fleet positions from window:', currentFleetPositions);
+              console.log('💾 Saving fleet base positions before planetary transition');
               
-              // Save current positions to universe store
+              // Save base positions to universe store
               const universeStore = useUniverse.getState();
               if (universeStore?.updateFleetPosition) {
                 currentSystem.factions?.forEach((faction: any) => {
                   faction.fleets?.forEach((fleet: any) => {
-                    const currentPos = currentFleetPositions[fleet.id];
-                    if (currentPos) {
-                      console.log(`💾 Saving current position for fleet ${fleet.id}:`, currentPos);
-                      universeStore.updateFleetPosition(currentSystem.id, fleet.id, currentPos);
-                    }
+                    // Save a COPY of the base position to prevent mutations from affecting saved data
+                    const positionSnapshot: [number, number, number] = [...fleet.position];
+                    console.log(`💾 Saving base position snapshot for fleet ${fleet.id}:`, positionSnapshot);
+                    universeStore.updateFleetPosition(currentSystem.id, fleet.id, positionSnapshot);
                   });
                 });
               }
