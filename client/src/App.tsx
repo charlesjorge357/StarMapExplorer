@@ -765,8 +765,11 @@ function App() {
                     faction.fleets.forEach((fleet: any) => {
                       const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
                       if (savedFleet && savedFleet.position) {
-                        console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
-                        fleet.position = savedFleet.position;
+                        console.log(`📍 Restoring fleet ${fleet.id} to EXACT position:`, savedFleet.position);
+                        // Set position to exact saved coordinates
+                        fleet.position = [...savedFleet.position];
+                        // Mark that this fleet was just restored to prevent orbital motion from shifting it
+                        fleet._justRestored = true;
                       }
                     });
                   }

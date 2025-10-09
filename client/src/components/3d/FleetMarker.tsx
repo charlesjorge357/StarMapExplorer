@@ -135,26 +135,35 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
   const [movementStartTime, setMovementStartTime] = useState(0);
   const lastPositionRef = useRef<[number, number, number]>(fleet.position);
   
-  // Detect when fleet position changes (user clicked to move it)
+  // Detect when fleet position changes (user clicked to move it or restored from save)
   useEffect(() => {
     const hasPositionChanged = 
       fleet.position[0] !== lastPositionRef.current[0] || 
       fleet.position[2] !== lastPositionRef.current[2];
       
     if (hasPositionChanged) {
-      console.log(`🚀 Fleet ${fleet.id} position changed - stopping orbital motion`);
-      console.log(`Old: [${lastPositionRef.current.join(', ')}]`);
-      console.log(`New: [${fleet.position.join(', ')}]`);
+      // Check if this is a restoration (not a user click)
+      const isRestoration = (fleet as any)._justRestored;
+      
+      if (isRestoration) {
+        console.log(`📍 Fleet ${fleet.id} restored to exact position - holding steady`);
+        // Clear the restoration flag
+        delete (fleet as any)._justRestored;
+      } else {
+        console.log(`🚀 Fleet ${fleet.id} position changed - stopping orbital motion`);
+        console.log(`Old: [${lastPositionRef.current.join(', ')}]`);
+        console.log(`New: [${fleet.position.join(', ')}]`);
+      }
       
       setIsMoving(true);
       setMovementStartTime(Date.now());
       lastPositionRef.current = [...fleet.position];
       
-      // Resume orbital motion after 1 second
+      // Resume orbital motion after 1 second (or immediately if restored)
       setTimeout(() => {
-        console.log(`🌀 Fleet ${fleet.id} resuming orbital motion from new position`);
+        console.log(`🌀 Fleet ${fleet.id} resuming orbital motion from ${isRestoration ? 'restored' : 'new'} position`);
         setIsMoving(false);
-      }, 1000);
+      }, isRestoration ? 100 : 1000); // Shorter delay for restorations
     }
   }, [fleet.position[0], fleet.position[2], fleet.id]);
   
