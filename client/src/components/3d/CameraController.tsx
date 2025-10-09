@@ -356,7 +356,9 @@ export function CameraController() {
     // Disable orbital tracking in planetary view to prevent camera conflicts
     if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope !== 'planetary') {
       const planetData = orbitalTargetRef.current;
-      const time = Date.now() * 0.0001;
+      const currentSystem = (window as any).currentSystem;
+      const simulationTime = currentSystem?.frozenTime || Date.now();
+      const time = simulationTime * 0.0001;
       const planetIndex = planetData.index || 0;
       const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
 
