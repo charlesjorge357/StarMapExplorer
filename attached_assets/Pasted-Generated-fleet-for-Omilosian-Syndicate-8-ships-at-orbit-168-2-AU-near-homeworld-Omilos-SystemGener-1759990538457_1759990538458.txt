@@ -1,0 +1,50 @@
+Generated fleet for Omilosian Syndicate: 8 ships at orbit 168.2 AU near homeworld Omilos
+SystemGenerator.ts:682 Generated 1 fleets for faction: Omilosian Syndicate
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:422 🚀 FLEET CLICKED - selecting: Object
+SystemView.tsx:428 ✅ FLEET SELECTION STATE UPDATED - orbital disk should now appear
+FleetMarker.tsx:287 Fleet 57vskshi: 8 ships
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:929 🎯 ORBITAL DISK CLICKED - fleet movement initiated
+SystemView.tsx:948 📍 OLD FLEET POSITION: [-171.72379738274245, 0, 289.2306512992722]
+SystemView.tsx:955 💾 Saving fleet position with system ID: system-star-2390
+useUniverse.tsx:256 💾 updateFleetPosition called with systemId: system-star-2390, fleetId: 57vskshi
+SystemView.tsx:962 🚀 FLEET MOVED TO: [-64.23, 0.00, -274.74]
+SystemView.tsx:963 📊 Updated targetFleet.position: Array(3)
+SystemView.tsx:964 📊 Updated selectedFleet will be: Object
+FleetMarker.tsx:222 🌍 Fleet 57vskshi adopting orbital speed from closest planet: Zeta Andromedae γ (orbit radius diff: 0.2 AU)
+FleetMarker.tsx:145 🚀 Fleet 57vskshi position changed - stopping orbital motion
+FleetMarker.tsx:146 Old: [-171.72379738274245, 0, 289.2306512992722]
+FleetMarker.tsx:147 New: [-64.22995026637463, 6.100496734471198e-14, -274.74194820139417]
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+75FleetMarker.tsx:252 🎯 Fleet 57vskshi holding position at [-64.22995026637463, 6.100496734471198e-14, -274.74194820139417]
+FleetMarker.tsx:155 🌀 Fleet 57vskshi resuming orbital motion from new position
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+App.tsx:843 💾 Updating currentSystem with current fleet positions before planetary transition
+App.tsx:740 🔄 Restoring fleet positions when returning from planetary view
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
+SystemView.tsx:855 📡 Exposed 5 planets to fleet orbital system: Array(5)
+SystemView.tsx:861 📡 Exposed 6 space features to fleet orbital system: Array(6)
