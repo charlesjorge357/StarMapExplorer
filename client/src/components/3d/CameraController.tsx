@@ -63,9 +63,7 @@ export function CameraController() {
     isOrbitalTrackingRef.current = false;
     orbitalTargetRef.current = null;
 
-    // Scale camera distance based on orbital radius - farther planets get farther camera
-    const orbitScaling = planetData?.orbitRadius ? Math.max(planetData.orbitRadius * 0.15, 1) : 1;
-    const distance = Math.max(planetRadius * 25 * orbitScaling, 15);
+    const distance = Math.max(planetRadius * 25, 15);
 
     if (!planetData) {
       // Simple positioning for non-orbiting objects
@@ -371,9 +369,8 @@ export function CameraController() {
         Math.sin(angle) * planetData.orbitRadius * 2
       );
 
-      // Scale camera distance based on orbital radius - farther planets get farther camera
-      const orbitScaling = Math.max(planetData.orbitRadius * 0.15, 1);
-      const cameraDistance = Math.max(planetData.radius * 8 * orbitScaling, 5);
+      // Position camera at fixed distance from planet, not star
+      const cameraDistance = Math.max(planetData.radius * 8, 5);
       const cameraOffsetAngle = angle + Math.PI * 0.3;
 
       // Calculate direction from planet to camera
