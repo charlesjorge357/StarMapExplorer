@@ -272,8 +272,10 @@ function PlanetMesh({
 
   useFrame((state) => {
     if (planetRef.current) {
-      // Use Date.now() for consistent timing across components
-      const time = Date.now() * 0.0001;
+      // Use frozen time if available, otherwise use Date.now()
+      const currentSystem = (window as any).currentSystem;
+      const simulationTime = currentSystem?.frozenTime || Date.now();
+      const time = simulationTime * 0.0001;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / totalPlanets);
       const x = Math.cos(angle) * planet.orbitRadius * 2;
       const z = Math.sin(angle) * planet.orbitRadius * 2;

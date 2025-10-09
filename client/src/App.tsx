@@ -648,8 +648,15 @@ function App() {
           }
         }
 
+        // Clear any existing frozen time when entering system (fresh visit should not be frozen)
+        if (system.frozenTime) {
+          console.log(`🔓 Clearing stale frozen time for system ${system.id}`);
+          delete system.frozenTime;
+        }
+        
         setCurrentView('system');
         setCurrentSystem(system);
+        (window as any).currentSystem = system; // Expose for PlanetMesh to access frozen time
         setLastVisitedStar(selectedStar); // Remember the star we're visiting
         setSelectedStar(null);
         setSelectedSpaceFeature(null); // Clear space feature when entering system view
@@ -758,54 +765,17 @@ function App() {
               console.log(`🔍 Saved system found:`, !!savedSystem);
               
               if (savedSystem?.fleets) {
-                console.log(`🔍 Restoring ${savedSystem.fleets.length} fleet positions`);
-                
-                // Calculate current planet positions using same formula as PlanetMesh
-                const currentTime = Date.now() * 0.0001;
-                const planetPositions = new Map<string, [number, number, number]>();
-                const planetCount = updatedSystem.planets?.length || 1;
-                updatedSystem.planets?.forEach((planet: any, index: number) => {
-                  const angle = currentTime * planet.orbitSpeed + index * (Math.PI * 2 / planetCount);
-                  const x = Math.cos(angle) * planet.orbitRadius * 2;
-                  const z = Math.sin(angle) * planet.orbitRadius * 2;
-                  planetPositions.set(planet.id, [x, 0, z]);
-                });
+                console.log(`🔍 Restoring ${savedSystem.fleets.length} fleet positions with frozen time`);
                 
                 // Update fleet positions in all factions
                 updatedSystem.factions?.forEach((faction: any) => {
                   if (faction.fleets) {
                     faction.fleets.forEach((fleet: any) => {
                       const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
-                      if (savedFleet) {
-                        // Check if fleet is anchored to a planet
-                        if (savedFleet.anchoredToPlanetId && savedFleet.anchorOffset) {
-                          const planetPos = planetPositions.get(savedFleet.anchoredToPlanetId);
-                          if (planetPos) {
-                            // Calculate new position relative to planet's current position
-                            const newPosition: [number, number, number] = [
-                              planetPos[0] + savedFleet.anchorOffset[0],
-                              planetPos[1] + savedFleet.anchorOffset[1],
-                              planetPos[2] + savedFleet.anchorOffset[2]
-                            ];
-                            console.log(`🔗 Restoring fleet ${fleet.id} anchored to planet ${savedFleet.anchoredToPlanetId}`);
-                            console.log(`   Planet at [${planetPos.map(v => v.toFixed(1)).join(', ')}], offset [${savedFleet.anchorOffset.map(v => v.toFixed(1)).join(', ')}]`);
-                            console.log(`   Final position [${newPosition.map(v => v.toFixed(1)).join(', ')}]`);
-                            fleet.position = newPosition;
-                            fleet.anchoredToPlanetId = savedFleet.anchoredToPlanetId;
-                            fleet.anchorOffset = savedFleet.anchorOffset;
-                            fleet._justRestored = true;
-                          } else {
-                            // Planet not found, use saved absolute position as fallback
-                            console.warn(`⚠️ Planet ${savedFleet.anchoredToPlanetId} not found, using absolute position`);
-                            fleet.position = [...savedFleet.position];
-                            fleet._justRestored = true;
-                          }
-                        } else if (savedFleet.position) {
-                          // No anchor, use absolute position
-                          console.log(`📍 Restoring fleet ${fleet.id} to absolute position:`, savedFleet.position);
-                          fleet.position = [...savedFleet.position];
-                          fleet._justRestored = true;
-                        }
+                      if (savedFleet && savedFleet.position) {
+                        console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
+                        fleet.position = [...savedFleet.position];
+                        fleet._justRestored = true;
                       }
                     });
                   }
@@ -813,6 +783,8 @@ function App() {
                 
                 // Update the current system state
                 setCurrentSystem(updatedSystem);
+                // Expose to window for PlanetMesh to access frozen time
+                (window as any).currentSystem = updatedSystem;
               }
             }
           }
@@ -832,6 +804,12 @@ function App() {
         } else if (currentView === 'system') {
           console.log('Returning to galactic view...');
 
+          // Clear frozen time when leaving system
+          if (currentSystem && currentSystem.frozenTime) {
+            console.log(`🔓 Unfreezing system ${currentSystem.id}`);
+            delete currentSystem.frozenTime;
+          }
+
           // Stop orbital tracking when leaving system view
           if ((window as any).homeToPlanet) {
             (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
@@ -841,12 +819,13 @@ function App() {
             (window as any).homeToSpaceFeature(null, 0, false);
           }
 
-          setCurrentView('galactic');
           setCurrentSystem(null);
+          setCurrentView('galactic');
           setSelectedPlanet(null);
           setSelectedSpaceFeature(null);
           setSelectedFleet(null); // Clear fleet when returning to galactic view
           (window as any).systemStarSelected = false;
+          (window as any).currentSystem = null;
 
           // Position camera with offset from last visited star and select it
           setTimeout(() => {
@@ -879,58 +858,27 @@ function App() {
           if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
             console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
             
-            // Save fleet positions RELATIVE to nearest planet before transitioning
+            // Save simulation time to freeze orbital state
             if (currentSystem) {
-              console.log('💾 Saving fleet positions relative to planets before planetary transition');
+              console.log('💾 Freezing simulation time before planetary transition');
               
-              // Get current planet positions from window
-              const currentPlanetPositions = (window as any).currentPlanetPositions || {};
+              // Save the current simulation time
+              const currentTime = Date.now();
+              if (!currentSystem.frozenTime) {
+                currentSystem.frozenTime = currentTime;
+                console.log(`💾 Froze simulation at time: ${currentTime}`);
+              } else {
+                console.log(`💾 System already frozen at time: ${currentSystem.frozenTime}`);
+              }
               
-              // Save relative positions to universe store
+              // Save fleet positions to universe store
               const universeStore = useUniverse.getState();
               if (universeStore?.updateFleetPosition) {
                 currentSystem.factions?.forEach((faction: any) => {
                   faction.fleets?.forEach((fleet: any) => {
-                    // Find nearest planet to this fleet
-                    let nearestPlanetId: string | undefined;
-                    let minDistance = Infinity;
-                    
-                    currentSystem.planets?.forEach((planet: any) => {
-                      const planetPos = currentPlanetPositions[planet.id];
-                      if (planetPos) {
-                        const dx = fleet.position[0] - planetPos[0];
-                        const dz = fleet.position[2] - planetPos[2];
-                        const distance = Math.sqrt(dx * dx + dz * dz);
-                        if (distance < minDistance) {
-                          minDistance = distance;
-                          nearestPlanetId = planet.id;
-                        }
-                      }
-                    });
-                    
-                    // Calculate offset from nearest planet
-                    if (nearestPlanetId) {
-                      const planetPos = currentPlanetPositions[nearestPlanetId];
-                      const offset = [
-                        fleet.position[0] - planetPos[0],
-                        fleet.position[1] - planetPos[1],
-                        fleet.position[2] - planetPos[2]
-                      ] as [number, number, number];
-                      
-                      // Save position snapshot (for fallback) and anchor info
-                      const positionSnapshot = [...fleet.position] as [number, number, number];
-                      
-                      console.log(`💾 Fleet ${fleet.id} anchored to planet ${nearestPlanetId} at offset [${offset.map(v => v.toFixed(1)).join(', ')}], distance: ${minDistance.toFixed(1)}`);
-                      universeStore.updateFleetPosition(currentSystem.id, fleet.id, positionSnapshot, {
-                        planetId: nearestPlanetId,
-                        offset: offset
-                      });
-                    } else {
-                      // No planet nearby, save absolute position
-                      const positionSnapshot = [...fleet.position] as [number, number, number];
-                      console.log(`💾 Saving absolute position for fleet ${fleet.id}:`, positionSnapshot);
-                      universeStore.updateFleetPosition(currentSystem.id, fleet.id, positionSnapshot);
-                    }
+                    const positionSnapshot = [...fleet.position] as [number, number, number];
+                    console.log(`💾 Saving fleet ${fleet.id} position:`, positionSnapshot);
+                    universeStore.updateFleetPosition(currentSystem.id, fleet.id, positionSnapshot);
                   });
                 });
               }
