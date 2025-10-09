@@ -79,8 +79,10 @@ export function CameraController() {
       return;
     }
 
-    // One-time positioning with offset
-    const time = Date.now() * 0.0001;
+    // One-time positioning with offset - use frozen time if available
+    const currentSystem = (window as any).currentSystem;
+    const simulationTime = currentSystem?.frozenTime || Date.now();
+    const time = simulationTime * 0.0001;
     const planetIndex = planetData.index || 0;
     const angle = time * planetData.orbitSpeed + planetIndex * (Math.PI * 2 / 8);
     const currentPlanetPos = new Vector3(
