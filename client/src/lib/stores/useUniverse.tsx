@@ -277,14 +277,18 @@ export const useUniverse = create<UniverseState>()(
             console.log(`💾 Updated fleet ${fleetId} position in system.fleets:`, position);
             fleetFound = true;
           } else if (fleetFound) {
-            // Add to system.fleets for backup reference
-            system.fleets.push({ id: fleetId, position });
+            // Add to system.fleets for backup reference (partial object for position tracking)
+            system.fleets.push({ id: fleetId, position } as any);
             console.log(`💾 Added fleet ${fleetId} to system.fleets backup:`, position);
           }
           
           if (fleetFound) {
             universeData.metadata.modified = new Date().toISOString();
-            set({ universeData: { ...universeData } });
+            // Create a deep copy to ensure Zustand detects the change
+            set({ universeData: { 
+              ...universeData,
+              systems: [...universeData.systems] 
+            } });
           } else {
             console.warn(`⚠️ Fleet ${fleetId} not found in system ${systemId}`);
           }
@@ -298,12 +302,17 @@ export const useUniverse = create<UniverseState>()(
         // Find planet and update army position
         for (const system of universeData.systems) {
           const planet = system.planets.find(p => p.id === planetId);
-          if (planet && planet.armies) {
-            const armyIndex = planet.armies.findIndex(a => a.id === armyId);
+          const planetArmies = (planet as any)?.armies;
+          if (planet && planetArmies) {
+            const armyIndex = planetArmies.findIndex((a: any) => a.id === armyId);
             if (armyIndex >= 0) {
-              planet.armies[armyIndex].position = position;
+              planetArmies[armyIndex].position = position;
               universeData.metadata.modified = new Date().toISOString();
-              set({ universeData: { ...universeData } });
+              // Create a deep copy to ensure Zustand detects the change
+              set({ universeData: { 
+                ...universeData,
+                systems: [...universeData.systems] 
+              } });
               console.log(`💾 Updated army ${armyId} position on planet ${planetId}:`, position);
               break;
             }
