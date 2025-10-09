@@ -2,9 +2,6 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { KeyboardControls, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { InstancedStarField } from "./components/3d/InstancedStarField";
-import { usePerformance, QualityPreset } from "./lib/stores/usePerformance";
-import { useFPS, FPSDisplay } from "./components/ui/FPSMonitor";
 import { CameraController } from "./components/3d/CameraController";
 import { SystemView } from "./components/3d/SystemView";
 import { PlanetaryView } from "./components/3d/PlanetaryView";
@@ -74,26 +71,6 @@ function SelectionRing({ star }: { star: SimpleStar }) {
       <ringGeometry args={[star.radius * 2.5 * 1.5, star.radius * 2.5 * 2, 16]} />
       <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
     </mesh>
-  );
-}
-
-// Performance-optimized bloom component
-function PerformanceOptimizedBloom({ currentView }: { currentView: string }) {
-  const { bloomEnabled, bloomIntensity } = usePerformance();
-  
-  if (!bloomEnabled) {
-    return null;
-  }
-  
-  return (
-    <EffectComposer>
-      <Bloom 
-        intensity={currentView === 'system' ? bloomIntensity * 1.2 : bloomIntensity}
-        luminanceThreshold={0.1}
-        luminanceSmoothing={0.7}
-        height={300}
-      />
-    </EffectComposer>
   );
 }
 
@@ -258,12 +235,57 @@ function StarField({
 
   return (
     <group onClick={handleBackgroundClick}>
-      {/* Optimized instanced star rendering */}
-      <InstancedStarField 
-        stars={stars}
-        selectedStar={selectedStar}
-        onStarClick={setSelectedStar}
-      />
+      {stars.map((star) => {
+        const isSelected = selectedStar?.id === star.id;
+        // Scale visual size by stellar radius, smaller minimum to show true variation
+        const visualRadius = Math.max(0.2, star.radius * 1.0); 
+        const hitboxRadius = Math.max(2.0, star.radius * 2.0);
+
+        return (
+          <group key={star.id}>
+            {/* Invisible larger hitbox for easier selection */}
+            <mesh 
+              position={star.position}
+              onClick={(e) => {
+                console.log(`Selected star: ${star.name}`);
+                setSelectedStar(star);
+              }}
+              visible={false}
+            >
+              <sphereGeometry args={[hitboxRadius, 8, 8]} />
+            </mesh>
+
+            {/* Visual star with gentle pulsing and emissive glow scaled by radius */}
+            <mesh position={star.position}>
+              <sphereGeometry args={[visualRadius, 8, 8]} />
+              <meshStandardMaterial 
+                color={StarGenerator.getStarColor(star.spectralClass)}
+                emissive={StarGenerator.getStarColor(star.spectralClass)}
+                emissiveIntensity={Math.max(0.6, star.radius * 0.4)}
+                // Star surface texture - fully opaque
+                map={starBumpMap}
+                transparent={false}
+                opacity={1.0}
+                depthTest = {false}
+              />
+            </mesh>
+
+            {/* Selection overlay */}
+            {isSelected && (
+              <mesh position={star.position}>
+                <sphereGeometry args={[visualRadius + 0.2, 8, 8]} />
+                <meshBasicMaterial 
+                  color="#ffffff"
+                  transparent
+                  opacity={0.3}
+                  depthWrite={false}
+                  depthTest={false}
+                />
+              </mesh>
+            )}
+          </group>
+        );
+      })}
 
       {/* Nebulas */}
       {nebulas.map((nebula) => (
@@ -317,10 +339,6 @@ function App() {
   const [warpLanes, setWarpLanes] = useState<any[]>([]);
   const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
   const [, forceUpdate] = useState({});
-
-  // Performance monitoring
-  const fps = useFPS();
-  const { quality, setQuality, bloomEnabled, showFPS, toggleFPS, toggleBloom } = usePerformance();
 
   // Generate nebulas once
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
@@ -976,89 +994,6 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      {/* FPS Display */}
-      {!showSelector && showFPS && <FPSDisplay fps={fps} />}
-      
-      {/* Performance Settings */}
-      {!showSelector && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          background: 'rgba(0, 0, 0, 0.9)',
-          color: 'white',
-          padding: '15px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          zIndex: 1000,
-          minWidth: '200px',
-        }}>
-          <div style={{ marginBottom: '12px', fontSize: '14px', fontWeight: 'bold' }}>
-            ⚙️ Performance
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Quality presets */}
-            <div>
-              <div style={{ fontSize: '12px', marginBottom: '6px', opacity: 0.8 }}>Quality:</div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {(['low', 'medium', 'high'] as QualityPreset[]).map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => setQuality(q)}
-                    style={{
-                      flex: 1,
-                      padding: '6px 10px',
-                      background: quality === q ? '#4CAF50' : '#333',
-                      color: 'white',
-                      border: quality === q ? '2px solid #66BB6A' : '1px solid #555',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Toggle options */}
-            <button
-              onClick={toggleBloom}
-              style={{
-                padding: '8px 12px',
-                background: bloomEnabled ? '#2196F3' : '#333',
-                color: 'white',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                textAlign: 'left',
-              }}
-            >
-              ✨ Bloom: {bloomEnabled ? 'ON' : 'OFF'}
-            </button>
-            
-            <button
-              onClick={toggleFPS}
-              style={{
-                padding: '8px 12px',
-                background: showFPS ? '#2196F3' : '#333',
-                color: 'white',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                textAlign: 'left',
-              }}
-            >
-              📊 FPS: {showFPS ? 'ON' : 'OFF'}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Planet Search UI for System View */}
       {currentView === 'system' && (
         <>
@@ -1712,8 +1647,15 @@ function App() {
                 </>
               )}
 
-              {/* Post-processing effects for bloom - performance optimized */}
-              <PerformanceOptimizedBloom currentView={currentView} />
+              {/* Post-processing effects for bloom */}
+              <EffectComposer>
+                <Bloom 
+                  intensity={currentView === 'system' ? 0.8 : 0.6}
+                  luminanceThreshold={0.1}
+                  luminanceSmoothing={0.7}
+                  height={500}
+                />
+              </EffectComposer>
             </>
           )}
         </Canvas>

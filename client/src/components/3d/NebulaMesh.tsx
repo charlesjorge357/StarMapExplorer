@@ -4,7 +4,6 @@ import { useTexture } from '@react-three/drei';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { Nebula } from 'shared/schema';
-import { usePerformance } from '../../lib/stores/usePerformance';
 
 interface NebulaMeshProps {
   nebula: Nebula;
@@ -17,7 +16,6 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
   const [hovered, setHovered] = useState(false);
   const [screenTintIntensity, setScreenTintIntensity] = useState(0);
   const { camera } = useThree();
-  const { nebulaParticles } = usePerformance();
 
   // Detect if we're in system view by checking if camera is very close (system view uses close camera positions)
   const isInSystemView = camera.position.length() < 100;
@@ -68,7 +66,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
 
   // Generate particle positions within the elliptical nebula volume
   const particles = useMemo(() => {
-    const particleCount = nebulaParticles; // Performance-based particle count
+    const particleCount = 130; // Fixed count to prevent LOD popping
     const data = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -108,7 +106,7 @@ export function NebulaMesh({ nebula, isSelected, onNebulaClick }: NebulaMeshProp
       });
     }
     return data;
-  }, [nebula.radius, nebula.id, nebulaShape, nebulaParticles]);
+  }, [nebula.radius, nebula.id, nebulaShape]);
 
   useFrame((state, delta) => {
     // Only calculate screen tint intensity in galactic view, not system view
