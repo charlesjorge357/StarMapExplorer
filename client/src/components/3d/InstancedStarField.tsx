@@ -73,7 +73,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
   
   // Create material once
   const starMaterial = useMemo(() => {
-    return new InstancedStarMaterial({ depthTest: false });
+    return new InstancedStarMaterial();
   }, []);
   
   // Create geometry with current quality setting
@@ -180,7 +180,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       {/* Visual stars - instanced with interaction */}
       <instancedMesh 
         ref={instancedMeshRef}
-        args={[starGeometry, starMaterial, stars.length]}
+        args={[undefined, undefined, stars.length]}
         frustumCulled={false}
         onClick={handleClick}
         onPointerOver={(e) => {
@@ -190,7 +190,13 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
         }}
-      />
+      >
+        <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
+        <meshBasicMaterial 
+          vertexColors={true}
+          map={starBumpMap}
+        />
+      </instancedMesh>
       
       {/* Larger invisible hitboxes for easier clicking */}
       <instancedMesh 
