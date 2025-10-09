@@ -140,7 +140,7 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
       });
       instancedMeshRef.current.instanceMatrix.needsUpdate = true;
       
-      // Set up instance color attribute
+      // Set up instance colors using the built-in instanceColor attribute
       const count = starData.colors.length;
       const colors = new Float32Array(count * 3);
       
@@ -150,8 +150,16 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         colors[i * 3 + 2] = color.b;
       });
       
-      const geometry = instancedMeshRef.current.geometry;
-      geometry.setAttribute('instanceColor', new THREE.InstancedBufferAttribute(colors, 3));
+      // Create the instanceColor buffer attribute
+      const instanceColorAttr = new THREE.InstancedBufferAttribute(colors, 3);
+      instancedMeshRef.current.instanceColor = instanceColorAttr;
+      instancedMeshRef.current.instanceColor.needsUpdate = true;
+      
+      // Update the material's emissive color to multiply with instance colors
+      if (instancedMeshRef.current.material) {
+        const mat = instancedMeshRef.current.material as THREE.MeshStandardMaterial;
+        mat.needsUpdate = true;
+      }
     }
     
     if (interactionMeshRef.current) {
@@ -192,9 +200,11 @@ export function InstancedStarField({ stars, selectedStar, onStarClick }: Instanc
         }}
       >
         <sphereGeometry args={[1, starGeometrySegments, starGeometrySegments]} />
-        <meshBasicMaterial 
-          vertexColors={true}
-          map={starBumpMap}
+        <meshStandardMaterial 
+          emissive={new THREE.Color(1, 1, 1)}
+          emissiveIntensity={2}
+          emissiveMap={starBumpMap}
+          toneMapped={false}
         />
       </instancedMesh>
       
