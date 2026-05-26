@@ -1,5 +1,5 @@
 import SurfaceFeaturesList from "@/components/ui/SurfaceFeaturesList";
-import { Planet, PlanetType, SurfaceFeature, Faction, Armies, Divisions, Fleets, Ships } from "shared/schema";
+import { Planet, PlanetType, SurfaceFeature, Faction, Armies, Divisions, Fleets, Ships } from "@shared/schema";
 
 export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {
@@ -180,7 +180,7 @@ export class PlanetGenerator {
     const chosenFaction = factions.find(f => f.name === chosenFactionName);
     if (chosenFaction) {
       chosenFaction.holdings = chosenFaction.holdings || [];
-      chosenFaction.holdings.push(...(planet.surfaceFeatures || []));
+      chosenFaction.holdings.push(...(planet?.surfaceFeatures || []));
     }
     return chosenFactionName;
   }

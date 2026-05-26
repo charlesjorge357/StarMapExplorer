@@ -2,7 +2,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Nebula } from 'shared/schema';
+import { Nebula } from '@shared/schema';
 
 interface NebulaScreenTintProps {
   nebulas: Nebula[];
@@ -10,7 +10,7 @@ interface NebulaScreenTintProps {
 
 export function NebulaScreenTint({ nebulas }: NebulaScreenTintProps) {
   const { camera } = useThree();
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
   // Create overlay element on mount and ensure cleanup on unmount
   useEffect(() => {

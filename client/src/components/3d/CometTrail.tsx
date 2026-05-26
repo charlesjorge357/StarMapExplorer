@@ -26,7 +26,7 @@ export const CometTrail: React.FC<CometTrailProps> = ({ cometRef }) => {
     // Update mesh positions
     trailRef.current.children.forEach((child, i) => {
       child.position.copy(positions[i]);
-      (child.material as THREE.Material).opacity = 1 - i / maxParticles;
+      ((child as THREE.Mesh).material as THREE.Material).opacity = 1 - i / maxParticles;
     });
   });
 

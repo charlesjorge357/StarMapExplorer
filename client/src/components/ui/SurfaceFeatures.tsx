@@ -1,12 +1,12 @@
 // SurfaceFeatureMarker.tsx
 
 import { useMemo } from 'react'
-import { MeshProps } from '@react-three/fiber'
+import { GroupProps } from '@react-three/fiber'
 import * as THREE from 'three'
-import { SurfaceFeature } from 'shared/schema'
+import { SurfaceFeature } from '@shared/schema'
 
 // 1) Omit the default onClick so we can define our own
-interface Props extends Omit<MeshProps, 'onClick'> {
+interface Props extends Omit<GroupProps, 'onClick'> {
   feature: SurfaceFeature
   planetRadius: number
   onFeatureClick: (feature: SurfaceFeature) => void

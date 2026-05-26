@@ -1,4 +1,4 @@
-import { UniverseData } from "../../shared/schema";
+import { UniverseData } from "@shared/schema";
 
 export class SaveSystem {
   static downloadUniverse(universeData: UniverseData): void {

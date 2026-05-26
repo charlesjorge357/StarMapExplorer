@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path, { dirname } from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { fileURLToPath } from "url";
 import glsl from "vite-plugin-glsl";
 
@@ -12,8 +11,7 @@ export default defineConfig({
   base: './',
   plugins: [
     react(),
-    runtimeErrorOverlay(),
-    glsl(), // Add GLSL shader support
+    glsl(),
   ],
   resolve: {
     alias: {

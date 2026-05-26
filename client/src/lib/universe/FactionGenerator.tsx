@@ -1,4 +1,4 @@
-import { Planet, Faction } from "shared/schema";
+import { Planet, Faction } from "@shared/schema";
 
 export const ContestedFaction: Faction = {
   id: "faction-contested",
@@ -16,8 +16,9 @@ export const ContestedFaction: Faction = {
   holdings: [],
   resources: { credits: 0, minerals: 0, energy: 0, food: 0 },
   ships: [],
-  forts: [],
   fleets: [],
+  divisions: [],
+  armies: [],
 };
 
 export class FactionGenerator {
@@ -138,8 +139,9 @@ export class FactionGenerator {
       holdings: [],
       resources: this.generateResources(planet),
       ships: [],
-      forts: [],
       fleets: [],
+      divisions: [],
+      armies: [],
     };
   }
 

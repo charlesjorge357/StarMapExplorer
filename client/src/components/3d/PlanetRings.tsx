@@ -1,7 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PlanetRing } from 'shared/schema';
+import { PlanetRing } from '@shared/schema';
 
 interface PlanetRingsProps {
   rings: PlanetRing[];

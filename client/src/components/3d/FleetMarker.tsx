@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 import * as THREE from 'three';
+import { useGameView } from '../../lib/stores/useGameView';
 
 //mm yes
 
@@ -164,7 +165,7 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
       
       setIsMoving(true);
       setMovementStartTime(Date.now());
-      lastPositionRef.current = [...fleet.position];
+      lastPositionRef.current = [...fleet.position] as [number, number, number];
       
       // Resume orbital motion after 1 second (or immediately if restored)
       setTimeout(() => {
@@ -289,8 +290,7 @@ export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: Fleet
         }
       } else {
         // Check for frozen time
-        const currentSystem = (window as any).currentSystem;
-        const isFrozen = currentSystem?.frozenTime;
+        const isFrozen = useGameView.getState().frozenTime;
 
         if (isFrozen) {
           // FROZEN: Don't move, stay at current position

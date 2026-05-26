@@ -19,6 +19,7 @@ import * as THREE from "three";
 import { NebulaScreenTint } from './components/3d/NebulaScreenTint';
 import { useAudio } from './lib/stores/useAudio';
 import { useUniverse } from './lib/stores/useUniverse';
+import { useGameView } from './lib/stores/useGameView';
 import { MusicController } from './components/3d/musicController';
 import { FleetInfoPanel } from './components/ui/FleetInfoPanel';
 import { ArmyInfoPanel } from './components/ui/ArmyInfoPanel';
@@ -316,29 +317,24 @@ function StarField({
 
 function App() {
   const [showSelector, setShowSelector] = useState(true);
-  const [selectedStar, setSelectedStar] = useState<SimpleStar | null>(null);
-  const [selectedNebula, setSelectedNebula] = useState<any>(null);
-  const [selectedPlanet, setSelectedPlanet] = useState<any>(null);
-  const [selectedFeature, setSelectedFeature] = useState<any>(null);
-  const [selectedSpaceFeature, setSelectedSpaceFeature] = useState<any>(null);
-  const [selectedFleet, setSelectedFleet] = useState<any>(null);
-  const [selectedArmy, setSelectedArmy] = useState<any>(null);
-  // Navigation mode removed - all interactions now use direct mouse controls
-  const [currentView, setCurrentView] = useState<'galactic' | 'system' | 'planetary'>('galactic');
-  const [currentSystem, setCurrentSystem] = useState<any>(null);
-  const [lastVisitedStar, setLastVisitedStar] = useState<SimpleStar | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [isSearchingSpaceFeatures, setIsSearchingSpaceFeatures] = useState(false);
-  const [isSearchingSurfaceFeatures, setIsSearchingSurfaceFeatures] = useState(false);
-  const [isViewingFleets, setIsViewingFleets] = useState(false);
-  const [isViewingArmies, setIsViewingArmies] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [warpLanes, setWarpLanes] = useState<any[]>([]);
-  const [systemCache, setSystemCache] = useState<Map<string, any>>(new Map());
-  const [, forceUpdate] = useState({});
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  const {
+    currentView, currentSystem, lastVisitedStar,
+    selectedStar, selectedNebula, selectedPlanet, selectedFeature,
+    selectedSpaceFeature, selectedFleet, selectedArmy,
+    isSearching, isSearchingSpaceFeatures, isSearchingSurfaceFeatures,
+    isViewingFleets, isViewingArmies,
+    setSelectedStar, setSelectedNebula, setSelectedPlanet, setSelectedFeature,
+    setSelectedSpaceFeature, setSelectedFleet, setSelectedArmy,
+    setIsSearching, setIsSearchingSpaceFeatures, setIsSearchingSurfaceFeatures,
+    setIsViewingFleets, setIsViewingArmies,
+    enterSystem, exitSystem, enterPlanetary, exitPlanetary,
+    getCachedSystem, setCachedSystem,
+  } = useGameView();
 
   // Generate nebulas once
   const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
@@ -349,7 +345,6 @@ function App() {
     const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
     const generatedStars = StarGenerator.generateStars(dynamicSeed, 4000);
     setStars(generatedStars);
-    setSystemCache(new Map()); // Clear system cache when regenerating galaxy
     console.log(`Generated ${generatedStars.length} stars`);
     
     // Generate warp lanes after stars are created (async to prevent blocking)
@@ -370,19 +365,31 @@ function App() {
     console.log("System cache cleared - new systems will include rings");
   }, []);
 
-  // Force re-render when system view state changes
+
+
+
+
+
+  // View transition overlay — fires synchronously via Zustand subscription (before React repaints)
+  // so the black frame lands before the new scene's first pixel is drawn.
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentView === 'system' && (window as any).systemViewState) {
-        forceUpdate({});
+    let fadeTimer: ReturnType<typeof setTimeout>;
+    const unsubscribe = useGameView.subscribe(
+      s => s.currentView,
+      () => {
+        const el = overlayRef.current;
+        if (!el) return;
+        el.style.transition = 'none';
+        el.style.opacity = '1';
+        clearTimeout(fadeTimer);
+        fadeTimer = setTimeout(() => {
+          el.style.transition = 'opacity 0.35s ease-out';
+          el.style.opacity = '0';
+        }, 200);
       }
-    }, 100);
-    return () => clearInterval(interval);
-  }, [currentView]);
-
-
-
-
+    );
+    return () => { unsubscribe(); clearTimeout(fadeTimer); };
+  }, []);
 
   // Cleanup audio on component unmount
   useEffect(() => {
@@ -603,422 +610,141 @@ function App() {
     return colors[type as keyof typeof colors] || '#888888';
   };
 
-  // Navigation mode removed - all interactions use mouse mode
-
-  // Handle Enter key to navigate to system view
+  // Keyboard navigation — all navigation actions delegate to the store
   useEffect(() => {
     const handleSystemNavigation = (event: KeyboardEvent) => {
+      const { cameraActions } = useGameView.getState();
+
+      // Enter in galactic view: navigate into selected star's system
       if (event.key === 'Enter' && selectedStar && currentView === 'galactic') {
         console.log(`Navigating to ${selectedStar.name} system...`);
 
-        // Check if system already exists in cache
-        let system = systemCache.get(selectedStar.id);
+        let system = getCachedSystem(selectedStar.id);
         if (!system) {
-          // Generate new system and cache it
           system = generateSystemForStar(selectedStar);
-          console.log('Generated system:', system);
-          setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
-          console.log(`Generated new system for ${selectedStar.name}`);
+          setCachedSystem(selectedStar.id, system);
         } else {
-          console.log(`Using cached system for ${selectedStar.name}, checking for fleet position updates...`);
-          
-          // Update cached system with saved fleet positions from universe store
+          // Sync cached fleet positions from universe store
           const universeStore = useUniverse.getState();
-          if (universeStore?.universeData?.systems) {
-            const savedSystem = universeStore.universeData.systems.find(s => s.id === `system-${selectedStar.id}`);
-            if (savedSystem?.fleets && savedSystem.fleets.length > 0) {
-              console.log(`🔄 Updating cached system with ${savedSystem.fleets.length} saved fleet positions`);
-              
-              // Update fleet positions in cached system
-              system.factions?.forEach((faction: any) => {
-                if (faction.fleets) {
-                  faction.fleets.forEach((fleet: any) => {
-                    const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
-                    if (savedFleet && savedFleet.position) {
-                      fleet.position = savedFleet.position;
-                      console.log(`🎯 Updated cached fleet ${fleet.id} position:`, savedFleet.position);
-                    }
-                  });
-                }
+          const savedSystem = universeStore?.universeData?.systems?.find(
+            (s: any) => s.id === `system-${selectedStar.id}`
+          );
+          if (savedSystem?.fleets?.length) {
+            const savedFleets = savedSystem.fleets;
+            system.factions?.forEach((faction: any) => {
+              faction.fleets?.forEach((fleet: any) => {
+                const saved = savedFleets.find((sf: any) => sf.id === fleet.id);
+                if (saved?.position) fleet.position = saved.position;
               });
-              
-              // Update the cache with the updated system
-              setSystemCache(prev => new Map(prev.set(selectedStar.id, system)));
-            }
+            });
+            setCachedSystem(selectedStar.id, system);
           }
         }
 
-        // Only clear frozen time if this is a fresh visit from galactic view
-        // Don't clear if we're returning from planetary view (currentView would be 'planetary')
-        if (system.frozenTime && currentView === 'galactic') {
-          console.log(`🔓 Clearing stale frozen time for system ${system.id} (fresh visit from galactic view)`);
-          delete system.frozenTime;
-        }
-        
-        setCurrentView('system');
-        setCurrentSystem(system);
-        (window as any).currentSystem = system; // Expose for PlanetMesh to access frozen time
-        (window as any).systemEntryTime = Date.now(); // Add this line
-        setLastVisitedStar(selectedStar); // Remember the star we're visiting
-        setSelectedStar(null);
-        setSelectedSpaceFeature(null); // Clear space feature when entering system view
-
-        // Ensure star info is available immediately in system view and set default camera
-        setTimeout(() => {
-          if (system.star) {
-            (window as any).systemStarSelected = system.star;
-            console.log('Star info set from system navigation:', system.star.name);
-          }
-          // Set default camera position for system view
-          if ((window as any).resetToStar) {
-            (window as any).resetToStar();
-          }
-        }, 100);
+        enterSystem(selectedStar, system);
       }
 
+      // Escape: stop tracking / clear selections
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
+        cameraActions.homeToPlanet?.(new Vector3(0, 0, 0), 1, null, false);
 
-        // Stop orbital tracking and reset camera to center star
-        if ((window as any).homeToPlanet) {
-          (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
-        }
-
-        // Note: Camera positioning for planetary view is handled by the view transition itself
-
-        if (currentView === 'galactic' && (selectedStar || selectedNebula)) {
-          if (selectedStar) {
-            console.log(`Unselected star: ${selectedStar.name}`);
-            setSelectedStar(null);
-          }
-          if (selectedNebula) {
-            console.log(`Unselected nebula: ${selectedNebula.name}`);
-            setSelectedNebula(null);
-          }
-        } else if (currentView === 'system' && (selectedPlanet || selectedSpaceFeature || selectedFleet)) {
-          // Only unselect planets, space features, and fleets in system view, not the central star
-          if (selectedPlanet) {
-            console.log(`Unselected planet: ${selectedPlanet.name}`);
-            setSelectedPlanet(null);
-          }
+        if (currentView === 'galactic') {
+          if (selectedStar) setSelectedStar(null);
+          if (selectedNebula) setSelectedNebula(null);
+        } else if (currentView === 'system') {
+          if (selectedPlanet) setSelectedPlanet(null);
           if (selectedSpaceFeature) {
-            console.log(`Unselected space feature: ${selectedSpaceFeature.name}`);
-            // Stop space feature orbital tracking
-            if ((window as any).homeToSpaceFeature) {
-              (window as any).homeToSpaceFeature(null, 0, false);
-            }
+            cameraActions.homeToSpaceFeature?.(null, 0, false);
             setSelectedSpaceFeature(null);
           }
-          if (selectedFleet) {
-            console.log(`Unselected fleet: ${selectedFleet.name}`);
-            setSelectedFleet(null);
-          }
-          
-          // Close any open search menus when escaping selections
+          if (selectedFleet) setSelectedFleet(null);
           setIsSearching(false);
           setIsSearchingSpaceFeatures(false);
-        } else if (currentView === 'planetary' && (selectedFeature || selectedArmy)) {
-          // Unselect surface features and armies in planetary view
-          if (selectedFeature) {
-            console.log(`Unselected feature: ${selectedFeature.name}`);
-            setSelectedFeature(null);
-          }
-          if (selectedArmy) {
-            console.log(`Unselected army: ${selectedArmy.name}`);
-            setSelectedArmy(null);
-          }
+        } else if (currentView === 'planetary') {
+          if (selectedFeature) setSelectedFeature(null);
+          if (selectedArmy) setSelectedArmy(null);
         }
       }
 
+      // Backspace: go back one view level
       if (event.key === 'Backspace') {
         if (currentView === 'planetary') {
-          console.log('Returning to system view, keeping planet selected:', selectedPlanet?.name);
-          setCurrentView('system');
-          // UNFREEZE TIME when returning to system view
-          if (currentSystem?.frozenTime) {
-            console.log(`🔓 Unfreezing time - clearing frozenTime from system ${currentSystem.id}`);
-            delete currentSystem.frozenTime;
-          }
-          setSelectedFeature(null);
-          setSelectedArmy(null); // Clear army when returning to system view
-          // Stop space feature orbital tracking when leaving planetary view
-          if ((window as any).homeToSpaceFeature) {
-            (window as any).homeToSpaceFeature(null, 0, false);
-          }
-          setSelectedSpaceFeature(null); // Clear space feature when returning to system view
-
-          // Re-enable galactic and system view keyboard controls
-          (window as any).disableGalacticSystemControls = false;
-
-          // CRITICAL: Restore fleet positions when returning from planetary view
-          if (currentSystem) {
-            console.log('🔄 Restoring fleet positions when returning from planetary view');
-            console.log(`🔍 Current system ID: ${currentSystem.id}`);
-            console.log(`🔍 Selected star ID: ${selectedStar?.id}`);
-            const updatedSystem = { ...currentSystem };
-            
-            // Get current fleet positions from universe store
-            const universeStore = useUniverse.getState();
-            console.log(`🔍 Universe store exists:`, !!universeStore);
-            console.log(`🔍 Universe data exists:`, !!universeStore?.universeData);
-            console.log(`🔍 Systems array exists:`, !!universeStore?.universeData?.systems);
-            console.log(`🔍 Systems count:`, universeStore?.universeData?.systems?.length || 0);
-            
-            if (universeStore?.universeData?.systems) {
-              console.log(`🔍 Available systems:`, universeStore.universeData.systems.map(s => s.id));
-              const savedSystem = universeStore.universeData.systems.find(s => s.id === currentSystem.id || s.id === `system-${selectedStar?.id}`);
-              console.log(`🔍 Looking for saved system: ${currentSystem.id} or system-${selectedStar?.id}`);
-              console.log(`🔍 Saved system found:`, !!savedSystem);
-              
-              if (savedSystem?.fleets) {
-                console.log(`🔍 Restoring ${savedSystem.fleets.length} fleet positions with frozen time`);
-                console.log(`🔄 Restoring fleet positions when returning from planetary view`);
-                console.log(`📦 updatedSystem.factions:`, updatedSystem.factions?.length || 0);
-                console.log(`📦 savedSystem exists:`, !!savedSystem);
-                console.log(`📦 savedSystem.fleets:`, savedSystem?.fleets?.length || 0);
-                
-                // Update fleet positions in all factions
-                updatedSystem.factions?.forEach((faction: any) => {
-                  if (faction.fleets) {
-                    faction.fleets.forEach((fleet: any) => {
-                      const savedFleet = savedSystem.fleets?.find((sf: any) => sf.id === fleet.id);
-                      if (savedFleet && savedFleet.position) {
-                        console.log(`📍 Restoring fleet ${fleet.id} to position:`, savedFleet.position);
-                        // Create new array reference to trigger position change detection
-                        fleet.position = [savedFleet.position[0], savedFleet.position[1], savedFleet.position[2]];
-                        fleet._justRestored = true;
-                        // Add timestamp to force recalc trigger
-                        fleet._forceRecalc = Date.now();
-                        console.log(`🏷️ SET FLAGS on fleet ${fleet.id}:`, {
-                          justRestored: fleet._justRestored,
-                          forceRecalc: fleet._forceRecalc,
-                          position: fleet.position
-                        });
-                      }
-                    });
-                  }
-                });
-
-                // Update the current system state - this triggers re-render and position change detection
-                setCurrentSystem({ ...updatedSystem });
-                // Expose to window for PlanetMesh to access frozen time
-                (window as any).currentSystem = { ...updatedSystem };
-              }
-            }
-          }
-
-          // Re-establish orbital tracking for the selected planet since it continued rotating
-          if (selectedPlanet && (window as any).homeToPlanet) {
+          exitPlanetary();
+          // Re-establish orbital lock for the planet that continued rotating
+          if (selectedPlanet) {
             setTimeout(() => {
-              // Find the planet's index for orbital tracking
-              const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
-              const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
-
-              // Re-establish orbital lock to track current position
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
-              console.log(`Re-established orbital tracking for ${selectedPlanet.name} after returning from planetary view`);
+              const { cameraActions: ca, currentSystem: sys } = useGameView.getState();
+              const planetIndex = sys?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) ?? 0;
+              ca.homeToPlanet?.(
+                new Vector3(0, 0, 0),
+                Math.max(selectedPlanet.radius * 0.6, 1),
+                { ...selectedPlanet, index: planetIndex },
+                true
+              );
+              console.log(`Re-established orbital tracking for ${selectedPlanet.name}`);
             }, 100);
           }
         } else if (currentView === 'system') {
-          console.log('Returning to galactic view...');
-          // Clear system entry time
-          delete (window as any).systemEntryTime; // Add this line
-
-          // Clear frozen time when leaving system
-          if (currentSystem && currentSystem.frozenTime) {
-            console.log(`🔓 Unfreezing system ${currentSystem.id}`);
-            delete currentSystem.frozenTime;
-          }
-
-          // Stop orbital tracking when leaving system view
-          if ((window as any).homeToPlanet) {
-            (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
-          }
-          // Stop space feature orbital tracking when leaving system view
-          if ((window as any).homeToSpaceFeature) {
-            (window as any).homeToSpaceFeature(null, 0, false);
-          }
-
-          setCurrentSystem(null);
-          setCurrentView('galactic');
-          setSelectedPlanet(null);
-          setSelectedSpaceFeature(null);
-          setSelectedFleet(null); // Clear fleet when returning to galactic view
-          (window as any).systemStarSelected = false;
-          (window as any).currentSystem = null;
-
-          // Position camera with offset from last visited star and select it
-          setTimeout(() => {
-            if (lastVisitedStar && (window as any).setCameraLookingAtStar) {
-              console.log(`Positioning camera to look at ${lastVisitedStar.name}`);
-              (window as any).setCameraLookingAtStar(lastVisitedStar);
-              setSelectedStar(lastVisitedStar); // Keep the star selected
-            }
-          }, 100); // Small delay to ensure view change is processed
+          exitSystem();
         }
       }
 
-      // Handle F key for planetary exploration
-      if (event.key === 'f' || event.key === 'F') {
-        console.log(`F key detected - currentView: ${currentView}, selectedPlanet: ${selectedPlanet?.name}, features: ${selectedPlanet?.surfaceFeatures?.length}`);
-
-
-        if (currentView === 'system' && selectedPlanet) {
-          event.preventDefault();
-
-          console.log(`Planet data for F key:`, {
-            name: selectedPlanet.name,
-            type: selectedPlanet.type,
-            surfaceFeatures: selectedPlanet.surfaceFeatures,
-            featureCount: selectedPlanet.surfaceFeatures?.length
-          });
-
-
-          // Allow planetary view for all terrestrial planets (non-gas giants)
-          if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
-            console.log(`Entering planetary view for ${selectedPlanet.name} (${selectedPlanet.type}) with ${selectedPlanet.surfaceFeatures?.length || 0} features`);
-            
-            // Save simulation time to freeze orbital state
-            if (currentSystem) {
-              console.log('💾 Freezing simulation time before planetary transition');
-
-              // Always update frozen time to capture current positions
-              const currentTime = Date.now();
-              currentSystem.frozenTime = currentTime;
-              console.log(`💾 Froze simulation at time: ${currentTime}`);
-              
-              // Save fleet positions to universe store
-              const universeStore = useUniverse.getState();
-              if (universeStore?.updateFleetPosition) {
-                currentSystem.factions?.forEach((faction: any) => {
-                  faction.fleets?.forEach((fleet: any) => {
-                    const positionSnapshot = [...fleet.position] as [number, number, number];
-                    console.log(`💾 Saving fleet ${fleet.id} position:`, positionSnapshot);
-                    universeStore.updateFleetPosition(currentSystem.id, fleet.id, positionSnapshot);
-                  });
-                });
-              }
-            }
-            
-            // Disable controls FIRST to prevent camera conflicts during transition
-            (window as any).disableGalacticSystemControls = true;
-            
-            // Stop any orbital tracking when entering planetary view
-            if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new Vector3(0, 0, 0), 1, null, false);
-            }
-            
-            // Switch to planetary view - let PlanetaryView handle camera positioning
-            setCurrentView('planetary');
-            setSelectedSpaceFeature(null); // Clear space feature when entering planetary view
-            setSelectedFleet(null); // Clear fleet when entering planetary view
-          } else {
-            console.log(`${selectedPlanet.name} is a ${selectedPlanet.type} - no surface to explore`);
-          }
+      // F: enter planetary surface view
+      if ((event.key === 'f' || event.key === 'F') && currentView === 'system' && selectedPlanet) {
+        event.preventDefault();
+        if (selectedPlanet.type !== 'gas_giant' && selectedPlanet.type !== 'frost_giant') {
+          enterPlanetary();
         }
       }
 
-      // Handle Enter key for orbital tracking
-      if (event.key === 'Enter') {
-        if (currentView === 'system' && selectedPlanet && !isSearching && !isSearchingSpaceFeatures) {
+      // Enter in system view: start orbital tracking
+      if (event.key === 'Enter' && currentView === 'system' && !isSearching && !isSearchingSpaceFeatures) {
+        if (selectedPlanet) {
           event.preventDefault();
-
-          // Deselect space feature if one is selected and stop its tracking
           if (selectedSpaceFeature) {
-            console.log('Deselecting space feature due to planet tracking');
-            if ((window as any).homeToSpaceFeature) {
-              (window as any).homeToSpaceFeature(null, 0, false);
-            }
+            cameraActions.homeToSpaceFeature?.(null, 0, false);
             setSelectedSpaceFeature(null);
           }
-
-          // Enable orbital tracking for selected planet
-          if ((window as any).homeToPlanet) {
-            const planetIndex = currentSystem?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) || 0;
-            const planetDataWithIndex = { ...selectedPlanet, index: planetIndex };
-            (window as any).homeToPlanet(selectedPlanet.position, Math.max(selectedPlanet.radius * 0.6, 1), planetDataWithIndex, true);
-            console.log(`Starting orbital tracking for ${selectedPlanet.name}`);
-          }
-        }
-
-        if (currentView === 'system' && selectedSpaceFeature && !isSearching && !isSearchingSpaceFeatures) {
+          const { currentSystem: sys } = useGameView.getState();
+          const planetIndex = sys?.planets?.findIndex((p: any) => p.id === selectedPlanet.id) ?? 0;
+          cameraActions.homeToPlanet?.(
+            selectedPlanet.position,
+            Math.max(selectedPlanet.radius * 0.6, 1),
+            { ...selectedPlanet, index: planetIndex },
+            true
+          );
+        } else if (selectedSpaceFeature) {
           event.preventDefault();
-
-          // Deselect planet if one is selected and stop its tracking
           if (selectedPlanet) {
-            console.log('Deselecting planet due to space feature tracking');
-            if ((window as any).homeToPlanet) {
-              (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
-            }
+            cameraActions.homeToPlanet?.(new Vector3(0, 0, 0), 1, null, false);
             setSelectedPlanet(null);
           }
-
-          // Enable orbital tracking for selected space feature
-          if ((window as any).homeToSpaceFeature) {
-            const trackingDistance = SPACE_FEATURE_TRACKING_DISTANCE;
-            (window as any).homeToSpaceFeature(selectedSpaceFeature, trackingDistance, true);
-            console.log(`Starting orbital tracking for ${selectedSpaceFeature.name} via Enter key`);
-          }
+          cameraActions.homeToSpaceFeature?.(selectedSpaceFeature, SPACE_FEATURE_TRACKING_DISTANCE, true);
         }
       }
     };
 
     document.addEventListener('keydown', handleSystemNavigation);
     return () => document.removeEventListener('keydown', handleSystemNavigation);
-  }, [selectedStar, currentView, systemCache, selectedPlanet, isSearching, isSearchingSpaceFeatures, currentSystem]);
-
-  // Planet search function for system view
-  const searchPlanet = (planetName: string) => {
-    if (currentView === 'system' && currentSystem?.planets) {
-      const planet = currentSystem.planets.find((p: any) => 
-        p.name.toLowerCase().includes(planetName.toLowerCase())
-      );
-
-      if (planet) {
-        setSelectedPlanet(planet);
-        console.log(`Found and selected planet: ${planet.name}`);
-        return planet;
-      }
-    }
-    return null;
-  };
-
-  // Space feature search function for system view
-  const searchSpaceFeature = (featureName: string) => {
-    if (currentView === 'system' && currentSystem?.spaceFeatures) {
-      const feature = currentSystem.spaceFeatures.find((f: any) => 
-        f.name.toLowerCase().includes(featureName.toLowerCase())
-      );
-
-      if (feature) {
-        setSelectedSpaceFeature(feature);
-        console.log(`Found and selected space feature: ${feature.name}`);
-        return feature;
-      }
-    }
-    return null;
-  };
-
-  // Surface feature search function for planetary view
-  const searchSurfaceFeature = (featureName: string) => {
-    if (currentView === 'planetary' && selectedPlanet?.surfaceFeatures) {
-      const feature = selectedPlanet.surfaceFeatures.find((f: any) => 
-        f.name.toLowerCase().includes(featureName.toLowerCase())
-      );
-
-      if (feature) {
-        setSelectedFeature(feature);
-        console.log(`Found and selected surface feature: ${feature.name}`);
-        return feature;
-      }
-    }
-    return null;
-  };
+  }, [selectedStar, currentView, selectedPlanet, selectedSpaceFeature, selectedNebula,
+      selectedFleet, selectedFeature, selectedArmy, isSearching, isSearchingSpaceFeatures,
+      enterSystem, exitSystem, enterPlanetary, exitPlanetary, getCachedSystem, setCachedSystem]);
 
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      {/* View transition overlay — opacity driven directly via ref, not React state */}
+      <div ref={overlayRef} style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'black',
+        opacity: 0,
+        pointerEvents: 'none',
+        zIndex: 9999,
+      }} />
+
       {/* Planet Search UI for System View */}
       {currentView === 'system' && (
         <>
@@ -1065,24 +791,16 @@ function App() {
                     <button
                       key={planet.id}
                       onClick={() => {
-                        // Deselect space feature if one is selected and stop its tracking
+                        const { cameraActions: ca } = useGameView.getState();
                         if (selectedSpaceFeature) {
-                          console.log('Deselecting space feature due to planet menu selection');
-                          if ((window as any).homeToSpaceFeature) {
-                            (window as any).homeToSpaceFeature(null, 0, false);
-                          }
+                          ca.homeToSpaceFeature?.(null, 0, false);
                           setSelectedSpaceFeature(null);
                         }
-                        
                         setSelectedPlanet(planet);
                         setIsSearching(false);
-
-                        // Auto-start orbital tracking for selected planet
                         setTimeout(() => {
-                          if ((window as any).homeToPlanet) {
-                            const planetDataWithIndex = { ...planet, index: planetIndex };
-                            (window as any).homeToPlanet(new Vector3(0, 0, 0), Math.max(planet.radius * 0.6, 1), planetDataWithIndex, true);
-                          }
+                          const { cameraActions: cam } = useGameView.getState();
+                          cam.homeToPlanet?.(new Vector3(0, 0, 0), Math.max(planet.radius * 0.6, 1), { ...planet, index: planetIndex }, true);
                         }, 100);
                       }}
                       style={{
@@ -1287,35 +1005,18 @@ function App() {
                     <button
                       key={feature.id}
                       onClick={() => {
-                        // Toggle selection: if already selected, deselect it
+                        const { cameraActions: ca } = useGameView.getState();
                         if (selectedSpaceFeature && selectedSpaceFeature.id === feature.id) {
-                          console.log('Deselecting space feature (menu toggle)');
-                          // Stop space feature orbital tracking
-                          if ((window as any).homeToSpaceFeature) {
-                            (window as any).homeToSpaceFeature(null, 0, false);
-                          }
+                          ca.homeToSpaceFeature?.(null, 0, false);
                           setSelectedSpaceFeature(null);
                         } else {
-                          console.log('Selecting space feature (menu)');
-                          
-                          // Deselect planet if one is selected and stop its tracking
                           if (selectedPlanet) {
-                            console.log('Deselecting planet due to space feature selection');
-                            if ((window as any).homeToPlanet) {
-                              (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
-                            }
+                            ca.homeToPlanet?.(new Vector3(0, 0, 0), 1, null, false);
                             setSelectedPlanet(null);
                           }
-                          
                           setSelectedSpaceFeature(feature);
-
-                          // Auto-start orbital tracking for selected space feature (using dedicated function)
                           setTimeout(() => {
-                            if ((window as any).homeToSpaceFeature) {
-                              const trackingDistance = SPACE_FEATURE_TRACKING_DISTANCE;
-                              (window as any).homeToSpaceFeature(feature, trackingDistance, true);
-                              console.log(`Starting orbital tracking for space feature: ${feature.name}`);
-                            }
+                            useGameView.getState().cameraActions.homeToSpaceFeature?.(feature, SPACE_FEATURE_TRACKING_DISTANCE, true);
                           }, 100);
                         }
                         setIsSearchingSpaceFeatures(false);
@@ -1532,14 +1233,9 @@ function App() {
                         console.log('Selecting surface feature from menu:', feature.name);
                         setSelectedFeature(feature);
                         
-                        // Auto-start feature tracking (similar to Enter key behavior)
                         setTimeout(() => {
-                          if ((window as any).homeToFeature) {
-                            const planetRadius = selectedPlanet?.radius ? selectedPlanet.radius * 15 : 10;
-                            const trackingDistance = planetRadius * 0.9;
-                            (window as any).homeToFeature(feature, trackingDistance);
-                            console.log(`Starting surface feature tracking for: ${feature.name}`);
-                          }
+                          const planetRadius = selectedPlanet?.radius ? selectedPlanet.radius * 15 : 10;
+                          useGameView.getState().cameraActions.homeToFeature?.(feature, planetRadius * 0.9);
                         }, 100);
                         
                         setIsSearchingSurfaceFeatures(false);
@@ -1702,35 +1398,75 @@ function App() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` : 
+          📍 {currentView === 'galactic' ? `Galactic View • ${stars.length} Stars` :
                currentView === 'system' ? `System View • ${currentSystem?.star?.name || lastVisitedStar?.name || 'Unknown'}` :
-               `Planetary View • ${selectedPlanet?.name || 'Unknown'}`} • Left-click objects, Right-click+drag camera
-          {currentView === 'system' && (
-            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-              {selectedPlanet 
-                ? `Selected: ${selectedPlanet.name} • F: explore surface (${selectedPlanet.surfaceFeatures?.length || 0} features) • Enter: orbital track • Click: Deselect • Backspace: galactic view`
-                : selectedSpaceFeature
-                ? `Selected: ${selectedSpaceFeature.name} • Enter: orbital track • Reclick object: deselect • Backspace: galactic view`
-                : 'Click planets or space features to inspect • Select Planet / Select Space Feature buttons • Backspace: galactic view'
-              }
+               `Planetary View • ${selectedPlanet?.name || 'Unknown'}`}
+          {currentView === 'system' && selectedPlanet && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+              {selectedPlanet.name} • {selectedPlanet.surfaceFeatures?.length || 0} surface features
             </div>
           )}
+          {currentView === 'system' && selectedSpaceFeature && !selectedPlanet && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+              {selectedSpaceFeature.name}
+            </div>
+          )}
+          {currentView === 'planetary' && selectedFeature && (
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
+              {selectedFeature.name}
+            </div>
+          )}
+        </div>
+      )}
 
-          {currentView === 'planetary' && (
-            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-              {selectedFeature 
-                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Enter: deselect • Backspace: system view`
-                : 'Click surface features to inspect, and hit Enter to lock. Enter again to unlock • Backspace: return to system view'
-              }
-            </div>
+      {/* Controls reference — bottom left */}
+      {!showSelector && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          background: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          padding: '10px 14px',
+          borderRadius: '6px',
+          border: '1px solid #333',
+          pointerEvents: 'none',
+          zIndex: 10,
+          fontSize: '12px',
+          lineHeight: '1.7',
+        }}>
+          {currentView === 'galactic' && (
+            <>
+              <div style={{ fontWeight: 600, marginBottom: '4px', opacity: 0.6, fontSize: '11px', letterSpacing: '0.05em' }}>GALACTIC VIEW</div>
+              <div><span style={{ opacity: 0.5 }}>WASD / Arrows</span> — move camera</div>
+              <div><span style={{ opacity: 0.5 }}>Shift</span> — boost</div>
+              <div><span style={{ opacity: 0.5 }}>Right-drag</span> — rotate</div>
+              <div><span style={{ opacity: 0.5 }}>Click star</span> — select</div>
+              <div><span style={{ opacity: 0.5 }}>Enter</span> — enter system</div>
+              <div><span style={{ opacity: 0.5 }}>Escape</span> — deselect</div>
+            </>
+          )}
+          {currentView === 'system' && (
+            <>
+              <div style={{ fontWeight: 600, marginBottom: '4px', opacity: 0.6, fontSize: '11px', letterSpacing: '0.05em' }}>SYSTEM VIEW</div>
+              <div><span style={{ opacity: 0.5 }}>WASD / Arrows</span> — move camera</div>
+              <div><span style={{ opacity: 0.5 }}>Shift</span> — boost</div>
+              <div><span style={{ opacity: 0.5 }}>Right-drag</span> — rotate</div>
+              <div><span style={{ opacity: 0.5 }}>Click planet</span> — select</div>
+              <div><span style={{ opacity: 0.5 }}>Enter</span> — orbital lock</div>
+              <div><span style={{ opacity: 0.5 }}>F</span> — explore surface</div>
+              <div><span style={{ opacity: 0.5 }}>Escape</span> — deselect</div>
+              <div><span style={{ opacity: 0.5 }}>Backspace</span> — galactic view</div>
+            </>
           )}
           {currentView === 'planetary' && (
-            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-              {selectedFeature 
-                ? `Selected: ${selectedFeature.name} (${selectedFeature.type}) • Click background: deselect • Backspace: system view`
-                : `${selectedPlanet?.surfaceFeatures?.length || 0} surface features • Backspace: system view`
-              }
-            </div>
+            <>
+              <div style={{ fontWeight: 600, marginBottom: '4px', opacity: 0.6, fontSize: '11px', letterSpacing: '0.05em' }}>PLANETARY VIEW</div>
+              <div><span style={{ opacity: 0.5 }}>Left-drag</span> — rotate globe</div>
+              <div><span style={{ opacity: 0.5 }}>Click feature</span> — select</div>
+              <div><span style={{ opacity: 0.5 }}>Escape</span> — deselect</div>
+              <div><span style={{ opacity: 0.5 }}>Backspace</span> — system view</div>
+            </>
           )}
         </div>
       )}
@@ -1790,10 +1526,6 @@ function App() {
                   selectedStar.position[2]**2
                 ).toFixed(1)} ly</p>
               </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Press Enter to explore system</p>
-                <p>Click Again to deselect</p>
-              </div>
             </div>
           )}
 
@@ -1815,15 +1547,12 @@ function App() {
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Temperature:</span> {currentSystem.star.temperature?.toFixed(0)} K</p>
                 <p><span style={{ color: getStarDisplayColor(currentSystem.star.spectralClass) }}>Planets:</span> {currentSystem?.planets?.length || 0}</p>
               </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Star information always visible in system view</p>
-              </div>
             </div>
           )}
 
           {/* System view - planet information */}
           {currentView === 'system' && selectedPlanet && (
-            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ marginTop: (window as any).systemStarSelected ? '280px' : '0px' }}>
+            <div className="absolute top-4 right-4 bg-black/90 text-white p-4 rounded-lg min-w-72 backdrop-blur border border-gray-600" style={{ marginTop: '280px' }}>
               <h3 className="text-lg font-bold" style={{ color: getPlanetColor(selectedPlanet.type) }}>{selectedPlanet.name}</h3>
               <p className="text-sm text-gray-300 mb-2 capitalize">{selectedPlanet.type.replace('_', ' ')}</p>
               <div className="space-y-1 text-sm">
@@ -1839,9 +1568,6 @@ function App() {
                     <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
                   </div>
                 )}
-              </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Press Enter to focus camera • Escape to deselect</p>
               </div>
             </div>
           )}
@@ -1880,9 +1606,6 @@ function App() {
                 )}
                 <p><span style={{ color: getFeatureTypeColor(selectedSpaceFeature.type) }}>Location:</span> Orbital distance: {selectedSpaceFeature.orbitRadius?.toFixed(1) || 'N/A'} AU</p>
               </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Click feature again to deselect</p>
-              </div>
             </div>
           )}
 
@@ -1905,9 +1628,6 @@ function App() {
                     <p className="text-xs text-gray-400">{selectedPlanet.atmosphere.join(', ')}</p>
                   </div>
                 )}
-              </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Backspace to return to system view</p>
               </div>
             </div>
           )}
@@ -1957,9 +1677,6 @@ function App() {
                     <p className="text-xs text-gray-400">{selectedFeature.description}</p>
                   </div>
                 )}
-              </div>
-              <div className="mt-3 text-xs text-gray-400">
-                <p>Escape to deselect</p>
               </div>
             </div>
           )}

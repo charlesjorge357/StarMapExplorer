@@ -8,7 +8,7 @@ import { getPlanetTexturePath } from '../../hooks/useLazyTexture';
 import { SystemGenerator } from '../../lib/universe/SystemGenerator';
 import { NebulaScreenTint } from './NebulaScreenTint';
 import { useUniverse } from '../../lib/stores/useUniverse';
-import { UnsignedInt248Type } from 'three';
+import { useGameView } from '../../lib/stores/useGameView';
 
 interface PlanetaryViewProps {
   planet: any;
@@ -237,7 +237,7 @@ export function PlanetaryView({
       console.log(`Setting up Google Earth camera for ${planet.name}`);
 
       // Ensure CameraController movement stays disabled in planetary view
-      (window as any).disableGalacticSystemControls = true;
+      useGameView.getState().setControlsDisabled(true);
       
       // Position camera close to planet surface
       const distance = planetRadius * 1.8;
@@ -255,7 +255,7 @@ export function PlanetaryView({
 
     // Re-enable controls when leaving planetary view
     return () => {
-      (window as any).disableGalacticSystemControls = false;
+      useGameView.getState().setControlsDisabled(false);
       console.log('Re-enabled external camera controls');
     };
   }, [camera, planet, planetRadius]);
@@ -456,7 +456,7 @@ export function PlanetaryView({
                 
                 // Persist army position in universe store
                 if (universeStore?.updateArmyPosition && system?.id) {
-                  universeStore.updateArmyPosition(system.id, planet.id, armyId, movement.targetPosition);
+                  universeStore.updateArmyPosition(planet.id, armyId, movement.targetPosition);
                 }
                 
                 console.log(`Army ${armyId} reached destination:`, movement.targetPosition);

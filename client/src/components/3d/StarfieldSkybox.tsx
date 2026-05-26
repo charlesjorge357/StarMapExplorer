@@ -79,7 +79,7 @@ export function StarfieldSkybox({ stars, scale = 0.1 }: StarfieldSkyboxProps) {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[null, null, stars.length]}
+      args={[undefined, undefined, stars.length]}
       renderOrder={-1000}
       raycast={() => null}
     >

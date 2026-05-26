@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Nebula } from '../../../shared/schema';
+import { Nebula } from '@shared/schema';
 
 interface NebulaDetailsProps {
   nebula: Nebula;

@@ -6,7 +6,7 @@ import { useUniverse } from '../../lib/stores/useUniverse';
 import { useCamera } from '../../lib/stores/useCamera';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
 import { NebulaMesh } from './NebulaMesh';
-import { Star, Nebula } from 'shared/schema';
+import { Star, Nebula } from '@shared/schema';
 
 interface StarMeshProps {
   star: Star;
@@ -90,6 +90,7 @@ function StarMesh({ star, onClick, isSelected }: StarMeshProps) {
 export function GalacticView() {
   const { universeData, selectedStar, selectStar, setScope } = useUniverse();
   const { transitionTo } = useCamera();
+  const { camera } = useThree();
   const stars = universeData?.stars || [];
 
   const handleBackgroundClick = () => {
@@ -108,7 +109,6 @@ export function GalacticView() {
     selectStar(star);
     
     // Get current camera state for smooth transition
-    const { camera } = useThree.getState();
     const currentPos = camera.position.clone();
     const currentTarget = new THREE.Vector3(0, 0, 0);
     

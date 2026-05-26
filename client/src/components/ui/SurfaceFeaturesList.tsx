@@ -1,7 +1,7 @@
 // client/src/components/SurfaceFeaturesList.tsx
 
 import React from 'react';
-import { SurfaceFeature } from 'shared/schema';
+import { SurfaceFeature } from '@shared/schema';
 
 interface SurfaceFeaturesListProps {
   features: SurfaceFeature[];

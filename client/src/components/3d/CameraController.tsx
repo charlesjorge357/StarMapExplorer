@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import { Vector3 } from 'three';
 import { useCamera } from '../../lib/stores/useCamera';
-import { useUniverse } from '../../lib/stores/useUniverse';
+import { useGameView } from '../../lib/stores/useGameView';
 
 const MOVEMENT_SPEED = 8.0; // Much faster base speed
 const BOOST_MULTIPLIER_MIN = 3; // Starting boost
@@ -14,7 +14,7 @@ const MOUSE_SENSITIVITY = 0.002;
 export function CameraController() {
   const { camera, gl } = useThree();
   const { position, target, isTransitioning, setPosition, setTarget } = useCamera();
-  const { currentScope } = useUniverse();
+  const currentView = useGameView(s => s.currentView);
 
   const [sub, get] = useKeyboardControls();
   const isLockedRef = useRef(false);
@@ -42,20 +42,10 @@ export function CameraController() {
       return;
     }
 
-    // Disable orbital tracking only - reset rotation but keep position
+    // Disable orbital tracking only - clear refs, don't snap camera
     if (enableOrbitalTracking === false && !planetData) {
       isOrbitalTrackingRef.current = false;
       orbitalTargetRef.current = null;
-
-      // Reset camera rotation to look at star (0,0,0) but keep current position
-      camera.rotation.set(0, 0, 0);
-      camera.rotation.order = 'YXZ';
-      camera.up.set(0, 1, 0);
-      camera.lookAt(0, 0, 0); // Look at the central star
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
-
-      console.log('Stopped orbital tracking - reset rotation to look at star');
       return;
     }
 
@@ -136,20 +126,10 @@ export function CameraController() {
       return;
     }
 
-    // Disable orbital tracking only - reset rotation but keep position
+    // Disable orbital tracking only - clear refs, don't snap camera
     if (enableOrbitalTracking === false && !spaceFeature) {
       isSpaceFeatureTrackingRef.current = false;
       spaceFeatureTargetRef.current = null;
-
-      // Reset camera rotation to look at star (0,0,0) but keep current position
-      camera.rotation.set(0, 0, 0);
-      camera.rotation.order = 'YXZ';
-      camera.up.set(0, 1, 0);
-      camera.lookAt(0, 0, 0); // Look at the central star
-      camera.updateMatrix();
-      camera.updateMatrixWorld(true);
-
-      console.log('Stopped space feature orbital tracking - reset rotation to look at star');
       return;
     }
 
@@ -165,7 +145,8 @@ export function CameraController() {
     if (!camera) return;
 
     // Don't reset camera if we're in planetary view or controls are disabled
-    if (currentScope === 'planetary' || (window as any).disableGalacticSystemControls) {
+    const { currentView: view, controlsDisabled } = useGameView.getState();
+    if (view === 'planetary' || controlsDisabled) {
       console.log('Skipping camera reset - in planetary view or controls disabled');
       return;
     }
@@ -205,14 +186,14 @@ export function CameraController() {
 
   // Clear orbital tracking when leaving system view
   useEffect(() => {
-    if (currentScope !== 'system' && (isOrbitalTrackingRef.current || isSpaceFeatureTrackingRef.current)) {
+    if (currentView !== 'system' && (isOrbitalTrackingRef.current || isSpaceFeatureTrackingRef.current)) {
       console.log('Clearing orbital tracking - left system view');
       isOrbitalTrackingRef.current = false;
       orbitalTargetRef.current = null;
       isSpaceFeatureTrackingRef.current = false;
       spaceFeatureTargetRef.current = null;
     }
-  }, [currentScope]);
+  }, [currentView]);
 
   // Set camera to look at specific star with offset
   const setCameraLookingAtStar = (star: any) => {
@@ -234,17 +215,21 @@ export function CameraController() {
     console.log(`Camera positioned at ${cameraPosition.toArray().map(n => n.toFixed(1))} looking at ${star.name}`);
   };
 
-  // Expose camera functions to window for external access
+  // Register camera functions in the game view store
   useEffect(() => {
-    (window as any).homeToPlanet = homeToPlanet;
-    (window as any).homeToSpaceFeature = homeToSpaceFeature;
-    (window as any).resetToStar = resetToStar;
-    (window as any).setCameraLookingAtStar = setCameraLookingAtStar;
+    useGameView.getState().registerCameraActions({
+      homeToPlanet,
+      homeToSpaceFeature,
+      resetToStar,
+      setCameraLookingAtStar,
+    });
     return () => {
-      delete (window as any).homeToPlanet;
-      delete (window as any).homeToSpaceFeature;
-      delete (window as any).resetToStar;
-      delete (window as any).setCameraLookingAtStar;
+      useGameView.getState().registerCameraActions({
+        homeToPlanet: null,
+        homeToSpaceFeature: null,
+        resetToStar: null,
+        setCameraLookingAtStar: null,
+      });
     };
   }, [camera]);
 
@@ -254,7 +239,7 @@ export function CameraController() {
 
     const handleMouseMove = (event: MouseEvent) => {
       // Only rotate camera during right-click drag
-      if (!isRightClickDragRef.current || isTransitioning || (window as any).disableGalacticSystemControls)
+      if (!isRightClickDragRef.current || isTransitioning || useGameView.getState().controlsDisabled)
         return;
         
 
@@ -272,7 +257,7 @@ export function CameraController() {
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 2 && !(window as any).disableGalacticSystemControls) { // Right click
+      if (event.button === 2 && !useGameView.getState().controlsDisabled) { // Right click
         event.preventDefault();
         isRightClickDragRef.current = true;
         document.body.style.cursor = 'grabbing';
@@ -306,30 +291,34 @@ export function CameraController() {
   }, [camera, gl.domElement, isTransitioning]);
 
 
-  const previousScopeRef = useRef<string>(currentScope);
-  // Set camera position based on scope
+  // Subscribe synchronously so camera is pre-positioned BEFORE Three.js renders
+  // the new scene — eliminates the one-frame flash on view transitions.
   useEffect(() => {
-    if (currentScope === 'system' && previousScopeRef.current === 'galactic') {
-      // Set extended camera range for system view
-      camera.near = 0.1;
-      camera.far = 500000;
-      camera.updateProjectionMatrix();
-
-      // Only set initial position if camera is too close to origin
-      const currentDistance = camera.position.length();
-      if (currentDistance < 5) {
-        camera.position.set(0, 20, 200);
-        camera.lookAt(0, 0, 0);
-        console.log('Set system view camera position:', camera.position);
+    const unsubscribe = useGameView.subscribe(
+      s => s.currentView,
+      (view, prevView) => {
+        if (view === 'system' && prevView === 'galactic') {
+          camera.near = 0.1;
+          camera.far = 500000;
+          camera.updateProjectionMatrix();
+          camera.position.set(0, 20, 200);
+          camera.lookAt(0, 0, 0);
+          camera.updateMatrix();
+          camera.updateMatrixWorld(true);
+        } else if (view === 'galactic') {
+          camera.near = 0.1;
+          camera.far = 500000;
+          camera.updateProjectionMatrix();
+        }
       }
-    }
-    previousScopeRef.current = currentScope;
-  }, [camera, currentScope]);
+    );
+    return unsubscribe;
+  }, [camera]);
 
   // Handle keyboard movement
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     // CRITICAL: Check if another component has taken camera control
-    if ((window as any).disableGalacticSystemControls) {
+    if (useGameView.getState().controlsDisabled) {
       // Completely skip all camera updates when disabled
       return;
     }
@@ -352,11 +341,11 @@ export function CameraController() {
 
     // Handle orbital tracking - copy planet's movement data directly to camera
     // Disable orbital tracking in planetary view to prevent camera conflicts
-    if (isOrbitalTrackingRef.current && orbitalTargetRef.current && currentScope !== 'planetary') {
+    if (isOrbitalTrackingRef.current && orbitalTargetRef.current && useGameView.getState().currentView !== 'planetary') {
       const planetData = orbitalTargetRef.current;
 
-      // Get current system to check for frozen time
-      const currentSystem = (window as any).currentSystemRef?.current;
+      // Get current system and frozen time from store
+      const { currentSystem, frozenTime } = useGameView.getState();
 
       // Get planet index from current system data to ensure correct position
       let planetIndex = planetData.index || 0;
@@ -370,7 +359,7 @@ export function CameraController() {
       }
 
       // Use frozen time if available, otherwise use current time
-      const time = currentSystem?.frozenTime ? currentSystem.frozenTime * 0.0001 : Date.now() * 0.0001;
+      const time = frozenTime ? frozenTime * 0.0001 : Date.now() * 0.0001;
 
       // CRITICAL: Match the exact angle calculation from SystemView
       // Must use totalPlanets, not hardcoded 8, to match the visual positioning
@@ -416,7 +405,7 @@ export function CameraController() {
     }
 
     // Handle space feature orbital tracking
-    if (isSpaceFeatureTrackingRef.current && spaceFeatureTargetRef.current && currentScope !== 'planetary') {
+    if (isSpaceFeatureTrackingRef.current && spaceFeatureTargetRef.current && useGameView.getState().currentView !== 'planetary') {
       const spaceFeature = spaceFeatureTargetRef.current;
       const time = Date.now() * 0.0001;
       let featurePosition = new Vector3(0, 0, 0);
@@ -435,7 +424,7 @@ export function CameraController() {
 
       if (spaceFeature.orbitTarget === 'planet' && spaceFeature.orbitTargetId) {
         // Space feature orbiting a planet - need to get current system data
-        const currentSystem = (window as any).currentSystemRef?.current;
+        const currentSystem = useGameView.getState().currentSystem;
         if (currentSystem && currentSystem.planets) {
           const targetPlanet = currentSystem.planets.find((p: any) => p.id === spaceFeature.orbitTargetId);
           
@@ -503,8 +492,8 @@ export function CameraController() {
           orbitRadius: spaceFeature.orbitRadius,
           orbitSpeed: spaceFeature.orbitSpeed,
           orbitOffset: spaceFeature.orbitOffset,
-          currentSystem: !!(window as any).currentSystemRef?.current,
-          systemPlanets: (window as any).currentSystemRef?.current?.planets?.length || 0
+          currentSystem: !!useGameView.getState().currentSystem,
+          systemPlanets: useGameView.getState().currentSystem?.planets?.length || 0
         });
         isSpaceFeatureTrackingRef.current = false;
         spaceFeatureTargetRef.current = null;
@@ -583,11 +572,11 @@ export function CameraController() {
       .filter(([_, active]) => active)
       .map(([key, _]) => key);
 
-    if (isMoving && !(window as any).disableGalacticSystemControls) {
+    if (isMoving && !useGameView.getState().controlsDisabled) {
       // Debug camera movement conflicts
       if (Math.random() < 0.005) { // 0.5% chance to log
         console.log('CameraController movement update:', {
-          scope: currentScope,
+          scope: useGameView.getState().currentView,
           position: camera.position.toArray().map(n => n.toFixed(2)),
           isOrbitalTracking: isOrbitalTrackingRef.current,
           activeControls

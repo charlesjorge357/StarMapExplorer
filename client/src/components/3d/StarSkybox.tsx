@@ -68,7 +68,7 @@ export function StarSkybox({ count = 5000, radius = 800, starPosition = [0, 0, 0
   return (
     <instancedMesh
       ref={meshRef}
-      args={[null, null, count]}
+      args={[undefined, undefined, count]}
       position={[0, 0, 0]}
       renderOrder={-1000}
       raycast={() => null}

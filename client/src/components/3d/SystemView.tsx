@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
+import { useGameView } from '../../lib/stores/useGameView';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { StarGenerator } from '../../lib/universe/StarGenerator';
@@ -16,7 +17,7 @@ import { CometTrail } from './CometTrail';
 import { SpaceFeatureMarker } from './SpaceFeatureMarker';
 import { FleetMarker } from './FleetMarker';
 import { FleetInfoPanel } from '../ui/FleetInfoPanel';
-import { SpaceFeature } from '../../../../shared/schema';
+import { SpaceFeature, Planet, AsteroidBelt, SurfaceFeature, Faction } from '../../../../shared/schema';
 
 function MoonMesh({ 
   moon, 
@@ -273,8 +274,8 @@ function PlanetMesh({
   useFrame((state) => {
     if (planetRef.current) {
       // Use frozen time if available, otherwise use Date.now()
-      const currentSystem = (window as any).currentSystem;
-      const simulationTime = currentSystem?.frozenTime || Date.now();
+      const { frozenTime } = useGameView.getState();
+      const simulationTime = frozenTime || Date.now();
       const time = simulationTime * 0.0001;
       const angle = time * planet.orbitSpeed + index * (Math.PI * 2 / totalPlanets);
       const x = Math.cos(angle) * planet.orbitRadius * 2;
@@ -315,26 +316,15 @@ function PlanetMesh({
  const handleClick = (event: any) => {
     event.stopPropagation();
     if (isSelected) {
-      // Stop orbital tracking when deselecting
-      if ((window as any).homeToPlanet) {
-        (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
-      }
+      useGameView.getState().cameraActions.homeToPlanet?.(new THREE.Vector3(0, 0, 0), 1, null, false);
       console.log(`Deselected planet: ${planet.name}`);
       onPlanetClick(null);
     } else {
       console.log(`Selected planet: ${planet.name}`);
-      
-      // Deselect space feature if one is selected and stop its tracking
       if (selectedSpaceFeature) {
-        console.log('Deselecting space feature due to planet selection (3D click)');
-        if ((window as any).homeToSpaceFeature) {
-          (window as any).homeToSpaceFeature(null, 0, false);
-        }
-        if (onSpaceFeatureClick) {
-          onSpaceFeatureClick(null);
-        }
+        useGameView.getState().cameraActions.homeToSpaceFeature?.(null, 0, false);
+        onSpaceFeatureClick?.(null);
       }
-      
       onPlanetClick(planet);
     }
   };
@@ -449,15 +439,6 @@ export function SystemView({
   }
   const selectStar = universeStore?.selectStar || (() => {});
 
-  // Expose current system data to window for space feature orbital tracking
-  useEffect(() => {
-    if (system) {
-      (window as any).currentSystemRef = { current: system };
-    }
-    return () => {
-      delete (window as any).currentSystemRef;
-    };
-  }, [system]);
 
   const outermostOrbit = useMemo(() => {
     if (!system || !system.planets || system.planets.length === 0) return 0;
@@ -616,9 +597,9 @@ export function SystemView({
   }, []);
 
   // Use planets from the cached system with null checks
-  const planets = system?.planets || [];
-  const asteroidBelts = system?.asteroidBelts || [];
-  const spaceFeatures = system?.spaceFeatures || [];
+  const planets: Planet[] = system?.planets || [];
+  const asteroidBelts: AsteroidBelt[] = system?.asteroidBelts || [];
+  const spaceFeatures: SpaceFeature[] = system?.spaceFeatures || [];
 
   // Optimized lazy texture loading - only load textures as needed
   const planetTextures = useMemo(() => {
@@ -718,10 +699,7 @@ export function SystemView({
       // Toggle selection: if already selected, deselect it
       if (selectedSpaceFeature && selectedSpaceFeature.id === feature.id) {
         console.log('Deselecting space feature (toggle)');
-        // Stop space feature orbital tracking
-        if ((window as any).homeToSpaceFeature) {
-          (window as any).homeToSpaceFeature(null, 0, false);
-        }
+        useGameView.getState().cameraActions.homeToSpaceFeature?.(null, 0, false);
         if (propOnSpaceFeatureClick) {
           propOnSpaceFeatureClick(null);
         } else {
@@ -732,10 +710,7 @@ export function SystemView({
         
         // Deselect planet if one is selected and stop its tracking
         if (selectedPlanet) {
-          console.log('Deselecting planet due to space feature selection (3D click)');
-          if ((window as any).homeToPlanet) {
-            (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
-          }
+          useGameView.getState().cameraActions.homeToPlanet?.(new THREE.Vector3(0, 0, 0), 1, null, false);
           onPlanetClick(null);
         }
         
@@ -747,7 +722,7 @@ export function SystemView({
       }
     } catch (error) {
       console.error('Error in handleSpaceFeatureClick:', error);
-      console.error('Error stack:', error.stack);
+      console.error('Error stack:', (error as Error).stack);
     }
   };
 
@@ -768,11 +743,7 @@ export function SystemView({
     
     // Only deselect if not clicking on orbital disk
     if (selectedPlanet) {
-      console.log('Deselecting planet');
-      // Stop orbital tracking
-      if ((window as any).homeToPlanet) {
-        (window as any).homeToPlanet(new THREE.Vector3(0, 0, 0), 1, null, false);
-      }
+      useGameView.getState().cameraActions.homeToPlanet?.(new THREE.Vector3(0, 0, 0), 1, null, false);
       onPlanetClick(null);
     }
 
@@ -888,7 +859,7 @@ export function SystemView({
     <group>
       {/* Comet mesh */}
       {showComet && (
-        <mesh ref={cometRef} position={cometDataRef.current.position}>
+        <mesh ref={cometRef} position={cometDataRef.current?.position ?? [0, 0, 0]}>
           <sphereGeometry args={[0.2, 8, 8]} />
           <meshStandardMaterial color="#FFFFFF" emissive='#FFFFFF' emissiveIntensity={2.0} metalness={0.1}/>
         </mesh>

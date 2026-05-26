@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { Nebula } from 'shared/schema';
+import { Nebula } from '@shared/schema';
 
 interface NebulaMeshProps {
   nebula: Nebula;

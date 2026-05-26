@@ -30,13 +30,44 @@ export const MusicController: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-800 text-white rounded-md flex flex-col items-center gap-2">
-      <div>🎵 Now Playing: {currentTrackName}</div>
-      <div className="flex gap-4">
-        <button onClick={playPreviousTrack}>⏮ Prev</button>
-        <button onClick={togglePlay}>{isPlaying ? '⏸ Pause' : '▶️ Play'}</button>
-        <button onClick={playNextTrack}>⏭ Next</button>
-        <button onClick={toggleMute}>{isMuted ? '🔇 Unmute' : '🔊 Mute'}</button>
+    <div style={{
+      background: 'rgba(0, 0, 0, 0.7)',
+      border: '1px solid #333',
+      borderRadius: '6px',
+      padding: '10px 15px',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '13px',
+    }}>
+      <div style={{ opacity: 0.85 }}>🎵 Now Playing: {currentTrackName}</div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {([
+          { id: 'prev', label: '⏮ Prev', fn: playPreviousTrack },
+          { id: 'play', label: isPlaying ? '⏸ Pause' : '▶️ Play', fn: togglePlay },
+          { id: 'next', label: '⏭ Next', fn: playNextTrack },
+          { id: 'mute', label: isMuted ? '🔇 Unmute' : '🔊 Mute', fn: toggleMute },
+        ] as { id: string; label: string; fn: () => void }[]).map(({ id, label, fn }) => (
+          <button
+            key={id}
+            onClick={fn}
+            style={{
+              background: 'transparent',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+              padding: '4px 10px',
+              cursor: 'pointer',
+              fontSize: '12px',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#aaa'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#555'; }}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   );
