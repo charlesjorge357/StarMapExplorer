@@ -10,6 +10,7 @@ export const ContestedFaction: Faction = {
   population: 0,
   technology: "0",
   influence: 0,
+  color: "#888888",
   allies: [],
   enemies: [],
   goals: [],
@@ -124,15 +125,17 @@ export class FactionGenerator {
     const name = this.generateFactionName(planet);
     const technology = this.generateTechnologyLevel(planet);
     
+    const hue = Math.floor(Math.random() * 360);
     return {
       id: `faction-${planet.id}`,
       name,
       description: `A faction based on the ${planet.type.replace("_", " ")} of ${planet.name}.`,
       leader: this.generateLeaderName(),
       homeworld: planet.name,
-      population: 0, // You can update population later
-      technology, // Planet-based technology level
+      population: 0,
+      technology,
       influence: Math.floor(Math.random() * 100),
+      color: `hsl(${hue}, 80%, 65%)`,
       allies: [],
       enemies: [],
       goals: this.generateGoals(),

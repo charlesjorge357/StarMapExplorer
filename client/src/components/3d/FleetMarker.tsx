@@ -2,361 +2,249 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 import * as THREE from 'three';
-import { useGameView } from '../../lib/stores/useGameView';
-
-//mm yes
 
 interface FleetMarkerProps {
-  fleet: any; // Fleets type from schema
+  fleet: any;
   isSelected?: boolean;
   onFleetClick?: (fleet: any) => void;
   starMass: number;
 }
 
 interface ShipMarkerProps {
-  ship: any; // Ships type from schema
+  ship: any;
   fleetPosition: [number, number, number];
   shipIndex: number;
 }
 
-// Enhanced orbital rotation helper based on your updateOrbitingObject function
-function updateOrbitingObject(
-  mesh: THREE.Object3D,
-  radius: number,
-  angularSpeed: number,
-  time: number,
-  clockwise: boolean = false
-) {
-  const theta = angularSpeed * time;
-  const x = radius * Math.cos(theta);
-  const z = radius * Math.sin(theta); // Using z instead of y for 3D space
-  let dx = -radius * Math.sin(theta);
-  let dz = radius * Math.cos(theta);
-  if (clockwise) {
-    dx = -dx;
-    dz = -dz;
-  }
-  const angle = Math.atan2(dz, dx);
-  mesh.position.set(x, mesh.position.y, z); // Preserve y position
-  mesh.rotation.y = angle; // Rotate around y-axis for 3D
-}
-
 export function ShipMarker({ ship, fleetPosition, shipIndex }: ShipMarkerProps) {
   const shipRef = useRef<Mesh>(null);
-  
-  // Calculate ship orbit parameters
+
   const shipOrbitRadius = useMemo(() => 0.5 + (shipIndex % 3) * 0.3, [shipIndex]);
-  const shipOrbitalSpeed = useMemo(() => {
-    // Use same orbital formula as planets/fleets for consistency
-    return Math.sqrt(1 / Math.max(shipOrbitRadius, 0.1)) * 0.15;
-  }, [shipOrbitRadius]);
+  const shipOrbitalSpeed = useMemo(
+    () => Math.sqrt(1 / Math.max(shipOrbitRadius, 0.1)) * 0.15,
+    [shipOrbitRadius]
+  );
 
   useFrame((state) => {
     if (shipRef.current && fleetPosition) {
-      const time = Date.now() * 0.0001 + shipIndex * (Math.PI * 2 / 8); // Stagger ships
+      const time = Date.now() * 0.0001 + shipIndex * ((Math.PI * 2) / 8);
       const theta = shipOrbitalSpeed * time;
-      
-      // Calculate current and next ship positions for velocity direction
+      const nextTheta = theta + 0.01;
+
       const currentX = shipOrbitRadius * Math.cos(theta);
       const currentZ = shipOrbitRadius * Math.sin(theta);
-      
-      const nextTheta = theta + 0.01; // Small time step for velocity calculation
-      const nextX = shipOrbitRadius * Math.cos(nextTheta);
-      const nextZ = shipOrbitRadius * Math.sin(nextTheta);
-      
-      // Calculate velocity direction (acceleration direction)
-      const velocityX = nextX - currentX;
-      const velocityZ = nextZ - currentZ;
-      
-      // Ship faces its acceleration direction (add π/2 to correct 90-degree offset)
-      const accelerationAngle = Math.atan2(velocityZ, velocityX) + Math.PI / 2;
-      
-      // Apply fleet position offset to get world position  
+      const velocityX = shipOrbitRadius * Math.cos(nextTheta) - currentX;
+      const velocityZ = shipOrbitRadius * Math.sin(nextTheta) - currentZ;
+
       shipRef.current.position.x = fleetPosition[0] + currentX;
       shipRef.current.position.z = fleetPosition[2] + currentZ;
-      shipRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02; // Gentle floating
-      
-      // Rotation corrected: face the direction of acceleration/movement
-      shipRef.current.rotation.y = accelerationAngle;
+      shipRef.current.position.y =
+        Math.sin(state.clock.elapsedTime * 2 + shipIndex * 0.5) * 0.02;
+      shipRef.current.rotation.y = Math.atan2(velocityZ, velocityX) + Math.PI / 2;
     }
   });
 
-  // Ship size based on type
-  const getShipScale = (shipType: string) => {
-    switch (shipType) {
-      case 'fighter_wing':
-      case 'bomber_wing':
-        return 0.08;
-      case 'cruiser':
-      case 'destroyer':
-        return 0.12;
-      case 'carrier':
-      case 'dreadnought':
-        return 0.18;
-      case 'battleship':
-      case 'super_carrier':
-        return 0.25;
-      default:
-        return 0.12;
+  const getShipScale = (type: string) => {
+    switch (type) {
+      case 'fighter_wing': case 'bomber_wing': return 0.08;
+      case 'cruiser': case 'destroyer': return 0.12;
+      case 'carrier': case 'dreadnought': return 0.18;
+      case 'battleship': case 'super_carrier': return 0.25;
+      default: return 0.12;
     }
   };
-
-  // Safe faction access with error handling
-  const shipColor = ship?.faction?.name === 'Contested Zone' ? '#888888' : '#00ffff';
-  const shipEmissive = ship?.faction?.name === 'Contested Zone' ? '#222222' : '#004444';
-  const scale = getShipScale(ship?.type || 'cruiser');
 
   return (
     <mesh
       ref={shipRef}
-      position={fleetPosition || [0, 0, 0]} // Initial position, will be updated by useFrame
-      scale={[scale, scale, scale]}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (ship?.name && ship?.type) {
-          console.log(`Ship ${ship.name}: ${ship.type}`);
-        }
-      }}
+      position={fleetPosition}
+      scale={[getShipScale(ship?.type || 'cruiser'), getShipScale(ship?.type || 'cruiser'), getShipScale(ship?.type || 'cruiser')]}
+      onClick={(e) => { e.stopPropagation(); }}
     >
       <boxGeometry args={[1.5, 0.4, 0.8]} />
-      <meshLambertMaterial 
-        color={shipColor}
-        emissive={shipEmissive}
+      <meshLambertMaterial
+        color={ship?.faction?.name === 'Contested Zone' ? '#888888' : '#00ffff'}
+        emissive={ship?.faction?.name === 'Contested Zone' ? '#222222' : '#004444'}
       />
     </mesh>
   );
 }
 
-export function FleetMarker({ fleet, isSelected, onFleetClick, starMass }: FleetMarkerProps) {
+function keplerianSpeed(orbitRadius: number): number {
+  const logicalRadius = orbitRadius / 2;
+  return Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15;
+}
+
+export function FleetMarker({ fleet, isSelected, onFleetClick }: FleetMarkerProps) {
   const fleetRef = useRef<Mesh>(null);
+  const ringRef = useRef<Mesh>(null);
+  const pingPhase = useMemo(() => Math.random() * 2, []);
   const [realTimePosition, setRealTimePosition] = useState<[number, number, number]>(fleet.position);
-
-  // Use system entry time as base reference, not individual movement time
-  const systemEntryTime = useRef<number>((window as any).systemEntryTime || Date.now());
-
-  // Movement state tracking
   const [isMoving, setIsMoving] = useState(false);
-  const [movementStartTime, setMovementStartTime] = useState(systemEntryTime.current);
+
+  // Planet-relative orbit: angle offset from synced planet, persisted on fleet object
+  const angleOffsetRef = useRef<number>((fleet as any)._angleOffset ?? 0);
+  const offsetInitialized = useRef((fleet as any)._angleOffset !== undefined);
+
+  // Keplerian fallback orbit: speed + offset computed from fleet's radial distance
+  const keplerianSpeedRef = useRef<number>(
+    keplerianSpeed(Math.sqrt(fleet.position[0] ** 2 + fleet.position[2] ** 2))
+  );
+  const keplerianOffsetRef = useRef<number>(
+    (fleet as any)._keplerianOffset ??
+      (Math.atan2(fleet.position[2], fleet.position[0]) -
+        Date.now() * 0.0001 * keplerianSpeedRef.current)
+  );
+
+  // Lazily resolved in useFrame — retries each frame until window.systemPlanets is populated.
+  // undefined = not yet resolved; null = resolved but no orbital objects found.
+  const closestObjectRef = useRef<any>(undefined);
+
+  // Detect position changes (user moves fleet or restoration)
   const lastPositionRef = useRef<[number, number, number]>(fleet.position);
-  const [recalcTrigger, setRecalcTrigger] = useState(0);
-  
-  // Detect when fleet position changes (user clicked to move it or restored from save)
   useEffect(() => {
-    const hasPositionChanged = 
-      fleet.position[0] !== lastPositionRef.current[0] || 
-      fleet.position[2] !== lastPositionRef.current[2];
-      
-    if (hasPositionChanged) {
-      // Check if this is a restoration (not a user click)
-      const isRestoration = (fleet as any)._justRestored;
-      
-      if (isRestoration) {
-        console.log(`📍 Fleet ${fleet.id} restored to exact position - holding steady`);
-        // Clear the restoration flag
-        delete (fleet as any)._justRestored;
-        delete (fleet as any)._resetMovementTime;
-        // Force speed recalculation
-        setRecalcTrigger(prev => prev + 1);
-      } else {
-        console.log(`🚀 Fleet ${fleet.id} position changed - stopping orbital motion`);
-        console.log(`Old: [${lastPositionRef.current.join(', ')}]`);
-        console.log(`New: [${fleet.position.join(', ')}]`);
-      }
-      
-      setIsMoving(true);
-      setMovementStartTime(Date.now());
-      lastPositionRef.current = [...fleet.position] as [number, number, number];
-      
-      // Resume orbital motion after 1 second (or immediately if restored)
-      setTimeout(() => {
-        console.log(`🌀 Fleet ${fleet.id} resuming orbital motion from ${isRestoration ? 'restored' : 'new'} position`);
-        setIsMoving(false);
-      }, isRestoration ? 100 : 1000); // Shorter delay for restorations
-    }
+    const [lx, , lz] = lastPositionRef.current;
+    if (fleet.position[0] === lx && fleet.position[2] === lz) return;
+    lastPositionRef.current = [...fleet.position] as [number, number, number];
+
+    const isRestoration = !!(fleet as any)._justRestored;
+    delete (fleet as any)._justRestored;
+    delete (fleet as any)._forceRecalc;
+
+    // Force re-initialization of planet offset and closest object from new position
+    offsetInitialized.current = false;
+    closestObjectRef.current = undefined;
+
+    // Recalculate Keplerian params for new orbit radius
+    const r = Math.sqrt(fleet.position[0] ** 2 + fleet.position[2] ** 2);
+    keplerianSpeedRef.current = keplerianSpeed(r);
+
+    setIsMoving(true);
+    setTimeout(() => setIsMoving(false), isRestoration ? 100 : 1000);
   }, [fleet.position[0], fleet.position[2], fleet.id, (fleet as any)._forceRecalc]);
 
-  // Separate effect specifically for restoration flag
-  useEffect(() => {
-    console.log(`🔍 RESTORATION CHECK for Fleet ${fleet.id}:`, {
-      justRestored: (fleet as any)._justRestored,
-      forceRecalc: (fleet as any)._forceRecalc,
-      currentRecalcTrigger: recalcTrigger
-    });
-
-    if ((fleet as any)._justRestored) {
-      console.log(`✅ Fleet ${fleet.id} HAS _justRestored flag - triggering recalc NOW`);
-      const newTrigger = recalcTrigger + 1;
-      console.log(`⚡ Calling setRecalcTrigger: ${recalcTrigger} → ${newTrigger}`);
-      setRecalcTrigger(newTrigger);
-      delete (fleet as any)._justRestored;
-      console.log(`🧹 Cleaned up _justRestored flag`);
-    } else {
-      console.log(`❌ Fleet ${fleet.id} does NOT have _justRestored flag`);
-    }
-  }, [(fleet as any)._justRestored, fleet.id]);
-  
-  // Orbit center and base parameters
-  const orbitCenter = fleet.orbitCenter || [0, 0, 0];
-  
-  // Find the closest orbital object (planet or space feature) and adopt its orbital speed
-  const { orbitalSpeed, closestObject } = useMemo(() => {
-    // Get planets and space features from system data
-    const systemPlanets = (window as any).systemPlanets || [];
-    const systemSpaceFeatures = (window as any).systemSpaceFeatures || [];
-    
-    if (systemPlanets.length === 0 && systemSpaceFeatures.length === 0) {
-      // Fallback to calculated speed if no orbital objects available
-      const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-      const logicalRadius = visualRadius / 2;
-      return {
-        orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
-        closestObject: null
-      };
-    }
-    
-    // Combine planets and space features into orbital objects list
-    const orbitalObjects = [
-      ...systemPlanets.map((p: any) => ({ ...p, objectType: 'planet' })),
-      ...systemSpaceFeatures.filter((f: any) => f.orbitRadius && f.orbitSpeed).map((f: any) => ({ ...f, objectType: 'space_feature' }))
-    ];
-    
-    let closestObject = null;
-    let minRadiusDiff = Infinity;
-    const fleetOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]) / 2;
-    
-    // Enhanced proximity check: also check actual distance for close fleets
-    const fleetPos = fleet.position;
-    let proximityBonus = 0;
-    
-    for (const orbitalObj of orbitalObjects) {
-      if (!orbitalObj.orbitRadius || !orbitalObj.orbitSpeed) continue;
-      
-      const radiusDiff = Math.abs(orbitalObj.orbitRadius - fleetOrbitRadius);
-      
-      // Calculate actual 3D distance to object's current position
-      const objPos = orbitalObj.position || [orbitalObj.orbitRadius * 2, 0, 0]; // Fallback position
-      const actualDistance = Math.sqrt(
-        Math.pow(fleetPos[0] - objPos[0], 2) + 
-        Math.pow(fleetPos[2] - objPos[2], 2)
-      );
-      
-      // If fleet is within 8 units of an orbital object, strongly prefer that object for speed sync
-      const isInProximity = actualDistance < 8.0;
-      const adjustedRadiusDiff = isInProximity ? radiusDiff * 0.1 : radiusDiff; // 90% bonus for proximity
-      
-      if (adjustedRadiusDiff < minRadiusDiff) {
-        minRadiusDiff = adjustedRadiusDiff;
-        closestObject = orbitalObj;
-        proximityBonus = isInProximity ? actualDistance : 0;
-      }
-    }
-    
-    if (closestObject) {
-      const objectTypeEmoji = closestObject.objectType === 'planet' ? '🌍' : '🏗️';
-      const logMessage = proximityBonus > 0 
-        ? `${objectTypeEmoji} Fleet ${fleet.id} syncing with nearby ${closestObject.objectType} ${closestObject.name} (distance: ${proximityBonus.toFixed(1)} units)`
-        : `${objectTypeEmoji} Fleet ${fleet.id} adopting orbital speed from closest ${closestObject.objectType}: ${closestObject.name} (orbit radius diff: ${minRadiusDiff.toFixed(1)} AU)`;
-      console.log(logMessage);
-      
-      return {
-        orbitalSpeed: closestObject.orbitSpeed,
-        closestObject: closestObject
-      };
-    }
-    
-    // Fallback if no closest orbital object found
-    const visualRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-    const logicalRadius = visualRadius / 2;
-    return {
-      orbitalSpeed: Math.sqrt(1 / Math.max(logicalRadius, 0.1)) * 0.15,
-      closestObject: null
-    };
-  }, [fleet.position[0], fleet.position[2], recalcTrigger]);
-
-  // Calculate initial angle from current position
-  const initialAngle = useMemo(() => {
-    return Math.atan2(fleet.position[2], fleet.position[0]);
-  }, [fleet.position[0], fleet.position[2]]);
-
   useFrame(() => {
-    if (fleetRef.current) {
-      if (isMoving) {
-        // During movement, position fleet exactly at the target coordinates
-        fleetRef.current.position.set(fleet.position[0], fleet.position[1], fleet.position[2]);
-        setRealTimePosition([fleet.position[0], fleet.position[1], fleet.position[2]]);
+    if (!fleetRef.current) return;
 
-        if (isSelected) {
-          console.log(`🎯 Fleet ${fleet.id} holding position at [${fleet.position.join(', ')}]`);
-        }
-      } else {
-        // Check for frozen time
-        const isFrozen = useGameView.getState().frozenTime;
-
-        if (isFrozen) {
-          // FROZEN: Don't move, stay at current position
-          // This prevents the fleet from jumping when frozen time exists
-          if (!fleetRef.current.userData.frozenPosition) {
-            // Store the frozen position once
-            fleetRef.current.userData.frozenPosition = [
-              fleetRef.current.position.x,
-              fleetRef.current.position.y, 
-              fleetRef.current.position.z
-            ];
-            console.log(`❄️ Fleet ${fleet.id} frozen at position:`, fleetRef.current.userData.frozenPosition);
-          }
-        } else {
-          // Normal orbital motion - time is unfrozen
-          // If we just unfroze, reset movement start time
-          if (fleetRef.current.userData.frozenPosition) {
-            console.log(`🔥 Fleet ${fleet.id} unfrozen, resetting movement timer`);
-            setMovementStartTime(Date.now());
-            delete fleetRef.current.userData.frozenPosition;
-          }
-
-          const simulationTime = Date.now();
-          const elapsedTime = (simulationTime - movementStartTime) * 0.0001;
-          const angle = elapsedTime * orbitalSpeed + initialAngle;
-
-          // Calculate current orbit radius from position for positioning
-          const currentOrbitRadius = Math.sqrt(fleet.position[0] * fleet.position[0] + fleet.position[2] * fleet.position[2]);
-          const x = currentOrbitRadius * Math.cos(angle);
-          const z = currentOrbitRadius * Math.sin(angle);
-
-          fleetRef.current.position.set(x, fleet.position[1], z);
-          setRealTimePosition([x, fleet.position[1], z]);
-
-          if (isSelected && Math.floor(elapsedTime * 10) % 30 === 0) {
-            console.log(`🌀 Fleet ${fleet.id} orbiting at [${x.toFixed(1)}, 0, ${z.toFixed(1)}] - speed from ${closestObject?.name || 'calculated'}`);
-          }
-        }
+    // Lazily resolve closest orbital object — retries each frame until systemPlanets is ready
+    if (closestObjectRef.current === undefined) {
+      const systemPlanets: any[] = (window as any).systemPlanets || [];
+      const systemSpaceFeatures: any[] = (window as any).systemSpaceFeatures || [];
+      const all = [
+        ...systemPlanets.filter((p: any) => p.orbitRadius && p.orbitSpeed),
+        ...systemSpaceFeatures.filter((f: any) => f.orbitRadius && f.orbitSpeed),
+      ];
+      if (all.length > 0) {
+        const fleetRadius = Math.sqrt(fleet.position[0] ** 2 + fleet.position[2] ** 2) / 2;
+        const closest = all.reduce<any>(
+          (best, obj) =>
+            Math.abs(obj.orbitRadius - fleetRadius) <
+            Math.abs((best?.orbitRadius ?? Infinity) - fleetRadius)
+              ? obj
+              : best,
+          null
+        );
+        closestObjectRef.current =
+          Math.abs(closest.orbitRadius - fleetRadius) < 4.0 ? closest : null;
       }
+    }
+
+    const pos = fleetRef.current.position;
+    const planetPositions: Record<string, { x: number; z: number; angle: number }> =
+      (window as any).currentPlanetPositions || {};
+    const planetData = closestObjectRef.current ? planetPositions[closestObjectRef.current.id] : null;
+
+    // Lazily initialize planet-relative offset once planet data is available
+    if (!offsetInitialized.current && planetData) {
+      const fleetAngle = Math.atan2(fleet.position[2], fleet.position[0]);
+      angleOffsetRef.current = fleetAngle - planetData.angle;
+      (fleet as any)._angleOffset = angleOffsetRef.current;
+      offsetInitialized.current = true;
+    }
+
+    const orbitRadius = Math.sqrt(fleet.position[0] ** 2 + fleet.position[2] ** 2);
+
+    if (isMoving) {
+      // Hold at exact position; keep both offsets current for seamless handoff
+      pos.set(fleet.position[0], fleet.position[1], fleet.position[2]);
+
+      const fleetAngle = Math.atan2(fleet.position[2], fleet.position[0]);
+
+      keplerianOffsetRef.current =
+        fleetAngle - Date.now() * 0.0001 * keplerianSpeedRef.current;
+      (fleet as any)._keplerianOffset = keplerianOffsetRef.current;
+
+      if (planetData) {
+        angleOffsetRef.current = fleetAngle - planetData.angle;
+        (fleet as any)._angleOffset = angleOffsetRef.current;
+      }
+    } else if (planetData && offsetInitialized.current) {
+      // Planet-relative orbit: follow planet's angle with constant offset
+      const fleetAngle = planetData.angle + angleOffsetRef.current;
+      pos.set(
+        orbitRadius * Math.cos(fleetAngle),
+        fleet.position[1],
+        orbitRadius * Math.sin(fleetAngle)
+      );
+      // Keep Keplerian offset current so remount handoff is seamless
+      keplerianOffsetRef.current =
+        fleetAngle - Date.now() * 0.0001 * keplerianSpeedRef.current;
+      (fleet as any)._keplerianOffset = keplerianOffsetRef.current;
+    } else {
+      // Keplerian fallback: orbit the star at the speed a body at this radius would
+      const angle =
+        Date.now() * 0.0001 * keplerianSpeedRef.current + keplerianOffsetRef.current;
+      pos.set(
+        orbitRadius * Math.cos(angle),
+        fleet.position[1],
+        orbitRadius * Math.sin(angle)
+      );
+      (fleet as any)._keplerianOffset = keplerianOffsetRef.current;
+    }
+
+    setRealTimePosition([pos.x, pos.y, pos.z]);
+
+    // Sonar ping ring
+    if (ringRef.current) {
+      ringRef.current.position.copy(pos);
+      const t = ((Date.now() * 0.0005 + pingPhase) % 1);
+      ringRef.current.scale.setScalar(1 + t * 6);
+      (ringRef.current.material as THREE.MeshBasicMaterial).opacity = (1 - t) * 0.45;
     }
   });
 
-  // Fleet command ship - larger marker
   const scale = Math.max(0.15, Math.min(0.3, fleet.size / 10));
 
   return (
     <group>
-      {/* Fleet command ship */}
       <mesh
         ref={fleetRef}
         scale={[scale, scale, scale]}
         onClick={(e) => {
           e.stopPropagation();
           onFleetClick?.(fleet);
-          console.log(`Fleet ${fleet.id}: ${fleet.size} ships`);
         }}
       >
         <octahedronGeometry args={[1, 0]} />
-        <meshLambertMaterial 
-          color={isSelected ? '#ff6600' : (fleet.faction?.name === 'Contested Zone' ? '#666666' : '#2222ff')} 
-          emissive={isSelected ? '#ff3300' : (fleet.faction?.name === 'Contested Zone' ? '#333333' : '#000066')} 
+        <meshLambertMaterial
+          color={isSelected ? '#ff6600' : (fleet.faction?.name === 'Contested Zone' ? '#666666' : '#2255ff')}
+          emissive={isSelected ? '#ff3300' : (fleet.faction?.name === 'Contested Zone' ? '#333333' : '#0033bb')}
         />
       </mesh>
 
-      {/* Render ship markers around the fleet */}
-      {fleet.composition && fleet.composition.map((ship: any, index: number) => (
+      {/* Sonar ping ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.28, 0.42, 32]} />
+        <meshBasicMaterial
+          color={isSelected ? '#ff6600' : (fleet.faction?.color || '#4477ff')}
+          transparent
+          opacity={0.45}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {fleet.composition?.map((ship: any, index: number) => (
         <ShipMarker
           key={ship.id}
           ship={ship}

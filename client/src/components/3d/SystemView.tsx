@@ -283,11 +283,10 @@ function PlanetMesh({
       planetRef.current.position.x = x;
       planetRef.current.position.z = z;
 
-      // Expose current planet position to window for persistence
       if (!(window as any).currentPlanetPositions) {
         (window as any).currentPlanetPositions = {};
       }
-      (window as any).currentPlanetPositions[planet.id] = [x, 0, z];
+      (window as any).currentPlanetPositions[planet.id] = { x, z, angle };
 
       // Axis rotation using frame time
       planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;

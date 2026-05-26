@@ -917,7 +917,8 @@ function App() {
                       style={{
                         background: '#333',
                         color: 'white',
-                        border: '1px solid #555',
+                        border: '1px solid #444',
+                        borderLeft: `3px solid ${fleet.faction?.color || '#555'}`,
                         borderRadius: '6px',
                         padding: '12px',
                         fontSize: '13px'
@@ -925,7 +926,8 @@ function App() {
                     >
                       <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{fleet.name}</div>
                       <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '1.3' }}>
-                        {fleet.faction?.name || 'Unknown'} • {fleet.composition?.length || 0} ships • {auDistance} AU
+                        <span style={{ color: fleet.faction?.color || '#ccc' }}>{fleet.faction?.name || 'Unknown'}</span>
+                        {' '}• {fleet.composition?.length || 0} ships • {auDistance} AU
                       </div>
                     </div>
                   );
@@ -1561,7 +1563,13 @@ function App() {
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Orbit:</span> {selectedPlanet.displayOrbit.toFixed(2)} AU</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>{' '}{selectedPlanet.faction.name || "Uninhabited"}</p>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>
+                  {selectedPlanet.faction?.color && (
+                    <span style={{ display: 'inline-block', width: '10px', height: '10px', background: selectedPlanet.faction.color, borderRadius: '2px', flexShrink: 0 }} />
+                  )}
+                  {selectedPlanet.faction.name || "Uninhabited"}
+                </p>
                 {selectedPlanet.atmosphere.length >0 && (
                   <div>
                     <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>
@@ -1621,7 +1629,13 @@ function App() {
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Temperature:</span> {selectedPlanet.temperature.toFixed(0)} K</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Moons:</span> {selectedPlanet.moons?.length || 0}</p>
                 <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Surface Features:</span> {selectedPlanet.surfaceFeatures?.length || 0}</p>
-                <p><span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>{' '}{selectedPlanet.faction.name || "Uninhabited"}</p>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: getPlanetColor(selectedPlanet.type) }}>Faction:</span>
+                  {selectedPlanet.faction?.color && (
+                    <span style={{ display: 'inline-block', width: '10px', height: '10px', background: selectedPlanet.faction.color, borderRadius: '2px', flexShrink: 0 }} />
+                  )}
+                  {selectedPlanet.faction.name || "Uninhabited"}
+                </p>
                 {selectedPlanet.atmosphere.length >0 && (
                   <div>
                     <p style={{ color: getPlanetColor(selectedPlanet.type) }}>Atmosphere:</p>

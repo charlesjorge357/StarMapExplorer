@@ -8,18 +8,7 @@ interface FleetInfoPanelProps {
 export function FleetInfoPanel({ fleet, onClose }: FleetInfoPanelProps) {
   if (!fleet) return null;
 
-  const getFactionColor = (factionName: string) => {
-    if (!factionName || factionName === 'Contested Zone') return '#888888';
-    // Generate consistent color based on faction name
-    let hash = 0;
-    for (let i = 0; i < factionName.length; i++) {
-      hash = factionName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 70%, 50%)`;
-  };
-
-  const factionColor = getFactionColor(fleet?.faction?.name || 'Unknown');
+  const factionColor = fleet?.faction?.color || '#888888';
 
   const getShipTypeDisplay = (type: string) => {
     switch (type) {

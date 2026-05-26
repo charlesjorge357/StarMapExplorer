@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { Vector3 } from 'three';
-import { useUniverse } from './useUniverse';
 
 export type ViewType = 'galactic' | 'system' | 'planetary';
 
@@ -164,24 +163,11 @@ export const useGameView = create<GameViewState>()(
       const { currentSystem, cameraActions } = get();
       if (!currentSystem) return;
 
-      const frozenTime = Date.now();
-
-      // Snapshot fleet positions into the universe store before leaving system view
-      const universeStore = useUniverse.getState();
-      if (universeStore?.updateFleetPosition) {
-        currentSystem.factions?.forEach((faction: any) => {
-          faction.fleets?.forEach((fleet: any) => {
-            const snap = [...fleet.position] as [number, number, number];
-            universeStore.updateFleetPosition(currentSystem.id, fleet.id, snap);
-          });
-        });
-      }
-
       cameraActions.homeToPlanet?.(new Vector3(0, 0, 0), 1, null, false);
 
       set({
         currentView: 'planetary',
-        frozenTime,
+        frozenTime: Date.now(),
         controlsDisabled: true,
         selectedSpaceFeature: null,
         selectedFleet: null,
@@ -189,39 +175,17 @@ export const useGameView = create<GameViewState>()(
     },
 
     exitPlanetary: () => {
-      const { currentSystem, cameraActions } = get();
+      const { cameraActions } = get();
 
       cameraActions.homeToSpaceFeature?.(null, 0, false);
 
-      // Restore fleet positions from universe store BEFORE flipping the view.
-      // CameraController's useEffect on currentView fires after this render,
-      // so homeToPlanet will see the already-restored positions.
-      let updatedSystem = currentSystem ? { ...currentSystem } : null;
-      if (updatedSystem) {
-        const universeStore = useUniverse.getState();
-        const savedSystem = universeStore?.universeData?.systems?.find(
-          (s: any) => s.id === currentSystem.id
-        );
-        if (savedSystem?.fleets) {
-          const savedFleets = savedSystem.fleets;
-          updatedSystem.factions?.forEach((faction: any) => {
-            faction.fleets?.forEach((fleet: any) => {
-              const saved = savedFleets.find((sf: any) => sf.id === fleet.id);
-              if (saved?.position) {
-                fleet.position = [...saved.position] as [number, number, number];
-                fleet._justRestored = true;
-                fleet._forceRecalc = Date.now();
-              }
-            });
-          });
-        }
-      }
-
+      // No fleet restoration needed — fleets use planet-relative positioning
+      // (_angleOffset stored on each fleet object) and automatically follow
+      // their synced planet to its current position on remount.
       set({
         currentView: 'system',
         frozenTime: null,
         controlsDisabled: false,
-        currentSystem: updatedSystem,
         selectedFeature: null,
         selectedArmy: null,
         selectedSpaceFeature: null,
