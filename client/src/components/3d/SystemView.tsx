@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
+import { useTexture, Html } from '@react-three/drei';
 import { useUniverse } from '../../lib/stores/useUniverse';
 import { useGameView } from '../../lib/stores/useGameView';
 import * as THREE from 'three';
@@ -250,24 +250,67 @@ function SelectionRing({ planet, isSelected, index }: { planet: any; isSelected:
   );
 }
 
-function PlanetMesh({ 
-  planet, 
-  index, 
+function FleetCountLabel({ planetRef, fleetsByFaction, planetRadius }: {
+  planetRef: React.RefObject<any>;
+  fleetsByFaction: { color: string; count: number; name: string }[];
+  planetRadius: number;
+}) {
+  const groupRef = useRef<any>(null);
+
+  useFrame(() => {
+    if (groupRef.current && planetRef.current) {
+      groupRef.current.position.copy(planetRef.current.position);
+      groupRef.current.position.y += planetRadius + 1.5;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <Html center distanceFactor={12} zIndexRange={[0, 0]}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}>
+          {fleetsByFaction.map(({ color, count, name }) => (
+            <div key={name} style={{
+              color: '#ffffff',
+              background: 'rgba(0, 0, 0, 0.85)',
+              border: `1px solid ${color}`,
+              borderLeft: `3px solid ${color}`,
+              borderRadius: '4px',
+              padding: '2px 7px',
+              fontSize: '11px',
+              fontFamily: 'monospace',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}>
+              <span style={{ color }}>⚓</span> {count}
+            </div>
+          ))}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+function PlanetMesh({
+  planet,
+  index,
   totalPlanets,
-  isSelected, 
-  onPlanetClick, 
+  isSelected,
+  onPlanetClick,
   planetTextures,
   selectedSpaceFeature,
-  onSpaceFeatureClick
-}: { 
-  planet: any; 
-  index: number; 
+  onSpaceFeatureClick,
+  allFleets,
+}: {
+  planet: any;
+  index: number;
   totalPlanets: number;
   isSelected: boolean;
   onPlanetClick: (planet: any) => void;
   planetTextures: any;
   selectedSpaceFeature?: any;
   onSpaceFeatureClick?: (feature: any) => void;
+  allFleets: any[];
 }) {
   const planetRef = useRef<any>();
 
@@ -292,6 +335,27 @@ function PlanetMesh({
       planetRef.current.rotation.y = state.clock.getElapsedTime() * (planet.rotationSpeed || 0.01) * 10;
     }
   });
+
+  const fleetsByFaction = useMemo(() => {
+    const nearby = allFleets.filter((fleet: any) => {
+      const r = Math.sqrt(fleet.position[0] ** 2 + fleet.position[2] ** 2) / 2;
+      return Math.abs(r - planet.orbitRadius) < 4.0;
+    });
+    const groups = new Map<string, { color: string; count: number; name: string }>();
+    nearby.forEach((fleet: any) => {
+      const key = fleet.faction?.id || 'unknown';
+      if (groups.has(key)) {
+        groups.get(key)!.count++;
+      } else {
+        groups.set(key, {
+          color: fleet.faction?.color || '#888888',
+          count: 1,
+          name: fleet.faction?.name || 'Unknown',
+        });
+      }
+    });
+    return Array.from(groups.values());
+  }, [allFleets, planet.orbitRadius]);
 
   // Calculate planet properties with debug logging
   const planetSeed = (planet.id || planet.name).split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
@@ -387,6 +451,10 @@ function PlanetMesh({
           planetRadius={planetRadius}
           planetRef={planetRef}
         />
+      )}
+
+      {fleetsByFaction.length > 0 && (
+        <FleetCountLabel planetRef={planetRef} fleetsByFaction={fleetsByFaction} planetRadius={planetRadius} />
       )}
     </>
   );
@@ -1010,9 +1078,9 @@ export function SystemView({
 
       {/* Planets with selection functionality */}
       {planets.map((planet, index) => (
-        <PlanetMesh 
-          key={planet.id} 
-          planet={planet} 
+        <PlanetMesh
+          key={planet.id}
+          planet={planet}
           index={index}
           totalPlanets={planets.length}
           isSelected={selectedPlanet?.id === planet.id}
@@ -1020,6 +1088,7 @@ export function SystemView({
           planetTextures={planetTextures}
           selectedSpaceFeature={selectedSpaceFeature}
           onSpaceFeatureClick={setSelectedSpaceFeature}
+          allFleets={system.factions?.flatMap((f: any) => f.fleets || []) ?? []}
         />
       ))}
 

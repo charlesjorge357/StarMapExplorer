@@ -8,18 +8,7 @@ interface ArmyInfoPanelProps {
 export function ArmyInfoPanel({ army, onClose }: ArmyInfoPanelProps) {
   if (!army) return null;
 
-  const getFactionColor = (factionName: string) => {
-    if (!factionName || factionName === 'Contested Zone') return '#888888';
-    // Generate consistent color based on faction name
-    let hash = 0;
-    for (let i = 0; i < factionName.length; i++) {
-      hash = factionName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 70%, 50%)`;
-  };
-
-  const factionColor = getFactionColor(army?.faction?.name || 'Unknown');
+  const factionColor = army?.faction?.color || '#888888';
 
   const getTotalUnits = () => {
     if (!army?.composition) return 0;
@@ -47,11 +36,10 @@ export function ArmyInfoPanel({ army, onClose }: ArmyInfoPanelProps) {
           <span className="ml-2">{army?.id || 'Unknown'}</span>
         </div>
         
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span className="text-gray-400">Faction:</span>
-          <span className="ml-2" style={{ color: factionColor }}>
-            {army?.faction?.name || 'Unknown'}
-          </span>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: factionColor, borderRadius: '2px', flexShrink: 0 }} />
+          <span style={{ color: factionColor }}>{army?.faction?.name || 'Unknown'}</span>
         </div>
         
         <div>
@@ -76,7 +64,7 @@ export function ArmyInfoPanel({ army, onClose }: ArmyInfoPanelProps) {
             <span className="text-gray-400">Division Composition:</span>
             <div className="ml-2 mt-1 space-y-1 max-h-32 overflow-y-auto">
               {army.composition.map((division: any, index: number) => (
-                <div key={division?.id || index} className="text-green-300">
+                <div key={division?.id || index} style={{ color: factionColor }}>
                   • Division {index + 1}: {division?.size?.toLocaleString() || 0} units
                 </div>
               ))}
