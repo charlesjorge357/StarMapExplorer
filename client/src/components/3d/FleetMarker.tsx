@@ -82,7 +82,7 @@ function FighterSquadGLB({ shipRef }: { shipRef: React.Ref<any> }) {
   const assignments = useMemo(
     () => FIGHTER_FORMATION.map((_, i) => FIGHTER_WING_VARIANTS[i % FIGHTER_WING_VARIANTS.length]),
     []
-  );
+  ); // Run once on mount
 
   return (
     <group ref={shipRef} onClick={(e: any) => e.stopPropagation()}>

@@ -94,7 +94,11 @@ export const useUniverse = create<UniverseState>()(
       if (universeData) {
         let system = universeData.systems.find((s: any) => s.starId === star.id);
         if (!system) {
-          system = SystemGenerator.generateSystem(star, Math.floor(Math.random() * 1000000));
+          // Derive system seed deterministically so the same star always generates the same system
+          const galaxySeed = universeData.metadata.seed ?? 0;
+          const starHash = star.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+          const systemSeed = Math.abs((galaxySeed * 31337 + starHash * 7919) % 1000000);
+          system = SystemGenerator.generateSystem(star, systemSeed);
           // Create deep copy when adding system
           set({ 
             selectedSystem: system, 

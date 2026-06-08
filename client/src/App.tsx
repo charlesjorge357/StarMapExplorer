@@ -318,6 +318,9 @@ function StarField({
 function App() {
   const [showSelector, setShowSelector] = useState(true);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [galaxySeed, setGalaxySeed] = useState(() => Math.floor(Math.random() * 1000000));
+  const [seedInput, setSeedInput] = useState('');
+  const [seedCopied, setSeedCopied] = useState(false);
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [warpLanes, setWarpLanes] = useState<any[]>([]);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -336,34 +339,29 @@ function App() {
     getCachedSystem, setCachedSystem,
   } = useGameView();
 
-  // Generate nebulas once
-  const nebulas = useMemo(() => StarGenerator.generateNebulas(20), []);
+  // Generate nebulas once — seeded so same galaxy seed always produces same nebulae
+  const nebulas = useMemo(() => StarGenerator.generateNebulas(20, galaxySeed), [galaxySeed]);
 
-  // Generate stars and warp lanes when app loads and clear system cache
+  // Generate stars and warp lanes together so React batches them into one render (no flash)
   useEffect(() => {
-    console.log("Generating stars...");
-    const dynamicSeed = Math.floor(Math.random() * 1000000); // Generate dynamic seed each time
-    const generatedStars = StarGenerator.generateStars(dynamicSeed, 4000);
-    setStars(generatedStars);
-    console.log(`Generated ${generatedStars.length} stars`);
-    
-    // Generate warp lanes after stars are created (async to prevent blocking)
+    console.log(`Generating stars with seed ${galaxySeed}...`);
+    const generatedStars = StarGenerator.generateStars(galaxySeed, 4000);
+
+    let generatedWarpLanes: any[] = [];
     if (generatedStars.length > 0) {
-      setTimeout(() => {
-        try {
-          const galaxyRadius = 10000; // Match the star generation radius
-          const generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 15); // Tripled from 8 to 24
-          setWarpLanes(generatedWarpLanes);
-          console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
-        } catch (error) {
-          console.error("Error generating warp lanes:", error);
-          setWarpLanes([]); // Fallback to no warp lanes
-        }
-      }, 100);
+      try {
+        const galaxyRadius = 10000;
+        generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 15, galaxySeed);
+        console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
+      } catch (error) {
+        console.error("Error generating warp lanes:", error);
+      }
     }
-    
-    console.log("System cache cleared - new systems will include rings");
-  }, []);
+
+    setStars(generatedStars);
+    setWarpLanes(generatedWarpLanes);
+    console.log(`Generated ${generatedStars.length} stars`);
+  }, [galaxySeed]);
 
 
 
@@ -403,7 +401,18 @@ function App() {
 
   const [hasStarted, setHasStarted] = useState(false);
 
+  const handleCopySeed = () => {
+    navigator.clipboard.writeText(galaxySeed.toString()).then(() => {
+      setSeedCopied(true);
+      setTimeout(() => setSeedCopied(false), 2000);
+    });
+  };
+
   const handleStart = () => {
+    if (seedInput.trim() !== '') {
+      const parsed = parseInt(seedInput.trim(), 10);
+      if (!isNaN(parsed)) setGalaxySeed(parsed);
+    }
     setShowSelector(false);
     setHasStarted(true);
 
@@ -1418,6 +1427,35 @@ function App() {
               {selectedFeature.name}
             </div>
           )}
+          <div style={{
+            marginTop: '8px',
+            paddingTop: '7px',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '11px',
+          }}>
+            <span style={{ opacity: 0.4, letterSpacing: '0.08em' }}>SEED</span>
+            <span style={{ fontFamily: 'monospace', opacity: 0.8 }}>{galaxySeed}</span>
+            <button
+              onClick={handleCopySeed}
+              style={{
+                pointerEvents: 'auto',
+                background: 'none',
+                border: '1px solid rgba(255,255,255,0.25)',
+                color: seedCopied ? '#7fff7f' : 'white',
+                padding: '1px 6px',
+                borderRadius: '3px',
+                fontSize: '10px',
+                cursor: 'pointer',
+                opacity: seedCopied ? 1 : 0.55,
+                transition: 'color 0.2s, opacity 0.2s',
+              }}
+            >
+              {seedCopied ? '✓ copied' : 'copy'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -1708,10 +1746,38 @@ function App() {
           padding: '40px',
           borderRadius: '8px',
           textAlign: 'center',
-          zIndex: 100
+          zIndex: 100,
+          border: '1px solid rgba(255,255,255,0.1)',
         }}>
-          <h1>The Rogue Stars</h1>
-          <button 
+          <h1 style={{ marginBottom: '28px', letterSpacing: '0.05em' }}>The Rogue Stars</h1>
+
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '11px', opacity: 0.4, marginBottom: '6px', letterSpacing: '0.1em' }}>UNIVERSE SEED</div>
+            <input
+              type="text"
+              placeholder={galaxySeed.toString()}
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleStart(); }}
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'white',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                textAlign: 'center',
+                width: '200px',
+                fontFamily: 'monospace',
+                outline: 'none',
+                display: 'block',
+                margin: '0 auto',
+              }}
+            />
+            <div style={{ fontSize: '10px', opacity: 0.25, marginTop: '5px' }}>leave blank for random</div>
+          </div>
+
+          <button
             onClick={handleStart}
             style={{
               background: 'blue',
@@ -1721,7 +1787,6 @@ function App() {
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '16px',
-              marginTop: '20px'
             }}
           >
             Start Sandbox

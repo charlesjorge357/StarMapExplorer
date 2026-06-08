@@ -22,6 +22,14 @@ function generateColors(count: number): string[] {
 }
 
 export class WarpLaneGenerator {
+  private static seededRandom(seed: number): () => number {
+    let s = seed;
+    return () => {
+      s = Math.sin(s) * 10000;
+      return s - Math.floor(s);
+    };
+  }
+
   static calculateDistance(a: SimpleStar, b: SimpleStar): number {
     const dx = a.position[0] - b.position[0];
     const dy = a.position[1] - b.position[1];
@@ -33,7 +41,8 @@ export class WarpLaneGenerator {
     t: number,
     start: [number, number, number],
     end: [number, number, number],
-    curveStrength: number
+    curveStrength: number,
+    random: () => number
   ): [number, number, number] {
     const [sx, sy, sz] = start;
     const [ex, ey, ez] = end;
@@ -41,9 +50,9 @@ export class WarpLaneGenerator {
     const my = (sy + ey) / 2;
     const mz = (sz + ez) / 2;
     const arcOffset: [number, number, number] = [
-      (Math.random() - 0.5) * curveStrength,
-      (Math.random() - 0.5) * curveStrength,
-      (Math.random() - 0.5) * curveStrength,
+      (random() - 0.5) * curveStrength,
+      (random() - 0.5) * curveStrength,
+      (random() - 0.5) * curveStrength,
     ];
     const cx = mx + arcOffset[0];
     const cy = my + arcOffset[1];
@@ -57,8 +66,10 @@ export class WarpLaneGenerator {
   static generateWarpLanes(
     stars: SimpleStar[],
     galaxyRadius: number,
-    laneCount: number = 10
+    laneCount: number = 10,
+    seed: number = 99999
   ): WarpLane[] {
+    const random = this.seededRandom(seed);
     console.log(`Generating ${laneCount} warp lanes across ${stars.length} stars`);
     const warpLanes: WarpLane[] = [];
     const working = stars.slice(0, Math.min(stars.length, 500));
@@ -69,7 +80,7 @@ export class WarpLaneGenerator {
       const available = working.filter((s) => !used.has(s.id));
       if (available.length < 2) break;
 
-      const start = available[Math.floor(Math.random() * available.length)];
+      const start = available[Math.floor(random() * available.length)];
       const minEndSep = galaxyRadius * 0.6;
       const ends = available.filter(
         (s) => s.id !== start.id && this.calculateDistance(start, s) >= minEndSep
@@ -78,7 +89,7 @@ export class WarpLaneGenerator {
         i--;
         continue;
       }
-      const end = ends[Math.floor(Math.random() * ends.length)];
+      const end = ends[Math.floor(random() * ends.length)];
 
       const distance = this.calculateDistance(start, end);
       const hopSpacing = galaxyRadius * 0.1;
@@ -93,7 +104,8 @@ export class WarpLaneGenerator {
           t,
           start.position,
           end.position,
-          galaxyRadius * 0.4
+          galaxyRadius * 0.4,
+          random
         );
         let nearest = { id: '', dist: Infinity };
         working.forEach((s) => {
