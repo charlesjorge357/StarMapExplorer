@@ -1,4 +1,13 @@
 import { Planet, Faction } from "@shared/schema";
+import {
+  CultureArchetype,
+  getArchetype,
+  generateCultureName,
+  getGovernmentTerm,
+  getLeaderTitle,
+  getCulturePrefix,
+  idToSeed,
+} from './CultureNameGenerator';
 
 export const ContestedFaction: Faction = {
   id: "faction-contested",
@@ -121,21 +130,24 @@ export class FactionGenerator {
       console.warn("Attempted to create faction from undefined planet.");
       return ContestedFaction;
     }
-    
-    const name = this.generateFactionName(planet);
+
+    const seed = idToSeed(planet.id);
+    const archetype = getArchetype(planet.type, seed);
+    const name = this.generateFactionName(planet, archetype, seed);
     const technology = this.generateTechnologyLevel(planet);
-    
+
     const hue = Math.floor(Math.random() * 360);
-    return {
+    const faction: any = {
       id: `faction-${planet.id}`,
       name,
       description: `A faction based on the ${planet.type.replace("_", " ")} of ${planet.name}.`,
-      leader: this.generateLeaderName(),
+      leader: this.generateLeaderName(archetype, seed),
       homeworld: planet.name,
       population: 0,
       technology,
       influence: Math.floor(Math.random() * 100),
       color: `hsl(${hue}, 80%, 65%)`,
+      archetype,
       allies: [],
       enemies: [],
       goals: this.generateGoals(),
@@ -146,16 +158,20 @@ export class FactionGenerator {
       divisions: [],
       armies: [],
     };
+    return faction as Faction;
   }
 
-  public static editFactionFromPlanet (planet: Planet, faction: Faction): Faction{
+  public static editFactionFromPlanet(planet: Planet, faction: Faction): Faction {
+    const seed = idToSeed(planet.id);
+    const archetype = getArchetype(planet.type, seed);
     faction.homeworld = planet.name;
-    faction.name = this.generateFactionName(planet);
+    faction.name = this.generateFactionName(planet, archetype, seed);
     faction.description = `A faction based on the ${planet.type.replace("_", " ")} of ${planet.name}.`;
-    faction.leader = this.generateLeaderName();
-    faction.technology = this.generateTechnologyLevel(planet); // Update tech based on homeworld
+    faction.leader = this.generateLeaderName(archetype, seed);
+    faction.technology = this.generateTechnologyLevel(planet);
     faction.goals = this.generateGoals();
     faction.resources = this.generateResources(planet);
+    (faction as any).archetype = archetype;
     return faction;
   }
 
@@ -193,101 +209,55 @@ export class FactionGenerator {
     return techLevel.toString();
   }
 
-  private static generateFactionName(planet: Planet): string {
-    const governments = [
-      "Consortium",
-      "Federation",
-      "Syndicate",
-      "Dominion",
-      "Alliance",
-      "Conglomerate",
-      "Union",
-      "Guild",
-      "Assembly",
-      "Kingdom",
-      "Republic",
-      "Empire",
-      "League",
-      "Coalition",
-      "Corporation",
-      "Collective",
-      "Tsardom",
-    ];
+  private static generateFactionName(planet: Planet, archetype: CultureArchetype, seed: number): string {
+    const gov    = getGovernmentTerm(archetype, seed);
+    const prefix = getCulturePrefix(archetype, seed + 1);
+    const demonym = this.makeDemonym(planet.name, archetype);
 
-    const prefixes = [
-      "The",
-      "New",
-      "Greater",
-      "United",
-      "Free",
-      "Imperial",
-      "Grand",
-      "Solar",
-      "Galactic",
-      "Outer",
-    ];
+    // Seeded pattern selection
+    const s = Math.sin(seed * 9.7) * 10000;
+    const patternIndex = Math.floor((s - Math.floor(s)) * 6);
 
-    // Simple demonym generator based on planet name suffixes
-    function generateDemonym(name: string): string {
-      if (!name) return "";
-      const lower = name.toLowerCase();
-
-      if (lower.endsWith("a") || lower.endsWith("ia")) return name + "n";
-      if (lower.endsWith("on")) return name + "ian";
-      if (lower.endsWith("us")) return name.slice(0, -2) + "an";
-      if (lower.endsWith("is")) return name.slice(0, -2) + "ian";
-      if (lower.endsWith("ar")) return name + "ian";
-      if (lower.endsWith("e")) return name + "an";
-      if (lower.endsWith("y")) return name.slice(0, -1) + "ian";
-      if (lower.endsWith("er")) return name + "ian";
-
-      // Default fallback
-      return name + "ian";
-    }
-
-    
-    const gov = governments[Math.floor(Math.random() * governments.length)];
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const demonym = generateDemonym(planet.name);
-
-    // Naming patterns
     const patterns = [
-      () => `${planet.name} ${gov}`,                    // Crythus Syndicate
-      () => `${demonym} ${gov}`,                        // Crythian Empire
-      () => `${gov} of ${planet.name}`,                 // Federation of Crythus
-      () => `The ${demonym} ${gov}`,                    // The Crythian Assembly
-      () => `${prefix} ${planet.name} ${gov}`,          // Greater Crythus Guild
-      () => `${prefix} ${gov}`,                         // Galactic Union
+      () => `${planet.name} ${gov}`,           // Crythus Syndicate
+      () => `${demonym} ${gov}`,               // Crythian Empire
+      () => `${gov} of ${planet.name}`,        // Federation of Crythus
+      () => `The ${demonym} ${gov}`,           // The Crythian Assembly
+      () => `${prefix} ${planet.name} ${gov}`, // Greater Crythus Guild
+      () => `${prefix} ${gov}`,                // Grand Imperium
     ];
 
-    // Pick a random pattern to generate a name
-    const factionName = patterns[Math.floor(Math.random() * patterns.length)]();
-
-    return factionName;
+    return patterns[patternIndex]();
   }
 
-  private static generateLeaderName(): string {
-    const first = [
-      "Admiral",
-      "President",
-      "Chancellor",
-      "Overseer",
-      "Director",
-      "Warlord",
-      "Commander",
-    ];
-    const last = [
-      "Tarn",
-      "Vale",
-      "Korr",
-      "Saren",
-      "Dray",
-      "Zane",
-      "Myra",
-      "Quinn",
-      "Lex",
-    ];
-    return `${first[Math.floor(Math.random() * first.length)]} ${last[Math.floor(Math.random() * last.length)]}`;
+  private static makeDemonym(name: string, archetype: CultureArchetype): string {
+    if (!name) return '';
+    const lower = name.toLowerCase();
+
+    // Culture-flavoured demonym suffixes
+    const suffix: Record<CultureArchetype, string> = {
+      imperial:  'an',
+      republic:  'ian',
+      corporate: 'ite',
+      dominion:  'i',
+      alliance:  'ean',
+      generic:   'ian',
+    };
+    const s = suffix[archetype];
+
+    if (lower.endsWith('a') || lower.endsWith('ia')) return name + 'n';
+    if (lower.endsWith('on')) return name + s;
+    if (lower.endsWith('us')) return name.slice(0, -2) + s;
+    if (lower.endsWith('is')) return name.slice(0, -2) + s;
+    if (lower.endsWith('e'))  return name.slice(0, -1) + s;
+    if (lower.endsWith('y'))  return name.slice(0, -1) + 'i' + s;
+    return name + s;
+  }
+
+  private static generateLeaderName(archetype: CultureArchetype, seed: number): string {
+    const title    = getLeaderTitle(archetype, seed);
+    const personal = generateCultureName(archetype, seed + 77);
+    return `${title} ${personal}`;
   }
 
   private static generateGoals(): string[] {

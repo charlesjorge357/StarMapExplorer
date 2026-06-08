@@ -323,6 +323,7 @@ function App() {
   const [seedCopied, setSeedCopied] = useState(false);
   const [stars, setStars] = useState<SimpleStar[]>([]);
   const [warpLanes, setWarpLanes] = useState<any[]>([]);
+  const [intersectionStars, setIntersectionStars] = useState<Set<string>>(new Set());
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -351,16 +352,27 @@ function App() {
     if (generatedStars.length > 0) {
       try {
         const galaxyRadius = 10000;
-        generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, 15, galaxySeed);
+        const laneCount = 8 + (galaxySeed % 4); // 8–11, deterministic from seed
+          generatedWarpLanes = WarpLaneGenerator.generateWarpLanes(generatedStars, galaxyRadius, laneCount, galaxySeed);
         console.log(`Generated ${generatedWarpLanes.length} warp lanes`);
       } catch (error) {
         console.error("Error generating warp lanes:", error);
       }
     }
 
+    // Stars that appear in 2 lanes are crossroads — used by SystemGenerator to boost tech/fleets
+    const laneUsage = new Map<string, number>();
+    generatedWarpLanes.forEach((lane: any) => {
+      lane.path?.forEach((id: string) => laneUsage.set(id, (laneUsage.get(id) ?? 0) + 1));
+    });
+    const generatedIntersections = new Set<string>(
+      [...laneUsage.entries()].filter(([, count]) => count >= 2).map(([id]) => id)
+    );
+
     setStars(generatedStars);
     setWarpLanes(generatedWarpLanes);
-    console.log(`Generated ${generatedStars.length} stars`);
+    setIntersectionStars(generatedIntersections);
+    console.log(`Generated ${generatedStars.length} stars, ${generatedIntersections.size} intersection stars`);
   }, [galaxySeed]);
 
 
@@ -481,8 +493,9 @@ function App() {
   // Use SystemGenerator for consistent planet generation
   const generateSystemForStar = (star: SimpleStar) => {
     const seed = parseInt(star.id.slice(-3), 36) || Math.floor(Math.random() * 1000);
-    console.log(`Generating system for ${star.name} with seed ${seed}`);
-    const system = SystemGenerator.generateSystem(star, seed);
+    const isIntersection = intersectionStars.has(star.id);
+    console.log(`Generating system for ${star.name} with seed ${seed}${isIntersection ? ' [INTERSECTION]' : ''}`);
+    const system = SystemGenerator.generateSystem(star, seed, { isIntersection });
     console.log('SystemGenerator returned:', system);
     
     // Restore saved fleet positions from universe store

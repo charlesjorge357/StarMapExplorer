@@ -1,5 +1,4 @@
 import { WarpLane } from '../../../../shared/schema';
-import * as THREE from 'three';
 
 interface SimpleStar {
   id: string;
@@ -37,30 +36,92 @@ export class WarpLaneGenerator {
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
-  static generateCurvedWaypoint(
-    t: number,
-    start: [number, number, number],
-    end: [number, number, number],
-    curveStrength: number,
-    random: () => number
-  ): [number, number, number] {
-    const [sx, sy, sz] = start;
-    const [ex, ey, ez] = end;
-    const mx = (sx + ex) / 2;
-    const my = (sy + ey) / 2;
-    const mz = (sz + ez) / 2;
-    const arcOffset: [number, number, number] = [
-      (random() - 0.5) * curveStrength,
-      (random() - 0.5) * curveStrength,
-      (random() - 0.5) * curveStrength,
-    ];
-    const cx = mx + arcOffset[0];
-    const cy = my + arcOffset[1];
-    const cz = mz + arcOffset[2];
-    const x = (1 - t) ** 2 * sx + 2 * (1 - t) * t * cx + t ** 2 * ex;
-    const y = (1 - t) ** 2 * sy + 2 * (1 - t) * t * cy + t ** 2 * ey;
-    const z = (1 - t) ** 2 * sz + 2 * (1 - t) * t * cz + t ** 2 * ez;
-    return [x, y, z];
+  /**
+   * Greedy forward-progress path from start to end.
+   * At each hop, finds the nearest star that:
+   *   1. Has more forward projection along start→end than the current star
+   *   2. Falls within a deviation cone from the straight-line axis
+   *   3. Has been used fewer than 2 times across all lanes
+   *
+   * If no candidate is found at the tight cone, the cone widens in two steps
+   * before giving up and jumping directly to end.  This prevents a single
+   * bad snap from pulling the path sideways through empty space.
+   */
+  private static greedyPath(
+    start: SimpleStar,
+    end: SimpleStar,
+    working: SimpleStar[],
+    useCount: Map<string, number>,
+    galaxyRadius: number
+  ): string[] {
+    const path: string[] = [start.id];
+    const pathSet = new Set<string>([start.id]);
+    let current = start;
+    const maxHops = 60;
+    const arrivalThreshold = galaxyRadius * 0.12;
+
+    const dx = end.position[0] - start.position[0];
+    const dy = end.position[1] - start.position[1];
+    const dz = end.position[2] - start.position[2];
+    const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const dir = { x: dx / totalDist, y: dy / totalDist, z: dz / totalDist };
+
+    while (path.length < maxHops) {
+      if (this.calculateDistance(current, end) <= arrivalThreshold) break;
+
+      // Projection of current star along start→end axis
+      const cx = current.position[0] - start.position[0];
+      const cy = current.position[1] - start.position[1];
+      const cz = current.position[2] - start.position[2];
+      const currentProj = cx * dir.x + cy * dir.y + cz * dir.z;
+
+      let best: { star: SimpleStar; score: number } | null = null;
+
+      // Try a tight cone first, widen only if nothing is found
+      for (const maxDev of [galaxyRadius * 0.12, galaxyRadius * 0.26, galaxyRadius * 0.45]) {
+        for (const s of working) {
+          if (pathSet.has(s.id)) continue;
+          if (s.id === end.id) continue;
+          if ((useCount.get(s.id) ?? 0) >= 2) continue;
+
+          const sx = s.position[0] - start.position[0];
+          const sy = s.position[1] - start.position[1];
+          const sz = s.position[2] - start.position[2];
+          const sProj = sx * dir.x + sy * dir.y + sz * dir.z;
+
+          // Must advance along the axis
+          if (sProj <= currentProj) continue;
+
+          // Deviation from the straight-line axis at this projection depth
+          const idealX = start.position[0] + dir.x * sProj;
+          const idealY = start.position[1] + dir.y * sProj;
+          const idealZ = start.position[2] + dir.z * sProj;
+          const devX = s.position[0] - idealX;
+          const devY = s.position[1] - idealY;
+          const devZ = s.position[2] - idealZ;
+          const deviation = Math.sqrt(devX * devX + devY * devY + devZ * devZ);
+
+          if (deviation > maxDev) continue;
+
+          const distFromCurrent = this.calculateDistance(current, s);
+          const score = distFromCurrent + deviation * 0.5;
+
+          if (!best || score < best.score) best = { star: s, score };
+        }
+
+        if (best) break;
+      }
+
+      // No candidate anywhere — long hop directly toward end and stop
+      if (!best) break;
+
+      path.push(best.star.id);
+      pathSet.add(best.star.id);
+      current = best.star;
+    }
+
+    path.push(end.id);
+    return path;
   }
 
   static generateWarpLanes(
@@ -72,18 +133,54 @@ export class WarpLaneGenerator {
     const random = this.seededRandom(seed);
     console.log(`Generating ${laneCount} warp lanes across ${stars.length} stars`);
     const warpLanes: WarpLane[] = [];
-    const working = stars.slice(0, Math.min(stars.length, 500));
-    const used = new Set<string>();
+
+    // Probability that a star of each spectral class becomes a warp node.
+    // G/K stars (Sun-like, orange dwarfs) dominate — they're the most likely
+    // to host civilisations capable of building warp infrastructure.
+    // M dwarfs (70% of all stars) are kept rare so the network stays readable.
+    const nodeChance: Record<string, number> = {
+      G: 0.90,
+      K: 0.75,
+      F: 0.40,
+      M: 0.08,
+      A: 0.15,
+      B: 0.05,
+      O: 0.02,
+    };
+
+    // Deterministic hash so each star always gets the same roll regardless of
+    // lane generation order — keeps the working set seed-reproducible.
+    const starHash = (id: string): number => {
+      let h = 0;
+      for (const c of id) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+      return (h >>> 0) / 0xffffffff;
+    };
+
+    // Spatial sample first (every Nth) so void regions are represented,
+    // then spectral filter so the network is biased toward habitable stars.
+    const spatialStep = Math.max(1, Math.floor(stars.length / 1200));
+    const working = stars
+      .filter((_, i) => i % spatialStep === 0)
+      .filter(s => {
+        const cls = (s.spectralClass ?? 'M').charAt(0).toUpperCase();
+        return starHash(s.id) < (nodeChance[cls] ?? 0.08);
+      });
+    // Each star may appear in at most 2 lanes — allows junction stars at crossroads
+    const useCount = new Map<string, number>();
     const colors = generateColors(laneCount);
 
+    const canUse = (id: string) => (useCount.get(id) ?? 0) < 2;
+    const recordUse = (ids: string[]) =>
+      ids.forEach(id => useCount.set(id, (useCount.get(id) ?? 0) + 1));
+
     for (let i = 0; i < laneCount; i++) {
-      const available = working.filter((s) => !used.has(s.id));
+      const available = working.filter(s => canUse(s.id));
       if (available.length < 2) break;
 
       const start = available[Math.floor(random() * available.length)];
       const minEndSep = galaxyRadius * 0.6;
       const ends = available.filter(
-        (s) => s.id !== start.id && this.calculateDistance(start, s) >= minEndSep
+        s => s.id !== start.id && this.calculateDistance(start, s) >= minEndSep
       );
       if (!ends.length) {
         i--;
@@ -91,106 +188,7 @@ export class WarpLaneGenerator {
       }
       const end = ends[Math.floor(random() * ends.length)];
 
-      const distance = this.calculateDistance(start, end);
-      const hopSpacing = galaxyRadius * 0.1;
-      const requiredHops = Math.max(4, Math.floor(distance / hopSpacing));
-      const hopMidCount = requiredHops - 2;
-
-      // Generate curved mids
-      const mids: string[] = [];
-      for (let k = 1; k <= hopMidCount; k++) {
-        const t = k / (requiredHops - 1);
-        const [px, py, pz] = this.generateCurvedWaypoint(
-          t,
-          start.position,
-          end.position,
-          galaxyRadius * 0.4,
-          random
-        );
-        let nearest = { id: '', dist: Infinity };
-        working.forEach((s) => {
-          if (s.id === start.id || s.id === end.id || used.has(s.id)) return;
-          const d = Math.hypot(
-            s.position[0] - px,
-            s.position[1] - py,
-            s.position[2] - pz
-          );
-          if (d < nearest.dist) nearest = { id: s.id, dist: d };
-        });
-        if (nearest.id) mids.push(nearest.id);
-      }
-
-      const basePath = [start.id, ...mids, end.id];
-      const maxSegment = hopSpacing * 1.5;
-      const maxDeviation = galaxyRadius * 0.2;
-      const enhanced: string[] = [];
-
-      for (let j = 0; j < basePath.length - 1; j++) {
-        const aId = basePath[j];
-        const bId = basePath[j + 1];
-        const aStar = working.find((s) => s.id === aId)!;
-        const bStar = working.find((s) => s.id === bId)!;
-
-        enhanced.push(aId);
-
-        // Try inserting up to 3 midpoints between a and b
-        let midpoints: string[] = [];
-        const aPos = new THREE.Vector3(...aStar.position);
-        const bPos = new THREE.Vector3(...bStar.position);
-        const abDir = bPos.clone().sub(aPos).normalize();
-        const segDist = aPos.distanceTo(bPos);
-
-        for (let attempt = 0; attempt < 3; attempt++) {
-          let best: { id: string; score: number } | null = null;
-
-          for (const s of working) {
-            // Reject stars already used or in path (start, end, midpoints, or enhanced)
-            if (
-              used.has(s.id) ||
-              s.id === aId ||
-              s.id === bId ||
-              midpoints.includes(s.id) ||
-              enhanced.includes(s.id)
-            ) continue;
-
-            const sPos = new THREE.Vector3(...s.position);
-            const proj = sPos.clone().sub(aPos).dot(abDir);
-            if (proj < 0 || proj > segDist) continue;
-
-            // Reject candidates that are behind any previously chosen midpoints in this segment (enforce forward progress)
-            if (midpoints.length > 0) {
-              const lastMidPos = working.find((ws) => ws.id === midpoints[midpoints.length - 1])!;
-              const lastMidVector = new THREE.Vector3(...lastMidPos.position);
-              const lastProj = lastMidVector.clone().sub(aPos).dot(abDir);
-              if (proj <= lastProj) continue; // Candidate is not further along, skip
-            }
-
-            const closest = aPos.clone().add(abDir.clone().multiplyScalar(proj));
-            const deviation = sPos.distanceTo(closest);
-
-            if (deviation < maxDeviation) {
-              const totalPath = aPos.distanceTo(sPos) + sPos.distanceTo(bPos);
-              const score = totalPath + deviation;
-              if (!best || score < best.score) {
-                best = { id: s.id, score };
-              }
-            }
-          }
-
-          if (best) {
-            midpoints.push(best.id);
-            used.add(best.id); // Immediately mark midpoint star as used
-          } else {
-            break;
-          }
-        }
-
-        enhanced.push(...midpoints);
-      }
-
-      enhanced.push(end.id);
-
-      const path = Array.from(new Set(enhanced));
+      const path = this.greedyPath(start, end, working, useCount, galaxyRadius);
       if (path.length < 2) {
         i--;
         continue;
@@ -198,9 +196,9 @@ export class WarpLaneGenerator {
 
       let total = 0;
       for (let j = 0; j < path.length - 1; j++) {
-        const a = working.find((s) => s.id === path[j])!;
-        const b = working.find((s) => s.id === path[j + 1])!;
-        total += this.calculateDistance(a, b);
+        const a = working.find(s => s.id === path[j]);
+        const b = working.find(s => s.id === path[j + 1]);
+        if (a && b) total += this.calculateDistance(a, b);
       }
 
       warpLanes.push({
@@ -215,7 +213,7 @@ export class WarpLaneGenerator {
         isActive: true,
       });
 
-      path.forEach((id) => used.add(id));
+      recordUse(path);
       console.log(`Lane ${i + 1}: ${path.length} hops`);
     }
 

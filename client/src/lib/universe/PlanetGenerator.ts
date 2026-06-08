@@ -1,5 +1,6 @@
 import SurfaceFeaturesList from "@/components/ui/SurfaceFeaturesList";
 import { Planet, PlanetType, SurfaceFeature, Faction, Armies, Divisions, Fleets, Ships } from "@shared/schema";
+import { CultureArchetype, generateCultureName, idToSeed } from './CultureNameGenerator';
 
 export class PlanetGenerator {
   static generateSurfaceTexture(planet: Planet): string {
@@ -79,7 +80,7 @@ export class PlanetGenerator {
       const feature: SurfaceFeature = {
         id: `feature-${i}`,
         type,
-        name: this.generateFeatureName(type, i, planetFaction),
+        name: this.generateFeatureName(type, i, planetFaction, planet.id),
         position: [lat, lon],
         description: this.generateFeatureDescription(type),
         population: type === 'city' ? Math.floor(Math.random() * 10000000) + 50000 : undefined,
@@ -95,135 +96,68 @@ export class PlanetGenerator {
     return features;
   }
 
-  private static getFactionArchetype(faction: any): string {
-    const n = faction?.name || '';
-    if (/Empire|Imperial|Kingdom|Tsardom|Crown/i.test(n))          return 'imperial';
-    if (/Republic|Federation|Assembly|Coalition|Democratic/i.test(n)) return 'republic';
-    if (/Syndicate|Corporation|Conglomerate|Guild|Consortium/i.test(n)) return 'corporate';
-    if (/Dominion|Collective|Union|Commune/i.test(n))              return 'dominion';
-    if (/League|Alliance|Pact|Accord/i.test(n))                   return 'alliance';
-    return 'generic';
+  private static generateFeatureName(
+    type: 'city' | 'fort' | 'landmark',
+    index: number,
+    faction?: any,
+    planetId?: string
+  ): string {
+    // Use stored archetype directly; fall back to regex detection for backward compat
+    const archetype: CultureArchetype = faction?.archetype ?? this.detectArchetype(faction);
+
+    const seed = idToSeed((planetId ?? faction?.id ?? 'generic') + type + index);
+
+    const noun = generateCultureName(archetype, seed);
+
+    const citySuffixes: Record<CultureArchetype, string[]> = {
+      imperial:  ['Gate', 'Square', 'Harbor', 'Quarter', 'Spire', 'Forum', 'Point', 'District', 'Rest', 'Landing'],
+      republic:  ['Forum', 'Square', 'Bay', 'Hall', 'Plaza', 'Station', 'Quarter', 'Court', 'Center', 'Crossing'],
+      corporate: ['Hub', 'Terminal', 'Exchange', 'Junction', 'Station', 'Nexus', 'Port', 'Tower', 'Prime', 'Base'],
+      dominion:  ['Post', 'Station', 'Camp', 'Hold', 'Point', 'Depot', 'Facility', 'Control', 'Bureau', 'Block'],
+      alliance:  ['Haven', 'Bay', 'Crossing', 'Rest', 'Landing', 'Shore', 'Way', 'Vale', 'Meeting', 'Springs'],
+      generic:   ['City', 'Colony', 'Settlement', 'Outpost', 'Station', 'Base', 'Landing', 'Prime', 'Port', 'Town'],
+    };
+
+    const fortSuffixes: Record<CultureArchetype, string[]> = {
+      imperial:  ['Keep', 'Bastion', 'Citadel', 'Hold', 'Wall', 'Rampart', 'Watch', 'Redoubt', 'Fortress', 'Gate'],
+      republic:  ['Garrison', 'Bastion', 'Hold', 'Watch', 'Guard', 'Bulwark', 'Keep', 'Post', 'Citadel', 'Line'],
+      corporate: ['Perimeter', 'Defense Post', 'Vault', 'Security Hub', 'Blockade', 'Lockdown', 'Shield', 'Barrier'],
+      dominion:  ['Fortress', 'Barracks', 'Control Post', 'Garrison', 'Iron Keep', 'Suppression Hub', 'Wall', 'Hold'],
+      alliance:  ['Refuge', 'Shelter', 'Watchtower', 'Safe Point', 'Retreat', 'Haven Keep', 'Guard Post', 'Outpost'],
+      generic:   ['Fort', 'Keep', 'Bastion', 'Outpost', 'Watch', 'Garrison', 'Stronghold', 'Redoubt'],
+    };
+
+    const landmarkSuffixes: Record<CultureArchetype, string[]> = {
+      imperial:  ['Monument', 'Arch', 'Obelisk', 'Tomb', 'Pillar', 'Colossus', 'Victory Gate', 'Mausoleum'],
+      republic:  ['Monument', 'Memorial', 'Stone', 'Foundation', 'Pillar', 'Obelisk', 'Ruin', 'Marker'],
+      corporate: ['Site', 'Remnant', 'Foundation', 'Wreck', 'Excavation', 'Ruin', 'Depot Ruin', 'Old Works'],
+      dominion:  ['Scar', 'Iron Pillar', 'Warning Stone', 'Ruin', 'Monument', 'Marker', 'Mass Grave', 'Obelisk'],
+      alliance:  ['Stone', 'Memorial', 'Glade', 'Falls', 'Spring', 'Sacred Ground', 'Meeting Place', 'Grove'],
+      generic:   ['Crater', 'Peaks', 'Falls', 'Canyon', 'Valley', 'Spire', 'Lake', 'Ruins', 'Plains', 'Rift'],
+    };
+
+    const suffixes = type === 'city'
+      ? citySuffixes[archetype]
+      : type === 'fort'
+        ? fortSuffixes[archetype]
+        : landmarkSuffixes[archetype];
+
+    // Pick suffix deterministically from the same seed offset
+    let s = seed + 999;
+    s = Math.sin(s) * 10000;
+    const suffix = suffixes[Math.floor((s - Math.floor(s)) * suffixes.length)];
+
+    return `${noun} ${suffix}`;
   }
 
-  private static generateFeatureName(type: 'city' | 'fort' | 'landmark', index: number, faction?: any): string {
-    const archetype = this.getFactionArchetype(faction);
-
-    const cities: Record<string, string[]> = {
-      imperial: [
-        'Imperial City', 'Crown Spire', 'Emperor\'s Rest', 'The Citadel', 'Sovereign Landing',
-        'Throne Point', 'Royal Harbor', 'Palace District', 'Augustan Quarter', 'Lord\'s Reach',
-        'Regent\'s Bay', 'High Sanctum', 'Castellan\'s Watch', 'Edict Square', 'Praetor\'s Gate',
-        'Imperial Nexus', 'Dominion Prime', 'Warlord\'s Seat', 'Grand Palisade', 'Apex Throne',
-        'Bastion Heights', 'Hegemony Plaza', 'Conqueror\'s Rest', 'Iron Throne', 'Imperium Bay'
-      ],
-      republic: [
-        'Parliament\'s Rest', 'Civic Center', 'Free Harbor', 'Accord Landing', 'Delegate\'s Point',
-        'Senate Square', 'Liberty Bay', 'Council Spire', 'Charter Falls', 'Union Gate',
-        'Commonwealth Hall', 'Tribune\'s Rest', 'Forum Prime', 'Quorum Station', 'Mandate City',
-        'Sovereign Hill', 'Assembly Point', 'Consul\'s Reach', 'Plebiscite Square', 'Vote Tower',
-        'Majority Falls', 'Peoples\'s Bay', 'Concord Station', 'Equality Heights', 'Justice Harbor'
-      ],
-      corporate: [
-        'Profit Junction', 'Market Prime', 'Exchange City', 'Dividend Bay', 'Ledger Station',
-        'Trade Nexus', 'Asset Landing', 'Commerce Spire', 'Yield Harbor', 'Venture Gate',
-        'Merger Heights', 'Acquisition Point', 'Revenue Falls', 'Contract Bay', 'Equity Station',
-        'Leverage City', 'Portfolio Plaza', 'Surplus Rest', 'Margin Tower', 'Capital Heights',
-        'Broker\'s Gate', 'Syndicate Prime', 'Monopoly Bay', 'Franchise Station', 'Yield Point'
-      ],
-      dominion: [
-        'Subjugation Prime', 'Occupied Falls', 'Control Station', 'Command Spire', 'Dominion Bay',
-        'Directive Gate', 'Order Heights', 'Mandate Landing', 'Compliance Harbor', 'Unity City',
-        'Collective Square', 'Solidarity Station', 'Commune Rest', 'State Prime', 'Bureau Gate',
-        'Edict Tower', 'Policy Falls', 'Decree Harbor', 'Provision Bay', 'Authority Heights',
-        'Overseer\'s Rest', 'Warden\'s Gate', 'Dictate Station', 'Regime Prime', 'Levy Point'
-      ],
-      alliance: [
-        'Accord City', 'Unity Harbor', 'Coalition Station', 'Pact Gate', 'Treaty Falls',
-        'Covenant Prime', 'Concord Bay', 'Partnership Heights', 'Bond Station', 'Compact Rest',
-        'Allied Landing', 'Mutual Harbor', 'League Square', 'Collective Bay', 'Harmony Gate',
-        'Truce Point', 'Alliance Spire', 'Ceasefire City', 'Fellowship Station', 'Kinship Falls',
-        'Solidarity Bay', 'Brethren Heights', 'Sworn Gate', 'Pledge Harbor', 'Covenant Rest'
-      ],
-      generic: [
-        'New Terra', 'Stellar Point', 'Void Port', 'Nexus Prime', 'Horizon City',
-        'Zenith Colony', 'Eclipse Station', 'Aurora Settlement', 'Cosmos Bay', 'Nebula Falls',
-        'Infinity Gate', 'Quantum City', 'Hyperion Base', 'Starfall Landing', 'Meridian Crossing',
-        'Phoenix Rising', 'Crystal Shore', 'Crimson Spire', 'Azure Heights', 'Titanium Valley',
-        'Solar Wind', 'Neutron Plaza', 'Pulsar Point', 'Comet\'s Rest', 'Asteroid Creek'
-      ],
-    };
-
-    const forts: Record<string, string[]> = {
-      imperial: [
-        'Imperial Bastion', 'Crown Fortress', 'Emperor\'s Wall', 'Legion Keep', 'Conqueror\'s Hold',
-        'Royal Redoubt', 'Sovereign Rampart', 'Praetorian Gate', 'Iron Bulwark', 'Palatine Watch',
-        'Tribune\'s Fortress', 'Centurion\'s Rest', 'Siege Wall', 'Vanguard Citadel', 'War Spire'
-      ],
-      republic: [
-        'Defender\'s Pact', 'Civil Guard Keep', 'Charter Bastion', 'Senate Wall', 'Union Stronghold',
-        'Militia Gate', 'Common Bulwark', 'Free Fortress', 'People\'s Hold', 'Liberty Rampart',
-        'Accord Citadel', 'Concord Watch', 'Tribune Guard', 'Patrol Station', 'Civic Redoubt'
-      ],
-      corporate: [
-        'Security Tower', 'Asset Protection', 'Perimeter Station', 'Vault Fortress', 'Corporate Wall',
-        'Defense Contract', 'Private Keep', 'Mercenary Hold', 'Hired Bastion', 'Secure Rampart',
-        'Lock & Load', 'Profit Shield', 'Guard Post Alpha', 'Enforcement Hub', 'Paywall Citadel'
-      ],
-      dominion: [
-        'Control Fortress', 'State Garrison', 'Order Bastion', 'Suppression Keep', 'Regime Wall',
-        'Authority Hold', 'Warden\'s Rampart', 'Subjugation Gate', 'Iron Citadel', 'Mandate Guard',
-        'Policy Fortress', 'Bureau Bulwark', 'Directive Keep', 'Compliance Wall', 'Overseer\'s Hold'
-      ],
-      alliance: [
-        'Combined Arms Keep', 'United Fortress', 'Pact Bastion', 'Covenant Gate', 'Treaty Hold',
-        'Mutual Defense', 'Allied Citadel', 'Joint Bulwark', 'Coalition Rampart', 'Bond Stronghold',
-        'Accord Fortress', 'Harmony Watch', 'League Garrison', 'Shared Rampart', 'Fellowship Keep'
-      ],
-      generic: [
-        'Fort Alpha', 'Ironhold Citadel', 'Starwatch Keep', 'Voidguard Bastion', 'Sentinel\'s Gate',
-        'Steel Thunder', 'Storm\'s End', 'Barrier Peak', 'Shield Wall', 'Guardian\'s Stand',
-        'Blackstone Keep', 'Iron Ridge', 'Steelpoint', 'Titanwall', 'Adamant Hold'
-      ],
-    };
-
-    const landmarks: Record<string, string[]> = {
-      imperial: [
-        'Emperor\'s Tomb', 'Victory Arch', 'Conquest Monument', 'Legacy Spire', 'War Memorial',
-        'Crown Obelisk', 'Dynasty Falls', 'Sovereign\'s Rest', 'Triumph Gate', 'Imperial Scar',
-        'Throne Stone', 'Warlord\'s Monument', 'Subjugation Marker', 'Glorious Ruin', 'Legion\'s End'
-      ],
-      republic: [
-        'Freedom Monument', 'Democracy Rock', 'Charter Obelisk', 'Founding Pillar', 'Liberty Stone',
-        'First Vote Falls', 'Assembly Ruins', 'People\'s Monument', 'Accord Scar', 'Union Stone',
-        'Old Senate Ruin', 'Liberty Gate', 'Revolution Monument', 'Equality Falls', 'Plebiscite Rock'
-      ],
-      corporate: [
-        'First Trade Post', 'Founders\' Monument', 'Profit Obelisk', 'Market Ruin', 'Exchange Stone',
-        'Old Ledger Falls', 'IPO Monument', 'Merger Scar', 'Asset Marker', 'Contract Stone',
-        'Yield Falls', 'Legacy Patent', 'First Contract', 'Revenue Ruin', 'Dividend Rock'
-      ],
-      dominion: [
-        'Dominion Marker', 'Control Obelisk', 'Mandate Stone', 'Subjugation Monument', 'Order Falls',
-        'State Ruin', 'Bureau Rock', 'Directive Stone', 'Compliance Scar', 'Regime Monument',
-        'Forgotten Dissent', 'Purge Marker', 'Authority Obelisk', 'Iron Pillar', 'Warden\'s Rock'
-      ],
-      alliance: [
-        'Treaty Stone', 'Accord Monument', 'Union Obelisk', 'Covenant Falls', 'Pact Marker',
-        'First Meeting Rock', 'Alliance Ruin', 'Bond Stone', 'Fellowship Scar', 'Harmony Falls',
-        'Ceasefire Marker', 'Handshake Stone', 'Coalition Rock', 'United Obelisk', 'Concord Ruin'
-      ],
-      generic: [
-        'Crystal Peaks', 'Azure Falls', 'Crimson Canyon', 'Emerald Valley', 'Silver Plateau',
-        'Whispering Stones', 'Singing Crystals', 'Floating Isles', 'Gravity Wells', 'Phantom Mists',
-        'Golden Spires', 'Sapphire Lakes', 'Ruby Caverns', 'Thunder Plains', 'Starfall Crater',
-        'Ancient Ruins', 'Titan\'s Bones', 'Dragon\'s Teeth', 'Giant\'s Stairs', 'Elder\'s Rest'
-      ],
-    };
-
-    const pool = (type === 'city' ? cities : type === 'fort' ? forts : landmarks)[archetype] ?? [];
-    const fallback = (type === 'city' ? cities : type === 'fort' ? forts : landmarks)['generic'];
-    const list = pool.length > 0 ? pool : fallback;
-    return list[index % list.length];
+  private static detectArchetype(faction: any): CultureArchetype {
+    const n = faction?.name || '';
+    if (/Empire|Imperial|Kingdom|Tsardom|Crown/i.test(n))            return 'imperial';
+    if (/Republic|Federation|Assembly|Coalition|Democratic/i.test(n)) return 'republic';
+    if (/Syndicate|Corporation|Conglomerate|Guild|Consortium/i.test(n)) return 'corporate';
+    if (/Dominion|Collective|Union|Commune/i.test(n))                return 'dominion';
+    if (/League|Alliance|Pact|Accord/i.test(n))                     return 'alliance';
+    return 'generic';
   }
 
   private static generateFeatureDescription(type: 'city' | 'fort' | 'landmark'): string {

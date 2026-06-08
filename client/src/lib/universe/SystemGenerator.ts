@@ -7,6 +7,7 @@ import { FactionGenerator } from './FactionGenerator';
 import {PlanetNameGenerator} from './PlanetNameGenerator';
 import { MilitaryGenerator } from "./MilitaryGenerator";
 import { FleetGenerator } from "./FleetGenerator";
+import { generateCultureName, idToSeed } from './CultureNameGenerator';
 
 // Using imported Planet, Moon, PlanetRing, PlanetType interfaces from shared schema
 
@@ -352,7 +353,8 @@ export class SystemGenerator {
     
   }
 
-  static generateSystem(star: any, seed: number): StarSystem {
+  static generateSystem(star: any, seed: number, options?: { isIntersection?: boolean }): StarSystem {
+    const isIntersection = options?.isIntersection ?? false;
     const planets = [];
 
     // Legacy generation logic - identical to original App.tsx
@@ -633,7 +635,18 @@ export class SystemGenerator {
 
     
 
-    // 3) Generate surfaceFeatures and assign to faction holdings efficiently
+    // 3) Rename non-homeworld planets using their faction's cultural archetype
+    for (const planet of filteredPlanets) {
+      const faction = (planet as any).faction;
+      if (!faction || faction.name === 'Contested Zone') continue;
+      const archetype = (faction as any).archetype;
+      if (!archetype) continue;
+      // Skip homeworlds — they keep the name that the faction was built around
+      if (faction.homeworld === planet.name) continue;
+      planet.name = generateCultureName(archetype, idToSeed(planet.id) + 13);
+    }
+
+    // 4) Generate surfaceFeatures and assign to faction holdings efficiently
     for (const planet of filteredPlanets) {
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
       
@@ -677,9 +690,19 @@ export class SystemGenerator {
         MilitaryGenerator.generateMilitaryForFaction(faction);
         console.log(`Generated ${faction.armies?.length || 0} armies for faction: ${faction.name} (Tech Level: ${faction.technology})`);
         
+        // Intersection bonus: crossroads stars have more developed, better-armed factions
+        if (isIntersection) {
+          const boostedTech = Math.min(10, parseInt(faction.technology || '5') + 2);
+          faction.technology = boostedTech.toString();
+        }
+
         // Generate fleets for faction homeworlds
         FleetGenerator.generateFleetForFaction(faction, star.id, filteredPlanets);
-        console.log(`Generated ${faction.fleets?.length || 0} fleets for faction: ${faction.name}`);
+        // Intersection systems get a second patrol fleet
+        if (isIntersection) {
+          FleetGenerator.generateFleetForFaction(faction, star.id, filteredPlanets);
+        }
+        console.log(`Generated ${faction.fleets?.length || 0} fleets for faction: ${faction.name}${isIntersection ? ' (intersection bonus)' : ''}`);
       }
     }
 
