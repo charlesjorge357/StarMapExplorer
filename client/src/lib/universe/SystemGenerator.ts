@@ -353,7 +353,10 @@ export class SystemGenerator {
     
   }
 
-  static generateSystem(star: any, seed: number, options?: { isIntersection?: boolean }): StarSystem {
+  // Structural skeleton only: planets (with names + faction assignment), factions.
+  // Enough to decide a star's civilization name. Heavy content (surface features,
+  // military, fleets, asteroid belts, space features) is added later by enrichSystem().
+  static generateSystemCore(star: any, seed: number, options?: { isIntersection?: boolean }): StarSystem {
     const isIntersection = options?.isIntersection ?? false;
     const planets = [];
 
@@ -646,6 +649,32 @@ export class SystemGenerator {
       planet.name = generateCultureName(archetype, idToSeed(planet.id) + 13);
     }
 
+    // Core complete — return the structural skeleton. enrichSystem() adds the rest.
+    const core: any = {
+      id: `system-${star.id}`,
+      starId: star.id,
+      star,
+      planets,
+      asteroidBelts: [],
+      spaceFeatures: [],
+      factions: factions,
+      _core: true,
+    };
+    return core as StarSystem;
+  }
+
+  /**
+   * Enrich a core system (from generateSystemCore) with the heavy content:
+   * surface features → faction holdings/tech → military → fleets → asteroid belts →
+   * space features. Mutates and returns the same system object. Guarded by the `_core`
+   * flag so a system is never enriched twice.
+   */
+  static enrichSystem(system: any, star: any, seed: number, options?: { isIntersection?: boolean }): StarSystem {
+    if (!system || system._core !== true) return system as StarSystem;
+    const isIntersection = options?.isIntersection ?? false;
+    const filteredPlanets = (system.planets || []).filter((planet: any) => planet != null);
+    const factions = system.factions || [];
+
     // 4) Generate surfaceFeatures and assign to faction holdings efficiently
     for (const planet of filteredPlanets) {
       planet.surfaceFeatures = PlanetGenerator.generateSurfaceFeatures(planet, 5, factions);
@@ -722,15 +751,64 @@ export class SystemGenerator {
     const spaceFeatures = this.generateSpaceFeatures(filteredPlanets, asteroidBelts, factions, star);
     console.log(`Generated ${spaceFeatures.length} space features for ${star.name}:`, spaceFeatures);
 
-    return {
-      id: `system-${star.id}`,
-      starId: star.id,
-      star,
-      planets,
-      asteroidBelts,
-      spaceFeatures,
-      factions : factions
-    };
+    system.asteroidBelts = asteroidBelts;
+    system.spaceFeatures = spaceFeatures;
+    system.factions = factions;
+    delete system._core;
+    return system as StarSystem;
+  }
+
+  /**
+   * Full system generation = core + enrich. Behavior is identical to the original
+   * single-pass generateSystem, so all existing callers are unaffected.
+   */
+  static generateSystem(star: any, seed: number, options?: { isIntersection?: boolean }): StarSystem {
+    const core = this.generateSystemCore(star, seed, options);
+    return this.enrichSystem(core, star, seed, options);
+  }
+
+  /**
+   * Derive a civilization name for a star from its core system, or null when the
+   * system has no real faction (keep the catalog name). Used by the galaxy preload.
+   * A seeded 1-in-3 roll picks the naming style: dominant faction name, a cultural
+   * archetype name, or the dominant faction's homeworld name.
+   */
+  static deriveStarName(coreSystem: any, seed: number): string | null {
+    const factions = (coreSystem?.factions || []).filter(
+      (f: any) => f && f.name !== 'Contested Zone'
+    );
+    if (factions.length === 0) return null;
+
+    // Dominant faction = highest influence (ties → first)
+    const dominant = factions.reduce(
+      (best: any, f: any) => ((f.influence ?? 0) > (best.influence ?? 0) ? f : best),
+      factions[0]
+    );
+
+    // Seeded style roll (same Math.sin hash pattern used elsewhere in this file)
+    const s = Math.sin((seed + 101) * 12.9898) * 43758.5453;
+    const style = Math.floor((s - Math.floor(s)) * 3);
+
+    // Both proper-noun styles draw an archetype-flavored name (distinct seeds give
+    // distinct names); the third reuses the dominant faction's homeworld. The verbatim
+    // faction name is intentionally never used as a star name.
+    const archetype = dominant.archetype ?? 'generic';
+    if (style === 0) return generateCultureName(archetype, seed + 911);
+    if (style === 1) return generateCultureName(archetype, seed + 31);
+
+    // Style 2: the star takes the homeworld's name; the homeworld planet is renamed to
+    // "<name> Prime". Keep the faction's homeworld field in sync (planet.faction is the
+    // same shared faction object, so updating dominant.homeworld covers both).
+    const homeworld = (coreSystem.planets || []).find((p: any) => p?.name === dominant.homeworld);
+    if (homeworld) {
+      const base = homeworld.name;
+      if (!base.endsWith(' Prime')) {
+        homeworld.name = `${base} Prime`;
+        if (dominant.homeworld === base) dominant.homeworld = homeworld.name;
+      }
+      return base;
+    }
+    return dominant.homeworld ?? generateCultureName(archetype, seed + 53);
   }
 
   static getPlanetColor(type: PlanetType, seed: number): string {

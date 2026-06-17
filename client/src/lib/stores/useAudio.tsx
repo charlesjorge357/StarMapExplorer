@@ -9,8 +9,10 @@ interface AudioState {
   successSound: HTMLAudioElement | null;
   isMuted: boolean;
   isPlaying: boolean,
+  volume: number; // 0..1, shared across all tracks so it persists across song changes
   setIsPlaying: (playing: boolean) => void;
-  
+  setVolume: (volume: number) => void;
+
   // Setter functions
   setBackgroundMusic: (music: HTMLAudioElement) => void;
   setMusicTracks: (tracks: HTMLAudioElement[]) => void;
@@ -28,6 +30,17 @@ interface AudioState {
   playTrack: (index: number) => void;
 }
 
+const VOLUME_STORAGE_KEY = 'music-volume';
+const loadInitialVolume = (): number => {
+  try {
+    const stored = parseFloat(localStorage.getItem(VOLUME_STORAGE_KEY) ?? '');
+    if (!isNaN(stored) && stored >= 0 && stored <= 1) return stored;
+  } catch {
+    // localStorage unavailable — fall through to default
+  }
+  return 0.3;
+};
+
 export const useAudio = create<AudioState>((set, get) => ({
   backgroundMusic: null,
   musicTracks: [],
@@ -36,9 +49,27 @@ export const useAudio = create<AudioState>((set, get) => ({
   hitSound: null,
   successSound: null,
   isMuted: false, // Start unmuted
-  
-  setBackgroundMusic: (music) => set({ backgroundMusic: music }),
-  setMusicTracks: (tracks) => set({ musicTracks: tracks }),
+  volume: loadInitialVolume(),
+
+  setVolume: (volume) => {
+    const clamped = Math.max(0, Math.min(1, volume));
+    set({ volume: clamped });
+    try { localStorage.setItem(VOLUME_STORAGE_KEY, String(clamped)); } catch {}
+    // Apply to every track so the level carries over to whichever song plays next
+    const { musicTracks, backgroundMusic } = get();
+    musicTracks.forEach(t => { t.volume = clamped; });
+    if (backgroundMusic) backgroundMusic.volume = clamped;
+  },
+
+  setBackgroundMusic: (music) => {
+    music.volume = get().volume;
+    set({ backgroundMusic: music });
+  },
+  setMusicTracks: (tracks) => {
+    const { volume } = get();
+    tracks.forEach(t => { t.volume = volume; });
+    set({ musicTracks: tracks });
+  },
   setCurrentTrackIndex: (index) => set({ currentTrackIndex: index }),
   setStartingTrackIndex: (index) => set({ startingTrackIndex: index }),
   setHitSound: (sound) => set({ hitSound: sound }),
@@ -142,6 +173,7 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     nextTrack.currentTime = 0;
     nextTrack.muted = isMuted;
+    nextTrack.volume = get().volume;
     if (get().isPlaying) {
       nextTrack.play().catch(error => {
         console.log("Next track play prevented:", error);
@@ -165,6 +197,7 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     prevTrack.currentTime = 0;
     prevTrack.muted = isMuted;
+    prevTrack.volume = get().volume;
     if (get().isPlaying) {
       prevTrack.play().catch(error => {
         console.log("Previous track play prevented:", error);
@@ -187,6 +220,7 @@ export const useAudio = create<AudioState>((set, get) => ({
     
     track.currentTime = 0;
     track.muted = isMuted;
+    track.volume = get().volume;
     if (get().isPlaying) {
       track.play().catch(error => {
         console.log("Track play prevented:", error);

@@ -413,6 +413,66 @@ function App() {
 
   const [hasStarted, setHasStarted] = useState(false);
 
+  // Galaxy preload: after Start, generate a lightweight "core" (planets + factions) for
+  // every star, cache it, and derive a civilization name for inhabited stars. The heavy
+  // content (surface features, military, fleets, space features) is added lazily on entry
+  // via SystemGenerator.enrichSystem. Runs chunked so the loading bar stays responsive.
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [preloadProgress, setPreloadProgress] = useState(0);
+  const preloadStartedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!hasStarted || stars.length === 0) return;
+
+    // Run once per generated star set (galaxy seed + count). setStars at the end keeps the
+    // same length, so this token prevents the effect from re-triggering itself.
+    const token = `${galaxySeed}:${stars.length}`;
+    if (preloadStartedRef.current === token) return;
+    preloadStartedRef.current = token;
+
+    let cancelled = false;
+    const CHUNK = 100;
+    const total = stars.length;
+    const renamed: SimpleStar[] = stars.slice();
+
+    setIsPreloading(true);
+    setPreloadProgress(0);
+
+    const processChunk = (start: number) => {
+      if (cancelled) return;
+      const end = Math.min(start + CHUNK, total);
+      for (let i = start; i < end; i++) {
+        const star = stars[i];
+        try {
+          const seed = parseInt(star.id.slice(-3), 36) || 0;
+          const isIntersection = intersectionStars.has(star.id);
+          const core = SystemGenerator.generateSystemCore(star, seed, { isIntersection });
+          setCachedSystem(star.id, core);
+
+          const name = SystemGenerator.deriveStarName(core, seed);
+          if (name) {
+            renamed[i] = { ...star, name };
+            // keep the cached core's own star label in sync with the map
+            if ((core as any).star) (core as any).star.name = name;
+          }
+        } catch {
+          // skip a bad star, keep the preload going
+        }
+      }
+      setPreloadProgress(end);
+      if (end < total) {
+        setTimeout(() => processChunk(end), 0);
+      } else if (!cancelled) {
+        setStars(renamed);
+        setIsPreloading(false);
+      }
+    };
+
+    // defer the first chunk a tick so the loading overlay paints before we block
+    const startId = setTimeout(() => processChunk(0), 0);
+    return () => { cancelled = true; clearTimeout(startId); };
+  }, [hasStarted, stars, intersectionStars, galaxySeed, setCachedSystem]);
+
   const handleCopySeed = () => {
     navigator.clipboard.writeText(galaxySeed.toString()).then(() => {
       setSeedCopied(true);
@@ -452,7 +512,7 @@ function App() {
     // Configure all tracks (disable individual looping for automatic progression)
     musicTracks.forEach((track, index) => {
       track.loop = false; // Disable looping to allow track progression
-      track.volume = 0.3;
+      track.volume = useAudio.getState().volume;
       
       // Add event listener for automatic track progression
       track.addEventListener('ended', () => {
@@ -646,6 +706,14 @@ function App() {
           system = generateSystemForStar(selectedStar);
           setCachedSystem(selectedStar.id, system);
         } else {
+          // A preloaded core (planets + factions only) — enrich it with the heavy
+          // content on first entry, then cache the full system.
+          if ((system as any)._core) {
+            const seed = parseInt(selectedStar.id.slice(-3), 36) || 0;
+            const isIntersection = intersectionStars.has(selectedStar.id);
+            system = SystemGenerator.enrichSystem(system, selectedStar, seed, { isIntersection });
+            setCachedSystem(selectedStar.id, system);
+          }
           // Sync cached fleet positions from universe store
           const universeStore = useUniverse.getState();
           const savedSystem = universeStore?.universeData?.systems?.find(
@@ -752,7 +820,8 @@ function App() {
     return () => document.removeEventListener('keydown', handleSystemNavigation);
   }, [selectedStar, currentView, selectedPlanet, selectedSpaceFeature, selectedNebula,
       selectedFleet, selectedFeature, selectedArmy, isSearching, isSearchingSpaceFeatures,
-      enterSystem, exitSystem, enterPlanetary, exitPlanetary, getCachedSystem, setCachedSystem]);
+      enterSystem, exitSystem, enterPlanetary, exitPlanetary, getCachedSystem, setCachedSystem,
+      intersectionStars]);
 
 
   return (
@@ -1804,6 +1873,44 @@ function App() {
           >
             Start Sandbox
           </button>
+        </div>
+      )}
+
+      {isPreloading && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'black',
+          color: 'white',
+          padding: '40px',
+          borderRadius: '8px',
+          textAlign: 'center',
+          zIndex: 200,
+          border: '1px solid rgba(255,255,255,0.1)',
+          minWidth: '320px',
+        }}>
+          <h2 style={{ marginBottom: '20px', letterSpacing: '0.05em', fontWeight: 400 }}>
+            Charting civilizations…
+          </h2>
+          <div style={{
+            width: '100%',
+            height: '8px',
+            background: 'rgba(255,255,255,0.12)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: `${stars.length ? Math.round((preloadProgress / stars.length) * 100) : 0}%`,
+              height: '100%',
+              background: 'blue',
+              transition: 'width 0.1s linear',
+            }} />
+          </div>
+          <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '10px', fontFamily: 'monospace' }}>
+            {preloadProgress} / {stars.length} stars
+          </div>
         </div>
       )}
     </div>

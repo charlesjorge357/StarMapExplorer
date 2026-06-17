@@ -7,7 +7,9 @@ export const MusicController: React.FC = () => {
     currentTrackIndex,
     isMuted,
     isPlaying,
+    volume,
     toggleMute,
+    setVolume,
     playNextTrack,
     playPreviousTrack,
     playTrack,
@@ -68,6 +70,22 @@ export const MusicController: React.FC = () => {
             {label}
           </button>
         ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+        <span style={{ fontSize: '12px', opacity: 0.7 }}>🔈</span>
+        <input
+          type="range"
+          min={0}
+          max={0.5}
+          step={0.01}
+          value={volume}
+          onChange={e => setVolume(parseFloat(e.target.value))}
+          style={{ flex: 1, cursor: 'pointer', accentColor: '#aaa' }}
+          aria-label="Music volume"
+        />
+        <span style={{ fontSize: '11px', opacity: 0.6, width: '32px', textAlign: 'right', fontFamily: 'monospace' }}>
+          {Math.round(volume * 100)}
+        </span>
       </div>
     </div>
   );
